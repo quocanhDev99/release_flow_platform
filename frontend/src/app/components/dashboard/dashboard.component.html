@@ -1,0 +1,233 @@
+<div class="dashboard-container">
+  <!-- Header Section -->
+  <header class="header">
+    <div class="header-left">
+      <mat-icon class="header-logo-icon">rocket_launch</mat-icon>
+      <h1>Release Flow Platform</h1>
+      <span class="header-subtitle">MVP v1 - Bảng Giám Sát Hợp Nhất</span>
+    </div>
+    <div class="header-right">
+      <button mat-flat-button color="primary" (click)="loadData()">
+        <mat-icon>refresh</mat-icon> Làm mới dữ liệu
+      </button>
+    </div>
+  </header>
+
+  <!-- Filter & Search Bar -->
+  <div class="filter-bar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Tìm kiếm theo mã Ticket...</mat-label>
+      <input matInput [(ngModel)]="searchText" (ngModelChange)="applyFilters()" placeholder="Ví dụ: MAG-20479">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-select">
+      <mat-label>Kho nguồn (Repo)</mat-label>
+      <mat-select [(ngModel)]="selectedRepo" (selectionChange)="applyFilters()">
+        <mat-option value="">Tất cả</mat-option>
+        <mat-option value="Core">Core</mat-option>
+        <mat-option value="E-com">E-com</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-select">
+      <mat-label>Bản Release (Fix version)</mat-label>
+      <mat-select [(ngModel)]="selectedRelease" (selectionChange)="applyFilters()">
+        <mat-option value="">Tất cả</mat-option>
+        <mat-option *ngFor="let rel of releases()" [value]="rel.version">
+          {{ rel.version }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-select">
+      <mat-label>Trạng thái QC</mat-label>
+      <mat-select [(ngModel)]="selectedQCStatus" (selectionChange)="applyFilters()">
+        <mat-option value="">Tất cả</mat-option>
+        <mat-option *ngFor="let status of qcStatuses" [value]="status">
+          {{ status }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Spreadsheet Table Area -->
+  <div class="table-card mat-elevation-z2">
+    <table mat-table [dataSource]="filteredItems()" class="spreadsheet-table">
+
+      <!-- Repo Column -->
+      <ng-container matColumnDef="repo">
+        <th mat-header-cell *mat-header-cellDef> Repos </th>
+        <td mat-cell *mat-cellDef="let item" class="repo-cell">
+          <span class="repo-badge" [ngClass]="item.repository.name === 'Core' ? 'repo-core' : 'repo-ecom'">
+            {{ item.repository.name }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Ticket Column -->
+      <ng-container matColumnDef="ticket">
+        <th mat-header-cell *mat-header-cellDef> Ticket </th>
+        <td mat-cell *mat-cellDef="let item" class="ticket-cell">
+          <div *ngFor="let t of item.tickets" class="ticket-link">
+            {{ t.ticketId }}
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Fix Version Column -->
+      <ng-container matColumnDef="fixVersion">
+        <th mat-header-cell *mat-header-cellDef> Fix version </th>
+        <td mat-cell *mat-cellDef="let item">
+          {{ item.releaseStream?.version || '-' }}
+        </td>
+      </ng-container>
+
+      <!-- Source Branch Column -->
+      <ng-container matColumnDef="sourceBranch">
+        <th mat-header-cell *mat-header-cellDef> Available on branch(es) </th>
+        <td mat-cell *mat-cellDef="let item" class="branch-cell" [title]="item.sourceBranch">
+          <code>{{ item.sourceBranch }}</code>
+        </td>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *mat-header-cellDef> Status </th>
+        <td mat-cell *mat-cellDef="let item">
+          <span class="status-merged">{{ item.status }}</span>
+        </td>
+      </ng-container>
+
+      <!-- Branch Build Column -->
+      <ng-container matColumnDef="branchBuilds">
+        <th mat-header-cell *mat-header-cellDef> Branch build (Dev/Devel) </th>
+        <td mat-cell *mat-cellDef="let item" class="build-cell">
+          <code>{{ getBuildsString(item) }}</code>
+        </td>
+      </ng-container>
+
+      <!-- Merge Devel Column -->
+      <ng-container matColumnDef="isMergedOnDevel">
+        <th mat-header-cell *mat-header-cellDef class="centered-header"> Merge on Devel </th>
+        <td mat-cell *mat-cellDef="let item" class="centered-cell">
+          <mat-checkbox 
+            [checked]="item.isMergedOnDevel" 
+            (change)="onMergeDevelChange(item, $event.checked)">
+          </mat-checkbox>
+        </td>
+      </ng-container>
+
+      <!-- Change Type Column -->
+      <ng-container matColumnDef="changeType">
+        <th mat-header-cell *mat-header-cellDef> Type </th>
+        <td mat-cell *mat-cellDef="let item">
+          <div *ngFor="let t of item.tickets" class="badge-container">
+            <span class="badge" [ngClass]="getChangeTypeClass(t.changeType)">
+              {{ t.changeType }}
+            </span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- QC Status Column -->
+      <ng-container matColumnDef="qcStatus">
+        <th mat-header-cell *mat-header-cellDef> Ready For QC </th>
+        <td mat-cell *mat-cellDef="let item">
+          <div *ngFor="let t of item.tickets" class="qc-select-container">
+            <select 
+              [ngModel]="t.qcStatus" 
+              (ngModelChange)="onQCStatusChange(t, $event)"
+              class="qc-inline-dropdown"
+              [ngClass]="getQCStatusClass(t.qcStatus)">
+              <option *ngFor="let opt of qcStatuses" [value]="opt">{{ opt }}</option>
+            </select>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Pending Issues Column -->
+      <ng-container matColumnDef="pendingIssues">
+        <th mat-header-cell *mat-header-cellDef> Pending issues </th>
+        <td mat-cell *mat-cellDef="let item" class="pending-issues-cell">
+          <div *ngFor="let t of item.tickets" class="issues-text" [title]="t.pendingIssues || ''">
+            {{ t.pendingIssues || '-' }}
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *mat-header-cellDef> Thao tác </th>
+        <td mat-cell *mat-cellDef="let item">
+          <div *ngFor="let t of item.tickets">
+            <button mat-icon-button color="accent" (click)="openEditPanel(item, t)" title="Chỉnh sửa chi tiết">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Table Header and Row configuration -->
+      <tr mat-header-row *mat-header-rowDef="displayedColumns; sticky: true"></tr>
+      <tr mat-row *mat-rowDef="let row; columns: displayedColumns;" class="spreadsheet-row"></tr>
+
+      <!-- Row displayed when no data fits filters -->
+      <tr class="mat-row" *mat-noDataRow>
+        <td class="mat-cell empty-table-cell" colspan="11">
+          Không tìm thấy dữ liệu phù hợp với bộ lọc hiện tại.
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Slide-over Edit Panel (Overlay sidebar) -->
+  <div class="edit-sidebar" [class.open]="activeItem !== null">
+    <div class="sidebar-header" *ngIf="activeTicket">
+      <h3>Cập nhật Ticket: {{ activeTicket.ticketId }}</h3>
+      <button mat-icon-button (click)="closeEditPanel()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="sidebar-body" *ngIf="activeItem && activeTicket">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Nhánh phát triển (Available branch)</mat-label>
+        <input matInput [(ngModel)]="activeItem.sourceBranch">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Phân loại (Type)</mat-label>
+        <mat-select [(ngModel)]="activeTicket.changeType">
+          <mat-option *ngFor="let type of changeTypes" [value]="type">{{ type }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Trạng thái kiểm thử (Ready For QC)</mat-label>
+        <mat-select [(ngModel)]="activeTicket.qcStatus">
+          <mat-option *ngFor="let status of qcStatuses" [value]="status">{{ status }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Lỗi tồn đọng / Ghi chú (Pending issues)</mat-label>
+        <textarea matInput rows="4" [(ngModel)]="activeTicket.pendingIssues" placeholder="Nhập ghi chú lỗi hoặc trạng thái..."></textarea>
+      </mat-form-field>
+      
+      <div class="sidebar-checkbox">
+        <mat-checkbox [(ngModel)]="activeItem.isMergedOnDevel">
+          Đã merge vào Devel (Merge on Devel)
+        </mat-checkbox>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button mat-stroked-button (click)="closeEditPanel()">Hủy bỏ</button>
+      <button mat-flat-button color="primary" (click)="saveTicketDetails()">Lưu thay đổi</button>
+    </div>
+  </div>
+
+  <!-- Background overlay when edit sidebar is open -->
+  <div class="sidebar-backdrop" *ngIf="activeItem !== null" (click)="closeEditPanel()"></div>
+</div>
