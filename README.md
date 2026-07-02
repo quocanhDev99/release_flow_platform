@@ -17,6 +17,7 @@
 | docs/07-deployment.md | Triển khai |
 | docs/08-roadmap.md | Lộ trình phát triển |
 | docs/09-architectural-review.md | Đánh giá kiến trúc |
+| README_DEV.md | Hướng dẫn chạy môi trường phát triển cục bộ |
 
 ---
 

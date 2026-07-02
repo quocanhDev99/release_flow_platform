@@ -1,0 +1,106 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Repository {
+  id              Int              @id @default(autoincrement())
+  name            String           @unique
+  gitUrl          String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deploymentItems DeploymentItem[]
+
+  @@map("repositories")
+}
+
+model User {
+  id              Int              @id @default(autoincrement())
+  username        String           @unique
+  email           String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deploymentItems DeploymentItem[]
+
+  @@map("users")
+}
+
+model ReleaseStream {
+  id              Int              @id @default(autoincrement())
+  version         String           @unique
+  status          String           @default("active") // active, completed, archived
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deploymentItems DeploymentItem[]
+
+  @@map("release_streams")
+}
+
+model DeploymentItem {
+  id                Int           @id @default(autoincrement())
+  sourceBranch      String
+  status            String        @default("merged") // merged, pending, closed
+  isMergedOnDevel   Boolean       @default(false)
+  mergedAt          DateTime      @default(now())
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  repository        Repository    @relation(fields: [repositoryId], references: [id])
+  repositoryId      Int
+  user              User          @relation(fields: [userId], references: [id])
+  userId            Int
+  releaseStream     ReleaseStream? @relation(fields: [releaseStreamId], references: [id])
+  releaseStreamId   Int?
+  tickets           Ticket[]
+  builds            Build[]
+
+  @@map("deployment_items")
+}
+
+model Ticket {
+  id                Int            @id @default(autoincrement())
+  ticketId          String         // e.g., MAG-20479
+  summary           String?
+  changeType        String         // Feature, Fix bug, Enhance
+  qcStatus          String         @default("waiting for QC test") // waiting for QC test, ready for QC, passed, failed
+  pendingIssues     String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  deploymentItem    DeploymentItem @relation(fields: [deploymentItemId], references: [id], onDelete: Cascade)
+  deploymentItemId  Int
+
+  @@map("tickets")
+}
+
+model Environment {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique // dev, devel, STG, UAT, Production
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  builds      Build[]
+
+  @@map("environments")
+}
+
+model Build {
+  id                Int            @id @default(autoincrement())
+  buildNumber       String?
+  buildUrl          String?
+  status            String         // SUCCESS, FAILED, BUILDING
+  builtAt           DateTime       @default(now())
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  deploymentItem    DeploymentItem @relation(fields: [deploymentItemId], references: [id], onDelete: Cascade)
+  deploymentItemId  Int
+  environment       Environment    @relation(fields: [environmentId], references: [id])
+  environmentId     Int
+
+  @@map("builds")
+}
