@@ -1,0 +1,23 @@
+flowchart LR
+
+DashboardModule
+
+ReleaseModule
+
+DeploymentModule
+
+PipelineModule
+
+WindowModule
+
+GitModule
+
+DecisionEngine
+
+Notification
+
+DeploymentModule --> DecisionEngine
+
+ReleaseModule --> DecisionEngine
+
+DecisionEngine --> Notification
