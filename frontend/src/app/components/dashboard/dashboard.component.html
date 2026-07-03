@@ -1,65 +1,125 @@
-<div class="dashboard-container">
-  <!-- Header Section -->
-  <header class="header">
-    <div class="header-left">
-      <mat-icon class="header-logo-icon">rocket_launch</mat-icon>
-      <h1>Release Flow Platform</h1>
-      <span class="header-subtitle">MVP v1 - Bảng Giám Sát Hợp Nhất</span>
+<div class="dashboard">
+
+  <!-- ─── Navbar ──────────────────────────────────────────────────────── -->
+  <header class="navbar">
+    <div class="navbar__brand">
+      <mat-icon class="navbar__logo-icon">rocket_launch</mat-icon>
+      <h1 class="navbar__title">Release Flow Platform</h1>
+      <span class="navbar__version-badge">MVP v1</span>
     </div>
-    <div class="header-right">
-      <button mat-flat-button color="primary" (click)="loadData()">
-        <mat-icon>refresh</mat-icon> Làm mới dữ liệu
+
+    <div class="navbar__actions">
+      <input #fileInput type="file" (change)="onExcelUpload($event)" accept=".xlsx,.xls,.csv" style="display:none">
+      <button mat-stroked-button (click)="fileInput.click()">
+        <mat-icon>upload_file</mat-icon> Import
+      </button>
+
+      <button mat-stroked-button (click)="openConfigPanel()">
+        <mat-icon>tune</mat-icon> Releases
+      </button>
+
+      <button mat-stroked-button (click)="loadData()">
+        <mat-icon>refresh</mat-icon> Refresh
+      </button>
+
+      <button mat-flat-button color="primary" (click)="openCreatePanel()">
+        <mat-icon>add</mat-icon> New Record
       </button>
     </div>
   </header>
 
-  <!-- Filter & Search Bar -->
-  <div class="filter-bar">
-    <mat-form-field appearance="outline" class="search-field">
-      <mat-label>Tìm kiếm theo mã Ticket...</mat-label>
-      <input matInput [(ngModel)]="searchText" (ngModelChange)="applyFilters()" placeholder="Ví dụ: MAG-20479">
+  <!-- ─── Toolbar (filters + group toggle) ────────────────────────────── -->
+  <div class="toolbar">
+    <mat-form-field appearance="outline" class="toolbar__search">
+      <mat-label>Search Ticket</mat-label>
+      <input matInput [(ngModel)]="searchText" (ngModelChange)="applyFilters()" placeholder="e.g. MAG-20479">
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" class="filter-select">
-      <mat-label>Kho nguồn (Repo)</mat-label>
+    <mat-form-field appearance="outline" class="toolbar__filter">
+      <mat-label>Repository</mat-label>
       <mat-select [(ngModel)]="selectedRepo" (selectionChange)="applyFilters()">
-        <mat-option value="">Tất cả</mat-option>
+        <mat-option value="">All</mat-option>
         <mat-option value="Core">Core</mat-option>
         <mat-option value="E-com">E-com</mat-option>
+        <mat-option value="CMS">CMS</mat-option>
+        <mat-option value="E-marketing">E-marketing</mat-option>
+        <mat-option value="Promotion">Promotion</mat-option>
       </mat-select>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" class="filter-select">
-      <mat-label>Bản Release (Fix version)</mat-label>
+    <mat-form-field appearance="outline" class="toolbar__filter">
+      <mat-label>Release Stream</mat-label>
       <mat-select [(ngModel)]="selectedRelease" (selectionChange)="applyFilters()">
-        <mat-option value="">Tất cả</mat-option>
-        <mat-option *ngFor="let rel of releases()" [value]="rel.version">
-          {{ rel.version }}
-        </mat-option>
+        <mat-select-trigger>{{ selectedRelease || 'All' }}</mat-select-trigger>
+        <mat-option value="">All</mat-option>
+        <mat-optgroup *ngFor="let group of releasesGrouped()" [label]="'Group ' + group.name">
+          <mat-option *ngFor="let rel of group.items" [value]="rel.version">{{ rel.version }}</mat-option>
+        </mat-optgroup>
       </mat-select>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" class="filter-select">
-      <mat-label>Trạng thái QC</mat-label>
+    <mat-form-field appearance="outline" class="toolbar__filter">
+      <mat-label>QC Status</mat-label>
       <mat-select [(ngModel)]="selectedQCStatus" (selectionChange)="applyFilters()">
-        <mat-option value="">Tất cả</mat-option>
-        <mat-option *ngFor="let status of qcStatuses" [value]="status">
-          {{ status }}
-        </mat-option>
+        <mat-option value="">All</mat-option>
+        <mat-option *ngFor="let s of qcStatuses" [value]="s">{{ s }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="toolbar__filter">
+      <mat-label>Branch Status</mat-label>
+      <mat-select [(ngModel)]="selectedStatus" (selectionChange)="applyFilters()">
+        <mat-option value="">All</mat-option>
+        <mat-option *ngFor="let s of statuses" [value]="s">{{ s | uppercase }}</mat-option>
       </mat-select>
     </mat-form-field>
   </div>
 
-  <!-- Spreadsheet Table Area -->
-  <div class="table-card mat-elevation-z2">
-    <table mat-table [dataSource]="filteredItems()" class="spreadsheet-table">
+  <!-- ─── Stats strip + group toggle ─────────────────────────────────── -->
+  <div style="display:flex; justify-content:flex-end; margin-bottom:12px; gap:8px;">
+    <button mat-stroked-button (click)="toggleSort()">
+      <mat-icon>{{ currentSort.icon }}</mat-icon>
+      Sort: {{ currentSort.label }}
+    </button>
+    <button mat-stroked-button (click)="toggleGrouping()" [color]="isGrouped() ? 'primary' : ''">
+      <mat-icon>{{ isGrouped() ? 'grid_on' : 'splitscreen' }}</mat-icon>
+      {{ isGrouped() ? 'Ungroup' : 'Group by Release' }}
+    </button>
+  </div>
+
+  <!-- ─── Data Grid ────────────────────────────────────────────────────── -->
+  <div class="data-grid">
+    <!-- Loading overlay -->
+    <div class="data-grid__loading-overlay" *ngIf="isLoading()">
+      <mat-spinner diameter="48"></mat-spinner>
+    </div>
+
+    <table mat-table [dataSource]="groupedDataSource()" class="data-grid__table">
+
+      <!-- Group Header Column -->
+      <ng-container matColumnDef="groupHeader">
+        <td mat-cell *matCellDef="let group" [attr.colspan]="displayedColumns.length"
+            class="release-group-cell"
+            [class.release-group-cell--level-2]="group.level === 2"
+            [class.release-group-cell--level-3]="group.level === 3">
+          <div class="release-group-cell__inner">
+            <mat-icon class="release-group-cell__icon">account_tree</mat-icon>
+            <span class="release-group-cell__label">
+              {{ group.level === 1 ? 'Release Group' : group.level === 2 ? 'Sub-release' : 'Patch' }}
+            </span>
+            <span class="release-group-cell__name">{{ group.groupName }}</span>
+            <span class="release-group-cell__count">{{ group.count }} items</span>
+          </div>
+        </td>
+
+      </ng-container>
 
       <!-- Repo Column -->
       <ng-container matColumnDef="repo">
-        <th mat-header-cell *mat-header-cellDef> Repos </th>
-        <td mat-cell *mat-cellDef="let item" class="repo-cell">
-          <span class="repo-badge" [ngClass]="item.repository.name === 'Core' ? 'repo-core' : 'repo-ecom'">
+        <th mat-header-cell *matHeaderCellDef>Repo</th>
+        <td mat-cell *matCellDef="let item">
+          <span class="row-badge" [ngClass]="getRepoBadgeClass(item.repository.name)">
             {{ item.repository.name }}
           </span>
         </td>
@@ -67,78 +127,71 @@
 
       <!-- Ticket Column -->
       <ng-container matColumnDef="ticket">
-        <th mat-header-cell *mat-header-cellDef> Ticket </th>
-        <td mat-cell *mat-cellDef="let item" class="ticket-cell">
-          <div *ngFor="let t of item.tickets" class="ticket-link">
-            {{ t.ticketId }}
-          </div>
+        <th mat-header-cell *matHeaderCellDef>Ticket</th>
+        <td mat-cell *matCellDef="let item">
+          <div *ngFor="let t of item.tickets" class="ticket-id">{{ t.ticketId }}</div>
         </td>
       </ng-container>
 
       <!-- Fix Version Column -->
       <ng-container matColumnDef="fixVersion">
-        <th mat-header-cell *mat-header-cellDef> Fix version </th>
-        <td mat-cell *mat-cellDef="let item">
-          {{ item.releaseStream?.version || '-' }}
-        </td>
+        <th mat-header-cell *matHeaderCellDef>Fix Version</th>
+        <td mat-cell *matCellDef="let item">{{ item.releaseStream?.version || '—' }}</td>
       </ng-container>
 
       <!-- Source Branch Column -->
       <ng-container matColumnDef="sourceBranch">
-        <th mat-header-cell *mat-header-cellDef> Available on branch(es) </th>
-        <td mat-cell *mat-cellDef="let item" class="branch-cell" [title]="item.sourceBranch">
-          <code>{{ item.sourceBranch }}</code>
+        <th mat-header-cell *matHeaderCellDef>Branch</th>
+        <td mat-cell *matCellDef="let item" [title]="item.sourceBranch">
+          <span class="code-chip">{{ item.sourceBranch }}</span>
         </td>
       </ng-container>
 
       <!-- Status Column -->
       <ng-container matColumnDef="status">
-        <th mat-header-cell *mat-header-cellDef> Status </th>
-        <td mat-cell *mat-cellDef="let item">
-          <span class="status-merged">{{ item.status }}</span>
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let item">
+          <span class="row-badge" [ngClass]="getStatusBadgeClass(item.status)">
+            {{ item.status | uppercase }}
+          </span>
         </td>
       </ng-container>
 
       <!-- Branch Build Column -->
       <ng-container matColumnDef="branchBuilds">
-        <th mat-header-cell *mat-header-cellDef> Branch build (Dev/Devel) </th>
-        <td mat-cell *mat-cellDef="let item" class="build-cell">
-          <code>{{ getBuildsString(item) }}</code>
+        <th mat-header-cell *matHeaderCellDef>Branch Build</th>
+        <td mat-cell *matCellDef="let item">
+          <span class="code-chip">{{ getBuildsString(item) }}</span>
         </td>
       </ng-container>
 
-      <!-- Merge Devel Column -->
+      <!-- Merge on Devel Column -->
       <ng-container matColumnDef="isMergedOnDevel">
-        <th mat-header-cell *mat-header-cellDef class="centered-header"> Merge on Devel </th>
-        <td mat-cell *mat-cellDef="let item" class="centered-cell">
-          <mat-checkbox 
-            [checked]="item.isMergedOnDevel" 
-            (change)="onMergeDevelChange(item, $event.checked)">
-          </mat-checkbox>
+        <th mat-header-cell *matHeaderCellDef class="col--center">Merge on Devel</th>
+        <td mat-cell *matCellDef="let item" class="col--center">
+          <mat-checkbox [checked]="item.isMergedOnDevel" (change)="onMergeDevelChange(item, $event.checked)"></mat-checkbox>
         </td>
       </ng-container>
 
       <!-- Change Type Column -->
       <ng-container matColumnDef="changeType">
-        <th mat-header-cell *mat-header-cellDef> Type </th>
-        <td mat-cell *mat-cellDef="let item">
-          <div *ngFor="let t of item.tickets" class="badge-container">
-            <span class="badge" [ngClass]="getChangeTypeClass(t.changeType)">
-              {{ t.changeType }}
-            </span>
+        <th mat-header-cell *matHeaderCellDef>Type</th>
+        <td mat-cell *matCellDef="let item">
+          <div *ngFor="let t of item.tickets">
+            <span class="row-badge" [ngClass]="getChangeTypeClass(t.changeType)">{{ t.changeType }}</span>
           </div>
         </td>
       </ng-container>
 
       <!-- QC Status Column -->
       <ng-container matColumnDef="qcStatus">
-        <th mat-header-cell *mat-header-cellDef> Ready For QC </th>
-        <td mat-cell *mat-cellDef="let item">
-          <div *ngFor="let t of item.tickets" class="qc-select-container">
-            <select 
-              [ngModel]="t.qcStatus" 
+        <th mat-header-cell *matHeaderCellDef>QC Ready</th>
+        <td mat-cell *matCellDef="let item">
+          <div *ngFor="let t of item.tickets">
+            <select
+              [ngModel]="t.qcStatus"
               (ngModelChange)="onQCStatusChange(t, $event)"
-              class="qc-inline-dropdown"
+              class="qc-select"
               [ngClass]="getQCStatusClass(t.qcStatus)">
               <option *ngFor="let opt of qcStatuses" [value]="opt">{{ opt }}</option>
             </select>
@@ -148,86 +201,253 @@
 
       <!-- Pending Issues Column -->
       <ng-container matColumnDef="pendingIssues">
-        <th mat-header-cell *mat-header-cellDef> Pending issues </th>
-        <td mat-cell *mat-cellDef="let item" class="pending-issues-cell">
-          <div *ngFor="let t of item.tickets" class="issues-text" [title]="t.pendingIssues || ''">
-            {{ t.pendingIssues || '-' }}
+        <th mat-header-cell *matHeaderCellDef>Pending Issues</th>
+        <td mat-cell *matCellDef="let item">
+          <div *ngFor="let t of item.tickets" class="pending-text" [title]="t.pendingIssues || ''">
+            {{ t.pendingIssues || '—' }}
           </div>
+        </td>
+      </ng-container>
+
+      <!-- Developer Column -->
+      <ng-container matColumnDef="developer">
+        <th mat-header-cell *matHeaderCellDef>Developer</th>
+        <td mat-cell *matCellDef="let item">
+          <span class="user-avatar" [title]="item.user?.email || ''">
+            <mat-icon style="font-size: 14px; width: 14px; height: 14px; margin-right: 4px; vertical-align: middle;">person</mat-icon>
+            {{ item.user?.username || '—' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Created At Column -->
+      <ng-container matColumnDef="createdAt">
+        <th mat-header-cell *matHeaderCellDef>Created</th>
+        <td mat-cell *matCellDef="let item" class="meta-cell">
+          {{ formatDate(item.createdAt) }}
+        </td>
+      </ng-container>
+
+      <!-- Updated At Column -->
+      <ng-container matColumnDef="updatedAt">
+        <th mat-header-cell *matHeaderCellDef>Updated</th>
+        <td mat-cell *matCellDef="let item" class="meta-cell">
+          {{ formatDate(item.updatedAt) }}
         </td>
       </ng-container>
 
       <!-- Actions Column -->
       <ng-container matColumnDef="actions">
-        <th mat-header-cell *mat-header-cellDef> Thao tác </th>
-        <td mat-cell *mat-cellDef="let item">
-          <div *ngFor="let t of item.tickets">
-            <button mat-icon-button color="accent" (click)="openEditPanel(item, t)" title="Chỉnh sửa chi tiết">
+        <th mat-header-cell *matHeaderCellDef class="col--center">Actions</th>
+        <td mat-cell *matCellDef="let item">
+          <div *ngFor="let t of item.tickets" class="row-actions">
+            <button mat-icon-button color="primary" (click)="openEditPanel(item, t)" title="Edit record">
               <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="deleteItem(item)" title="Delete record">
+              <mat-icon>delete_outline</mat-icon>
             </button>
           </div>
         </td>
       </ng-container>
 
-      <!-- Table Header and Row configuration -->
-      <tr mat-header-row *mat-header-rowDef="displayedColumns; sticky: true"></tr>
-      <tr mat-row *mat-rowDef="let row; columns: displayedColumns;" class="spreadsheet-row"></tr>
+      <!-- Header and Row definitions -->
+      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+      <tr mat-row *matRowDef="let row; columns: ['groupHeader']; when: isGroupHeaderRow" class="release-group-row"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
 
-      <!-- Row displayed when no data fits filters -->
+      <!-- Empty state -->
       <tr class="mat-row" *mat-noDataRow>
-        <td class="mat-cell empty-table-cell" colspan="11">
-          Không tìm thấy dữ liệu phù hợp với bộ lọc hiện tại.
+        <td class="mat-cell data-grid__empty-cell" colspan="11">
+          No records match the current filter criteria.
         </td>
       </tr>
     </table>
   </div>
 
-  <!-- Slide-over Edit Panel (Overlay sidebar) -->
-  <div class="edit-sidebar" [class.open]="activeItem !== null">
-    <div class="sidebar-header" *ngIf="activeTicket">
-      <h3>Cập nhật Ticket: {{ activeTicket.ticketId }}</h3>
-      <button mat-icon-button (click)="closeEditPanel()">
+  <!-- ─── Paginator ───────────────────────────────────────────────────── -->
+  <mat-paginator
+    [length]="totalItems()"
+    [pageSize]="pageSize()"
+    [pageIndex]="pageIndex()"
+    [pageSizeOptions]="[5, 10, 20, 50]"
+    (page)="onPageChange($event)"
+    aria-label="Select page"
+    class="paginator">
+  </mat-paginator>
+
+  <!-- ─── Sidebar Panel ────────────────────────────────────────────────── -->
+  <aside class="sidebar" [class.sidebar--open]="activeItem !== null">
+
+    <div class="sidebar__header">
+      <h3 class="sidebar__title" *ngIf="isCreateMode">New Deployment Record</h3>
+      <h3 class="sidebar__title" *ngIf="isConfigMode">Release Configuration</h3>
+      <h3 class="sidebar__title" *ngIf="!isCreateMode && !isConfigMode && activeTicket">
+        Edit — {{ activeTicket.ticketId }}
+      </h3>
+      <button mat-icon-button (click)="closeEditPanel()" aria-label="Close panel">
         <mat-icon>close</mat-icon>
       </button>
     </div>
 
-    <div class="sidebar-body" *ngIf="activeItem && activeTicket">
+    <!-- Create Mode Body -->
+    <div class="sidebar__body" *ngIf="isCreateMode">
+      <p class="sidebar__section-title">Record Details</p>
+
       <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Nhánh phát triển (Available branch)</mat-label>
+        <mat-label>Repository *</mat-label>
+        <mat-select [(ngModel)]="newRepoId">
+          <mat-option *ngFor="let repo of repositories()" [value]="repo.id">{{ repo.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Developer *</mat-label>
+        <mat-select [(ngModel)]="newUserId">
+          <mat-option *ngFor="let u of users()" [value]="u.id">{{ u.username }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Release Stream (Fix Version)</mat-label>
+        <mat-select [(ngModel)]="newReleaseVersion">
+          <mat-select-trigger>{{ newReleaseVersion || 'None' }}</mat-select-trigger>
+          <mat-option value="">None</mat-option>
+          <mat-optgroup *ngFor="let group of releasesGrouped()" [label]="'Group ' + group.name">
+            <mat-option *ngFor="let rel of group.items" [value]="rel.version">{{ rel.version }}</mat-option>
+          </mat-optgroup>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Development Branch *</mat-label>
+        <input matInput [(ngModel)]="newSourceBranch" placeholder="e.g. feature/auth-fix">
+      </mat-form-field>
+
+      <hr class="sidebar__divider">
+      <p class="sidebar__section-title">Ticket Information</p>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Ticket ID *</mat-label>
+        <input matInput [(ngModel)]="newTicketId" placeholder="e.g. MAG-20479">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Ticket Summary</mat-label>
+        <input matInput [(ngModel)]="newSummary" placeholder="Short description of the task">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Classification (Type)</mat-label>
+        <mat-select [(ngModel)]="newChangeType">
+          <mat-option *ngFor="let type of changeTypes" [value]="type">{{ type }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>QC Readiness Status</mat-label>
+        <mat-select [(ngModel)]="newQCStatus">
+          <mat-option *ngFor="let status of qcStatuses" [value]="status">{{ status }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Branch Status</mat-label>
+        <mat-select [(ngModel)]="newStatus">
+          <mat-option *ngFor="let s of statuses" [value]="s">{{ s | uppercase }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Pending Issues / Remarks</mat-label>
+        <textarea matInput rows="3" [(ngModel)]="newPendingIssues" placeholder="Enter any pending issues..."></textarea>
+      </mat-form-field>
+
+      <mat-checkbox [(ngModel)]="newIsMergedOnDevel">Merged to Devel</mat-checkbox>
+    </div>
+
+    <!-- Edit Mode Body -->
+    <div class="sidebar__body" *ngIf="!isCreateMode && activeItem && activeTicket">
+      <p class="sidebar__section-title">Branch Information</p>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Development Branch</mat-label>
         <input matInput [(ngModel)]="activeItem.sourceBranch">
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Phân loại (Type)</mat-label>
+        <mat-label>Branch Status</mat-label>
+        <mat-select [(ngModel)]="activeItem.status">
+          <mat-option *ngFor="let s of statuses" [value]="s">{{ s | uppercase }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Developer *</mat-label>
+        <mat-select [(ngModel)]="activeItem.userId">
+          <mat-option *ngFor="let u of users()" [value]="u.id">{{ u.username }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-checkbox [(ngModel)]="activeItem.isMergedOnDevel" style="margin-top:4px">
+        Merged to Devel
+      </mat-checkbox>
+
+      <hr class="sidebar__divider">
+      <p class="sidebar__section-title">Ticket Details</p>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Classification (Type)</mat-label>
         <mat-select [(ngModel)]="activeTicket.changeType">
           <mat-option *ngFor="let type of changeTypes" [value]="type">{{ type }}</mat-option>
         </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Trạng thái kiểm thử (Ready For QC)</mat-label>
+        <mat-label>QC Readiness Status</mat-label>
         <mat-select [(ngModel)]="activeTicket.qcStatus">
           <mat-option *ngFor="let status of qcStatuses" [value]="status">{{ status }}</mat-option>
         </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Lỗi tồn đọng / Ghi chú (Pending issues)</mat-label>
-        <textarea matInput rows="4" [(ngModel)]="activeTicket.pendingIssues" placeholder="Nhập ghi chú lỗi hoặc trạng thái..."></textarea>
+        <mat-label>Pending Issues / Remarks</mat-label>
+        <textarea matInput rows="4" [(ngModel)]="activeTicket.pendingIssues" placeholder="Enter pending issues or remarks..."></textarea>
       </mat-form-field>
-      
-      <div class="sidebar-checkbox">
-        <mat-checkbox [(ngModel)]="activeItem.isMergedOnDevel">
-          Đã merge vào Devel (Merge on Devel)
-        </mat-checkbox>
+    </div>
+
+    <!-- Release Config Mode Body -->
+    <div class="sidebar__body" *ngIf="isConfigMode">
+      <p class="sidebar__section-title">Active Release Streams</p>
+      <div class="release-chip-list">
+        <span *ngFor="let rel of releases()" class="release-chip">{{ rel.version }}</span>
+        <span *ngIf="releases().length === 0" class="release-chip-empty">No release streams configured.</span>
       </div>
+
+      <hr class="sidebar__divider">
+      <p class="sidebar__section-title">Add New Release Stream</p>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Version (e.g. sow/1.14.x)</mat-label>
+        <input matInput [(ngModel)]="newReleaseVersionName" placeholder="e.g. sow/1.14.x">
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" class="w-full" (click)="addReleaseVersion()">
+        <mat-icon>add</mat-icon> Add Release Stream
+      </button>
     </div>
 
-    <div class="sidebar-footer">
-      <button mat-stroked-button (click)="closeEditPanel()">Hủy bỏ</button>
-      <button mat-flat-button color="primary" (click)="saveTicketDetails()">Lưu thay đổi</button>
+    <div class="sidebar__footer">
+      <button mat-stroked-button (click)="closeEditPanel()">Cancel</button>
+      <button *ngIf="!isConfigMode" mat-flat-button color="primary" (click)="saveTicketDetails()">
+        Save Changes
+      </button>
     </div>
-  </div>
+  </aside>
 
-  <!-- Background overlay when edit sidebar is open -->
+  <!-- Backdrop -->
   <div class="sidebar-backdrop" *ngIf="activeItem !== null" (click)="closeEditPanel()"></div>
+
+  <!-- Toast notifications -->
+  <app-toast></app-toast>
 </div>

@@ -53,6 +53,7 @@ export interface DeploymentItem {
   isMergedOnDevel: boolean;
   mergedAt: string;
   createdAt: string;
+  updatedAt: string;
   repository: Repository;
   repositoryId: number;
   user: User;

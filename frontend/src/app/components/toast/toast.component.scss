@@ -1,0 +1,89 @@
+// ─── Toast Container ───────────────────────────────────────────────────────
+.toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  width: 360px;
+}
+
+// ─── Individual Toast ──────────────────────────────────────────────────────
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  pointer-events: all;
+  animation: toast-slide-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #1e293b;
+
+  // ─ Modifiers ────────────────────────────────────────────────────────────
+  &--success {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+    .toast__icon { color: #16a34a; }
+  }
+  &--error {
+    border-color: #fecaca;
+    background: #fff5f5;
+    .toast__icon { color: #dc2626; }
+  }
+  &--warn {
+    border-color: #fde68a;
+    background: #fffbeb;
+    .toast__icon { color: #d97706; }
+  }
+  &--info {
+    border-color: #bfdbfe;
+    background: #eff6ff;
+    .toast__icon { color: #2563eb; }
+  }
+
+  // ─ Elements ─────────────────────────────────────────────────────────────
+  &__icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  &__message {
+    flex: 1;
+    line-height: 1.45;
+  }
+  &__close {
+    all: unset;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    border-radius: 4px;
+    color: #94a3b8;
+    transition: color 0.15s;
+    &:hover { color: #475569; }
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  }
+}
+
+// ─── Animation ─────────────────────────────────────────────────────────────
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(40px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}

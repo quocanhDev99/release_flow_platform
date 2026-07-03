@@ -21,6 +21,12 @@
   border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
+.button-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .header-left {
   display: flex;
   align-items: center;
@@ -75,6 +81,7 @@
   border: 1px solid #e2e8f0;
   max-width: 100%;
   overflow-x: auto;
+  position: relative;
 }
 
 .spreadsheet-table {
@@ -346,4 +353,65 @@
   background-color: rgba(15, 23, 42, 0.3);
   backdrop-filter: blur(4px);
   z-index: 999;
+}
+
+/* Paginator Styling */
+.custom-paginator {
+  margin-top: 16px;
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  font-family: 'Outfit', sans-serif !important;
+  color: #475569;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.6);
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(2px);
+}
+
+/* Group Header Styling */
+.group-header-row {
+  background-color: #f1f5f9 !important;
+  font-family: 'Outfit', sans-serif;
+}
+
+.group-header-cell {
+  padding: 12px 24px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+  border-top: 1px solid #e2e8f0 !important;
+  letter-spacing: 0.5px;
+}
+
+.group-header-cell .group-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+  margin-right: 8px;
+  color: #3b82f6;
+}
+
+.group-header-cell .group-count {
+  margin-left: 8px;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  background-color: #e2e8f0;
+  padding: 2px 8px;
+  border-radius: 9999px;
 }
