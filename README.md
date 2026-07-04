@@ -17,7 +17,7 @@
 | 📄 [docs/05-database.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/05-database.md) | **Cơ sở dữ liệu & ERD:** Thiết kế thực thể liên kết chi tiết giữa các bảng trong Database. |
 | 📄 [docs/06-api.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/06-api.md) | **REST API:** Đặc tả kỹ thuật của các Endpoint giữa Client và NestJS Server. |
 | 📄 [docs/07-deployment.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/07-deployment.md) | **Quy trình Triển khai:** Hướng dẫn đóng gói Docker và đẩy lên máy chủ. |
-| 📄 [docs/08-roadmap.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/08-roadmap.md) | **Lộ trình phát triển:** Kế hoạch mở rộng từ V1 (MVP) đến V3 (Tự động hóa thông minh). |
+| 📄 [docs/08-roadmap.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/08-roadmap.md) | **Lộ trình phát triển:** Kế hoạch chi tiết từ V1 (MVP) đến V4 (Báo cáo & Tự động hóa thông minh). |
 | 📄 [docs/09-architectural-review.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/09-architectural-review.md) | **Đánh giá kiến trúc:** Các đề xuất cải tiến mã nguồn, hiệu năng và tính năng của hệ thống. |
 | 📄 [README_DEV.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/README_DEV.md) | **Local Dev Guide:** Hướng dẫn chạy Docker Database cục bộ, Migrate DB Prisma và Start Server/Client. |
 
@@ -156,3 +156,14 @@ Thư mục dự án Frontend nằm tại [frontend/](file:///d:/PROGRAMMING/PROJ
    ```
    *(Hoặc sử dụng lệnh: `npx ng serve`)*
 5. Mở trình duyệt và truy cập: `http://localhost:4200` để trải nghiệm giao diện quản lý của Release Flow Platform.
+
+---
+
+## 🗺️ Lộ trình Phát triển Tiếp theo (Future Roadmap)
+
+Dự án có định hướng phát triển lâu dài phục vụ tự động hóa luồng phát hành doanh nghiệp:
+*   **V2: CI/CD Webhooks & Automation:** Tự động kết xuất bản ghi từ GitHub/GitLab PR và bắn thông báo qua Slack/Teams.
+*   **V3: QA/QC Verification Hub:** Cổng xác thực QA/QC độc lập, liên kết Jira cảnh báo blocker bug.
+*   **V4: Analytics & Changelog Generator:** Tự động sinh tài liệu báo cáo Changelog (PDF/Markdown) và đo lường tần suất phát hành.
+
+👉 Xem lộ trình chi tiết tại: [docs/08-roadmap.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/08-roadmap.md)

@@ -22,16 +22,16 @@ Xây dựng một Nền tảng Trí tuệ Phát hành Nội bộ (Internal Relea
 ## Mục tiêu
 
 ### Trọng tâm MVP (Version 1)
-* **Xác thực & Bảo mật người dùng**: Đăng ký, đăng nhập bảo mật bằng bcrypt hashing, quản lý phiên làm việc cục bộ và phân quyền truy cập tuyến đường bằng Guard.
+* **Xác thực & Bảo mật người dùng**: Đăng ký, đăng nhập bảo mật bằng bcrypt hashing, quản lý phiên làm việc cục bộ, phân quyền truy cập tuyến đường bằng Guard, và cơ chế **Quên & Thiết lập lại Mật khẩu** bảo mật qua secure token có thời hạn 1 giờ.
 * **Theo dõi vết thay đổi nguồn**: Ghi nhận tự động ai đã thực hiện merge, từ nhánh nào sang nhánh nào (`dev` hoặc `devel`).
 * **Định vị phiên bản phát hành**: Liên kết mỗi sự kiện merge với một số phiên bản phát hành cụ thể (`ReleaseStream`).
 * **Theo dõi đích bản build**: Ghi nhận trạng thái và môi trường build đích tương ứng.
 * **Cấu hình giao diện cá nhân**: Cho phép người dùng chuyển đổi giao diện Sáng/Tối và đồng bộ cấu hình này lên cơ sở dữ liệu.
 
 ### Tầm nhìn dài hạn (Version 2+)
-* **Trực quan hóa quy trình triển khai**: Quản lý pipeline qua các môi trường STG, UAT và Production.
-* **Giảm thiểu rủi ro triển khai**: Kiểm soát khung giờ triển khai (Deployment Windows) và các cổng chất lượng.
-* **Cải thiện việc lên kế hoạch phát hành**: Sử dụng phân tích dữ liệu và AI để tối ưu hóa việc phân chia và sắp xếp lịch phát hành.
+* **Tự động hóa qua Webhook (Version 2)**: Tích hợp trực tiếp với GitHub/GitLab Webhooks để tự động hóa khâu tạo bản ghi deployment từ PR/Merge events và phát thông báo qua Slack/Teams.
+* **Cổng xác thực chất lượng & Phân quyền (Version 3)**: Xây dựng cổng kiểm thử QA/QC, phân quyền người dùng (Dev, QA, Release Manager) và kết nối Jira API để tự động chặn phát hành nếu phát hiện lỗi blocker.
+* **Báo cáo & Phân tích thông minh (Version 4)**: Tự động xuất tài liệu Release Notes / Changelog (PDF/Markdown) theo Change Type và đo lường tần suất phát hành qua biểu đồ trực quan.
 
 ---
 
