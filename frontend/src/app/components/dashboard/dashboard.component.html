@@ -60,11 +60,7 @@
       <mat-label>Repository</mat-label>
       <mat-select [(ngModel)]="selectedRepo" (selectionChange)="applyFilters()">
         <mat-option value="">All</mat-option>
-        <mat-option value="Core">Core</mat-option>
-        <mat-option value="E-com">E-com</mat-option>
-        <mat-option value="CMS">CMS</mat-option>
-        <mat-option value="E-marketing">E-marketing</mat-option>
-        <mat-option value="Promotion">Promotion</mat-option>
+        <mat-option *ngFor="let repo of repositories()" [value]="repo.name">{{ repo.name }}</mat-option>
       </mat-select>
     </mat-form-field>
 
@@ -73,9 +69,10 @@
       <mat-select [(ngModel)]="selectedRelease" (selectionChange)="applyFilters()">
         <mat-select-trigger>{{ selectedRelease || 'All' }}</mat-select-trigger>
         <mat-option value="">All</mat-option>
-        <mat-optgroup *ngFor="let group of releasesGrouped()" [label]="'Group ' + group.name">
-          <mat-option *ngFor="let rel of group.items" [value]="rel.version">{{ rel.version }}</mat-option>
-        </mat-optgroup>
+        <mat-option *ngFor="let rel of sortedReleasesWithIndent()" [value]="rel.version">
+          <span *ngFor="let space of rel.indentArray" style="display: inline-block; width: 16px;"></span>
+          {{ rel.displayName }}
+        </mat-option>
       </mat-select>
     </mat-form-field>
 
@@ -132,7 +129,10 @@
               <mat-panel-title>
                 <mat-icon class="version-panel__icon">account_tree</mat-icon>
                 <span class="version-panel__label">Release Group</span>
-                <span class="version-panel__name">{{ l1.versionKey }}{{ l1.versionKey === 'Unclassified' ? '' : 'x' }}</span>
+                <span class="version-panel__name">{{ l1.versionKey === 'Unclassified' ? 'Unclassified' : l1.versionKey }}</span>
+                <mat-icon *ngIf="l1.versionKey !== 'Unclassified'" class="version-panel__add-sub" (click)="openCreatePanelWithVersion(l1.versionKey, $event)" title="Add deployment record under this version">
+                  add_circle_outline
+                </mat-icon>
               </mat-panel-title>
               <mat-panel-description>
                 <span class="version-panel__count">{{ l1.totalCount }} items</span>
@@ -152,7 +152,10 @@
                     <mat-panel-title>
                       <mat-icon class="version-panel__icon">subdirectory_arrow_right</mat-icon>
                       <span class="version-panel__label">Sub-release</span>
-                      <span class="version-panel__name">{{ l2.versionKey }}x</span>
+                      <span class="version-panel__name">{{ l2.versionKey }}</span>
+                      <mat-icon class="version-panel__add-sub" (click)="openCreatePanelWithVersion(l2.versionKey, $event)" title="Add deployment record under this version">
+                        add_circle_outline
+                      </mat-icon>
                     </mat-panel-title>
                     <mat-panel-description>
                       <span class="version-panel__count">{{ l2.totalCount }} items</span>
@@ -172,7 +175,10 @@
                           <mat-panel-title>
                             <mat-icon class="version-panel__icon">tag</mat-icon>
                             <span class="version-panel__label">Patch</span>
-                            <span class="version-panel__name">{{ l3.versionKey }}x</span>
+                            <span class="version-panel__name">{{ l3.versionKey }}</span>
+                            <mat-icon class="version-panel__add-sub" (click)="openCreatePanelWithVersion(l3.versionKey, $event)" title="Add deployment record under this version">
+                              add_circle_outline
+                            </mat-icon>
                           </mat-panel-title>
                           <mat-panel-description>
                             <span class="version-panel__count">{{ l3.totalCount }} items</span>
@@ -225,7 +231,7 @@
         <!-- Fix Version Column -->
         <ng-container matColumnDef="fixVersion">
           <th mat-header-cell *matHeaderCellDef>Fix Version</th>
-          <td mat-cell *matCellDef="let item">{{ item.releaseStream?.version || '—' }}</td>
+          <td mat-cell *matCellDef="let item">{{ cleanVersion(item.releaseStream?.version) }}</td>
         </ng-container>
 
         <!-- Source Branch Column -->
@@ -370,7 +376,7 @@
 
     <div class="sidebar__header">
       <h3 class="sidebar__title" *ngIf="isCreateMode">New Deployment Record</h3>
-      <h3 class="sidebar__title" *ngIf="isConfigMode">Release Configuration</h3>
+      <h3 class="sidebar__title" *ngIf="isConfigMode">System Configuration</h3>
       <h3 class="sidebar__title" *ngIf="!isCreateMode && !isConfigMode && activeTicket">
         Edit — {{ activeTicket.ticketId }}
       </h3>
@@ -402,9 +408,10 @@
         <mat-select [(ngModel)]="newReleaseVersion">
           <mat-select-trigger>{{ newReleaseVersion || 'None' }}</mat-select-trigger>
           <mat-option value="">None</mat-option>
-          <mat-optgroup *ngFor="let group of releasesGrouped()" [label]="'Group ' + group.name">
-            <mat-option *ngFor="let rel of group.items" [value]="rel.version">{{ rel.version }}</mat-option>
-          </mat-optgroup>
+          <mat-option *ngFor="let rel of sortedReleasesWithIndent()" [value]="rel.version">
+            <span *ngFor="let space of rel.indentArray" style="display: inline-block; width: 16px;"></span>
+            {{ rel.displayName }}
+          </mat-option>
         </mat-select>
       </mat-form-field>
 
@@ -519,24 +526,51 @@
       </mat-form-field>
     </div>
 
-    <!-- Release Config Mode Body -->
+    <!-- Release & Repository Config Mode Body -->
     <div class="sidebar__body" *ngIf="isConfigMode">
+      <!-- 1. Release Streams section -->
       <p class="sidebar__section-title">Active Release Streams</p>
       <div class="release-chip-list">
-        <span *ngFor="let rel of releases()" class="release-chip">{{ rel.version }}</span>
+        <span *ngFor="let rel of releases()" class="release-chip">
+          {{ rel.version }}
+          <mat-icon class="release-chip__remove" (click)="deleteReleaseStream(rel, $event)">close</mat-icon>
+        </span>
         <span *ngIf="releases().length === 0" class="release-chip-empty">No release streams configured.</span>
       </div>
 
-      <hr class="sidebar__divider">
-      <p class="sidebar__section-title">Add New Release Stream</p>
-
-      <mat-form-field appearance="outline" class="w-full">
+      <mat-form-field appearance="outline" class="w-full" style="margin-top: 8px;">
         <mat-label>Version (e.g. sow/1.14.x)</mat-label>
         <input matInput [(ngModel)]="newReleaseVersionName" placeholder="e.g. sow/1.14.x">
       </mat-form-field>
 
-      <button mat-flat-button color="primary" class="w-full" (click)="addReleaseVersion()">
+      <button mat-flat-button color="primary" class="w-full" (click)="addReleaseVersion()" style="margin-bottom: 16px;">
         <mat-icon>add</mat-icon> Add Release Stream
+      </button>
+
+      <hr class="sidebar__divider">
+
+      <!-- 2. Repositories section -->
+      <p class="sidebar__section-title">Active Repositories</p>
+      <div class="release-chip-list">
+        <span *ngFor="let repo of repositories()" class="release-chip">
+          {{ repo.name }}
+          <mat-icon class="release-chip__remove" (click)="deleteRepository(repo, $event)">close</mat-icon>
+        </span>
+        <span *ngIf="repositories().length === 0" class="release-chip-empty">No repositories configured.</span>
+      </div>
+
+      <mat-form-field appearance="outline" class="w-full" style="margin-top: 8px;">
+        <mat-label>Repository Name (e.g. CMS)</mat-label>
+        <input matInput [(ngModel)]="newRepoName" placeholder="e.g. CMS">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Git URL (Optional)</mat-label>
+        <input matInput [(ngModel)]="newRepoGitUrl" placeholder="https://github.com/...">
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" class="w-full" (click)="addRepository()">
+        <mat-icon>add</mat-icon> Add Repository
       </button>
     </div>
 

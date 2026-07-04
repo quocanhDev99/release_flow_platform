@@ -55,6 +55,30 @@ async function main() {
             gitUrl: 'https://github.com/quocanhDev99/release_flow_platform_ecom.git',
         },
     });
+    const repoCms = await prisma.repository.upsert({
+        where: { name: 'CMS' },
+        update: {},
+        create: {
+            name: 'CMS',
+            gitUrl: 'https://github.com/quocanhDev99/release_flow_platform_cms.git',
+        },
+    });
+    const repoMarketing = await prisma.repository.upsert({
+        where: { name: 'E-marketing' },
+        update: {},
+        create: {
+            name: 'E-marketing',
+            gitUrl: 'https://github.com/quocanhDev99/release_flow_platform_emarketing.git',
+        },
+    });
+    const repoPromotion = await prisma.repository.upsert({
+        where: { name: 'Promotion' },
+        update: {},
+        create: {
+            name: 'Promotion',
+            gitUrl: 'https://github.com/quocanhDev99/release_flow_platform_promotion.git',
+        },
+    });
     console.log('Seed Repositories completed.');
     const envs = [
         { name: 'dev', description: 'Môi trường phát triển cục bộ của lập trình viên' },
@@ -124,7 +148,7 @@ async function main() {
                         ticketId: 'MAG-20479',
                         summary: 'Sửa lỗi hiển thị nút đăng nhập trên mobile',
                         changeType: 'Fix bug',
-                        qcStatus: 'passed',
+                        qcStatus: 'Passed',
                     },
                 ],
             },
@@ -160,7 +184,7 @@ async function main() {
                         ticketId: 'MAG-20550',
                         summary: 'Tối ưu hóa thời gian tải giỏ hàng',
                         changeType: 'Enhance',
-                        qcStatus: 'ready for QC',
+                        qcStatus: 'Ready',
                         pendingIssues: 'Cần tối ưu thêm các câu lệnh SQL query',
                     },
                 ],
@@ -191,7 +215,7 @@ async function main() {
                         ticketId: 'MAG-20600',
                         summary: 'Tích hợp đăng nhập một lần SSO',
                         changeType: 'Feature',
-                        qcStatus: 'waiting for QC test',
+                        qcStatus: 'Waiting',
                     },
                 ],
             },

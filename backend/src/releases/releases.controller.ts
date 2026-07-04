@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
 import { ReleasesService } from './releases.service';
 
 @Controller('releases')
@@ -13,5 +13,10 @@ export class ReleasesController {
   @Post()
   create(@Body('version') version: string) {
     return this.releasesService.create(version);
+  }
+
+  @Delete(':id')
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.releasesService.remove(id);
   }
 }

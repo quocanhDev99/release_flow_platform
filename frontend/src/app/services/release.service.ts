@@ -60,9 +60,21 @@ export class ReleaseService {
     return this.http.post<ReleaseStream>(`${this.apiUrl}/releases`, { version });
   }
 
+  deleteRelease(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/releases/${id}`);
+  }
+
   // Repositories
   getRepositories(): Observable<Repository[]> {
     return this.http.get<Repository[]>(`${this.apiUrl}/repositories`);
+  }
+
+  createRepository(name: string, gitUrl?: string): Observable<Repository> {
+    return this.http.post<Repository>(`${this.apiUrl}/repositories`, { name, gitUrl });
+  }
+
+  deleteRepository(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/repositories/${id}`);
   }
 
   // Users

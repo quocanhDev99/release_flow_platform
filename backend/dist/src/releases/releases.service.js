@@ -58,6 +58,17 @@ let ReleasesService = class ReleasesService {
             data: { version },
         });
     }
+    async remove(id) {
+        return this.prisma.$transaction(async (tx) => {
+            await tx.deploymentItem.updateMany({
+                where: { releaseStreamId: id },
+                data: { releaseStreamId: null },
+            });
+            return tx.releaseStream.delete({
+                where: { id },
+            });
+        });
+    }
 };
 exports.ReleasesService = ReleasesService;
 exports.ReleasesService = ReleasesService = __decorate([

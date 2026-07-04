@@ -123,7 +123,7 @@ export class DashboardComponent implements OnInit {
       const level = key === 'unclassified' ? 1 : Math.min(3, Math.max(1, parts.length - 1));
       result.push({
         isHeader: true,
-        groupName: key === 'unclassified' ? 'Unclassified' : key + 'x',
+        groupName: key === 'unclassified' ? 'Unclassified' : key,
         level,
         count: groupItems.length
       });
@@ -151,7 +151,7 @@ export class DashboardComponent implements OnInit {
 
       const parts = key.split('.').map(Number);
       const l1Key = parts.slice(0, 2).join('.');
-      
+
       let l1Node = level1Map.get(l1Key);
       if (!l1Node) {
         l1Node = { versionKey: l1Key, level: 1, directItems: [], subNodes: [], totalCount: 0 };
@@ -297,6 +297,39 @@ export class DashboardComponent implements OnInit {
     });
   });
 
+  sortedReleasesWithIndent = computed(() => {
+    const list = [...this.releases()].sort((a, b) => {
+      const matchA = a.version.match(/\d+(\.\d+)+/);
+      const matchB = b.version.match(/\d+(\.\d+)+/);
+      if (!matchA || !matchB) return a.version.localeCompare(b.version);
+
+      const partsA = matchA[0].split('.').map(Number);
+      const partsB = matchB[0].split('.').map(Number);
+      const maxLen = Math.max(partsA.length, partsB.length);
+      for (let i = 0; i < maxLen; i++) {
+        const valA = partsA[i] !== undefined ? partsA[i] : 0;
+        const valB = partsB[i] !== undefined ? partsB[i] : 0;
+        if (valA !== valB) return valA - valB;
+      }
+      return 0;
+    });
+
+    return list.map(rel => {
+      const match = rel.version.match(/\d+(\.\d+)*/);
+      const key = match ? match[0] : rel.version;
+      const parts = key.split('.').map(Number);
+      // Depth level: 2 parts (e.g., 1.12) -> 0, 3 parts (e.g., 1.12.1) -> 1, 4 parts -> 2, etc.
+      const depth = Math.max(0, parts.length - 2);
+      const indentArray = Array(depth).fill(0);
+      return {
+        version: rel.version,
+        displayName: key,
+        depth,
+        indentArray
+      };
+    });
+  });
+
   // Search & Filter state
   searchText = '';
   selectedRepo = '';
@@ -330,6 +363,8 @@ export class DashboardComponent implements OnInit {
   isConfigMode = false;
   newReleaseVersionName = '';
   newReleaseVersion = '';
+  newRepoName = '';
+  newRepoGitUrl = '';
   newRepoId: number | null = null;
   newUserId: number | null = null;
   newReleaseStreamId: number | null = null;
@@ -367,10 +402,11 @@ export class DashboardComponent implements OnInit {
 
   // QC Status dropdown options
   qcStatuses: string[] = [
-    'waiting for QC test',
-    'ready for QC',
-    'passed',
-    'failed'
+    '—',
+    'Waiting',
+    'Ready',
+    'Passed',
+    'Failed'
   ];
 
   // Change type options
@@ -543,8 +579,8 @@ export class DashboardComponent implements OnInit {
     const managedEnvs = ['dev', 'dev2', 'devel'];
     this.activeBranchBuilds = item.builds
       ? item.builds
-          .filter(b => b.status === 'SUCCESS' && b.environment && managedEnvs.includes(b.environment.name))
-          .map(b => b.environment.name)
+        .filter(b => b.status === 'SUCCESS' && b.environment && managedEnvs.includes(b.environment.name))
+        .map(b => b.environment.name)
       : [];
   }
 
@@ -558,7 +594,7 @@ export class DashboardComponent implements OnInit {
     this.newTicketId = '';
     this.newSummary = '';
     this.newChangeType = 'Feature';
-    this.newQCStatus = 'waiting for QC test';
+    this.newQCStatus = '—';
     this.newPendingIssues = '';
     this.newIsMergedOnDevel = false;
     this.newStatus = 'merged';
@@ -579,6 +615,8 @@ export class DashboardComponent implements OnInit {
   openConfigPanel() {
     this.isConfigMode = true;
     this.newReleaseVersionName = '';
+    this.newRepoName = '';
+    this.newRepoGitUrl = '';
     // Use dummy activeItem to open sidebar
     this.activeItem = {} as any;
   }
@@ -598,6 +636,71 @@ export class DashboardComponent implements OnInit {
       error: (err) => {
         console.error(err);
         this.toast.error('An error occurred or this release stream already exists.');
+      }
+    });
+  }
+
+  openCreatePanelWithVersion(versionKey: string, event: MouseEvent) {
+    event.stopPropagation();
+    this.openCreatePanel();
+
+    // Find the original release version in the DB list that matches this clean key
+    const match = this.releases().find(r => this.cleanVersion(r.version) === versionKey);
+    if (match) {
+      this.newReleaseVersion = match.version;
+    }
+  }
+
+  addRepository() {
+    if (!this.newRepoName.trim()) {
+      this.toast.warn('Please enter a repository name.');
+      return;
+    }
+
+    this.releaseService.createRepository(this.newRepoName.trim(), this.newRepoGitUrl.trim() || undefined).subscribe({
+      next: (repo) => {
+        this.toast.success(`Repository ${repo.name} added successfully.`);
+        this.newRepoName = '';
+        this.newRepoGitUrl = '';
+        this.loadData();
+      },
+      error: (err) => {
+        console.error(err);
+        this.toast.error('An error occurred or this repository already exists.');
+      }
+    });
+  }
+
+  deleteReleaseStream(rel: any, event: MouseEvent) {
+    event.stopPropagation();
+    const confirmed = confirm(`Are you sure you want to delete the release stream "${rel.version}"?`);
+    if (!confirmed) return;
+
+    this.releaseService.deleteRelease(rel.id).subscribe({
+      next: () => {
+        this.toast.success(`Release stream "${rel.version}" deleted successfully.`);
+        this.loadData();
+      },
+      error: (err) => {
+        console.error(err);
+        this.toast.error(err.error?.message || 'Failed to delete release stream.');
+      }
+    });
+  }
+
+  deleteRepository(repo: any, event: MouseEvent) {
+    event.stopPropagation();
+    const confirmed = confirm(`Are you sure you want to delete the repository "${repo.name}"? This will also delete all associated deployment records under it.`);
+    if (!confirmed) return;
+
+    this.releaseService.deleteRepository(repo.id).subscribe({
+      next: () => {
+        this.toast.success(`Repository "${repo.name}" deleted successfully.`);
+        this.loadData();
+      },
+      error: (err) => {
+        console.error(err);
+        this.toast.error(err.error?.message || 'Failed to delete repository.');
       }
     });
   }
@@ -784,6 +887,9 @@ export class DashboardComponent implements OnInit {
     const n = (name || '').toLowerCase();
     if (n === 'core') return 'row-badge--core';
     if (n === 'e-com') return 'row-badge--ecom';
+    if (n === 'cms') return 'row-badge--cms';
+    if (n === 'e-marketing') return 'row-badge--emarketing';
+    if (n === 'promotion') return 'row-badge--promotion';
     return 'row-badge--default-repo';
   }
 
@@ -797,8 +903,8 @@ export class DashboardComponent implements OnInit {
   }
 
   getQCStatusClass(status: string): string {
-    switch (status) {
-      case 'ready for QC': return 'qc-select--ready';
+    switch ((status || '').toLowerCase()) {
+      case 'ready': return 'qc-select--ready';
       case 'passed': return 'qc-select--passed';
       case 'failed': return 'qc-select--failed';
       default: return 'qc-select--waiting';
@@ -815,6 +921,12 @@ export class DashboardComponent implements OnInit {
     const hh = String(d.getHours()).padStart(2, '0');
     const min = String(d.getMinutes()).padStart(2, '0');
     return `${dd}/${mm}/${yy} ${hh}:${min}`;
+  }
+
+  cleanVersion(version?: string): string {
+    if (!version) return '—';
+    const match = version.match(/\d+(\.\d+)*/);
+    return match ? match[0] : version;
   }
 }
 

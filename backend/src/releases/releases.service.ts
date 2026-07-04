@@ -54,4 +54,17 @@ export class ReleasesService {
       data: { version },
     });
   }
+
+  async remove(id: number) {
+    return this.prisma.$transaction(async (tx) => {
+      // Manually set releaseStreamId to null on associated deployment items to prevent FK errors
+      await tx.deploymentItem.updateMany({
+        where: { releaseStreamId: id },
+        data: { releaseStreamId: null },
+      });
+      return tx.releaseStream.delete({
+        where: { id },
+      });
+    });
+  }
 }

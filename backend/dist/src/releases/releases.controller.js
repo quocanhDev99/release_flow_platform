@@ -26,6 +26,9 @@ let ReleasesController = class ReleasesController {
     create(version) {
         return this.releasesService.create(version);
     }
+    remove(id) {
+        return this.releasesService.remove(id);
+    }
 };
 exports.ReleasesController = ReleasesController;
 __decorate([
@@ -41,6 +44,13 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ReleasesController.prototype, "create", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], ReleasesController.prototype, "remove", null);
 exports.ReleasesController = ReleasesController = __decorate([
     (0, common_1.Controller)('releases'),
     __metadata("design:paramtypes", [releases_service_1.ReleasesService])

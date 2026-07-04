@@ -70,7 +70,7 @@ model Ticket {
   ticketId          String         // e.g., MAG-20479
   summary           String?
   changeType        String         // Feature, Fix bug, Enhance
-  qcStatus          String         @default("waiting for QC test") // waiting for QC test, ready for QC, passed, failed
+  qcStatus          String         @default("—") // —, Waiting, Ready, Passed, Failed
   pendingIssues     String?
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt

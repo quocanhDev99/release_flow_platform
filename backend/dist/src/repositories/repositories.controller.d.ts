@@ -9,4 +9,21 @@ export declare class RepositoriesController {
         createdAt: Date;
         updatedAt: Date;
     }[]>;
+    create(body: {
+        name: string;
+        gitUrl?: string;
+    }): import("@prisma/client").Prisma.Prisma__RepositoryClient<{
+        id: number;
+        name: string;
+        gitUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }, never, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    remove(id: number): Promise<{
+        id: number;
+        name: string;
+        gitUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
 }

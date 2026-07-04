@@ -13,4 +13,11 @@ export declare class ReleasesController {
         version: string;
         status: string;
     }>;
+    remove(id: number): Promise<{
+        id: number;
+        createdAt: Date;
+        updatedAt: Date;
+        version: string;
+        status: string;
+    }>;
 }

@@ -42,10 +42,17 @@ Nằm tại thư mục `frontend/`, được phát triển bằng **Angular 20**
     *   Tự xây dựng `ToastService` dạng hàng đợi (Queue Queue) độc lập dựa trên Signals để phát thông báo động khắp ứng dụng.
 *   **Giao diện & Thành phần UI:**
     *   **Bảng dữ liệu Excel-like Grid:** Sử dụng `<table mat-table>` kết hợp phân trang máy chủ (`<mat-paginator>`). Tích hợp hiệu ứng làm mờ kính (`backdrop-blur` overlay) và spinner loading thông minh ngăn chặn bấm nhầm dữ liệu.
-    *   **Gom nhóm đa cấp độ động (Hierarchical Grouping):** Thuật toán tự động bóc tách các Fix Version số học và phân loại sâu không giới hạn cấp độ:
-        *   **Cấp 1 (1.x):** Group chính (vd: `1.9x`, `1.12x`), nhãn chữ màu xanh lam và viền điểm nhấn trái.
-        *   **Cấp 2 (1.x.x):** Sub-release (vd: `1.9.5x`), thụt lề 36px, nhãn chữ màu xanh ngọc.
-        *   **Cấp 3 (1.x.x.x):** Patch (vd: `1.12.1.2x`), thụt lề 52px, nhãn chữ màu tím.
+    *   **Gom nhóm đa cấp độ động dạng Cây (Tree-indented Grouping):** Thuật toán bóc tách và loại bỏ ký tự `x` dư thừa ở đuôi phiên bản, tự động tổ chức hiển thị dạng cây phân cấp trực quan:
+        *   **Cấp 1 (Ví dụ: `1.12`):** Group chính (Release Group), nhãn chữ xanh lam làm chuẩn kèm viền nhấn trái.
+        *   **Cấp 2 (Ví dụ: `1.12.1`):** Sub-release thụt lề vào trong, nhãn chữ xanh ngọc.
+        *   **Cấp 3 (Ví dụ: `1.12.1.1`):** Patch thụt lề sâu hơn, nhãn chữ tím.
+    *   **Khởi tạo Bản ghi ngữ cảnh (Contextual Quick-create):** Click trực tiếp biểu tượng **`+`** tại bất kỳ tiêu đề phiên bản nào (`1.12`, `1.12.1`...) để mở form tạo mới, hệ thống tự động điền sẵn phiên bản tương ứng giúp loại bỏ thao tác chọn thủ công.
+    *   **Quản lý Cấu hình Động & Xóa liên tầng (Cascade Deletion):** Hỗ trợ thêm/xóa nhanh Repository và Release Stream dưới dạng các thẻ Chip trong bảng điều khiển. Việc xóa được bảo vệ bằng cửa sổ xác nhận an toàn (Confirm Popup) và tự động dọn sạch các bản ghi phụ thuộc (cascade deletion) trong một Database Transaction duy nhất để bảo đảm toàn vẹn dữ liệu.
+    *   **Nâng cấp Giao diện Chuẩn Doanh nghiệp (Enterprise UI/UX):**
+        *   Màu sắc Repository (`Core`, `CMS`...) và Status được cải tiến sang dạng nền bán trong suốt nhẹ nhàng phối hợp viền tinh tế, tự động tương thích Light/Dark mode.
+        *   Các nút thao tác Chỉnh sửa/Xóa trong bảng mặc định được làm mờ nhẹ (muted) giảm nhiễu thị giác, tự động sáng rõ và đổi màu đặc trưng khi di chuột qua.
+        *   Đường liên kết phân cấp dạng cây chuyển từ nét đứt sang nét liền xanh dương thanh lịch.
+        *   Tiêu đề bảng sử dụng font chữ mỏng trung bình (`weight: 600`) cho cảm giác thoáng đãng và chuyên nghiệp hơn.
     *   **Dynamic Sorting (Sắp xếp Động):** Người dùng có thể nhấn nút Sort xoay vòng trực quan trên Action Bar để đổi thứ tự sắp xếp theo `Ngày tạo` hoặc `Phiên bản Release` từ xa qua API.
     *   **Custom Modals & Toasts:** Thay thế hoàn toàn các hàm `alert()` và `confirm()` gốc của trình duyệt bằng `ToastComponent` động góc phải màn hình và hộp thoại xác nhận chuyên nghiệp `ConfirmDialogComponent`.
     *   **Hộp lọc thả xuống thông minh:** Phân loại Fix Version theo dạng nhóm cây gọn gàng thông qua component `<mat-optgroup>`.

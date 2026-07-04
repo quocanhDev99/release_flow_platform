@@ -192,6 +192,7 @@ $transition-base: all 0.2s ease;
   position: relative;
   box-shadow: $shadow-card;
   margin-bottom: 12px;
+  min-height: 280px; // Prevent collapse and ensure centered spinner when loading/empty
 
   &__table {
     width: 100%;
@@ -204,7 +205,7 @@ $transition-base: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.65);
+    background: var(--color-loading-bg);
     backdrop-filter: blur(3px);
     z-index: 10;
   }
@@ -250,14 +251,14 @@ $transition-base: all 0.2s ease;
 // ─── Table Header ──────────────────────────────────────────────────────────
 .data-grid__table {
   th.mat-mdc-header-cell {
-    background: $color-bg-subtle !important;
+    background-color: $color-bg-subtle !important;
     color: $color-text-muted !important;
-    font-weight: 700 !important;
-    font-size: 11px !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.4px;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
-    padding: 13px 14px !important;
-    border-bottom: 2px solid $color-border-strong !important;
+    padding: 12px 14px !important;
+    border-bottom: 2px solid $color-border !important;
     font-family: $font-primary;
     white-space: nowrap;
   }
@@ -293,23 +294,38 @@ $transition-base: all 0.2s ease;
 .row-badge {
   display: inline-flex;
   align-items: center;
-  padding: 3px 9px;
+  padding: 2.5px 8px;
   border-radius: $radius-pill;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
   border: 1px solid transparent;
 
   // ── Repo modifiers ──────────────────────────────────────────────────────
   &--core {
     background: $color-brand-light;
-    color: $color-brand-dark;
-    border-color: #bfdbfe;
+    color: $color-brand;
+    border-color: rgba(59, 130, 246, 0.25);
   }
   &--ecom {
     background: $color-success-bg;
     color: $color-success;
     border-color: $color-success-border;
+  }
+  &--cms {
+    background: $color-purple-bg;
+    color: $color-purple;
+    border-color: rgba(124, 58, 237, 0.25);
+  }
+  &--emarketing {
+    background: $color-warn-bg;
+    color: $color-warn;
+    border-color: $color-warn-border;
+  }
+  &--promotion {
+    background: $color-danger-bg;
+    color: $color-danger;
+    border-color: $color-danger-border;
   }
   &--default-repo {
     background: $color-bg-subtle;
@@ -319,9 +335,9 @@ $transition-base: all 0.2s ease;
 
   // ── Change-type modifiers ────────────────────────────────────────────────
   &--feature {
-    background: #e0f2fe;
-    color: #0369a1;
-    border-color: #bae6fd;
+    background: $color-brand-light;
+    color: $color-brand;
+    border-color: rgba(59, 130, 246, 0.25);
   }
   &--bug {
     background: $color-danger-bg;
@@ -331,7 +347,7 @@ $transition-base: all 0.2s ease;
   &--enhance {
     background: $color-purple-bg;
     color: $color-purple;
-    border-color: #ddd6fe;
+    border-color: rgba(124, 58, 237, 0.25);
   }
 
   // ── Branch-status modifiers ──────────────────────────────────────────────
@@ -346,9 +362,9 @@ $transition-base: all 0.2s ease;
     border-color: $color-warn-border;
   }
   &--closed {
-    background: #f1f5f9;
+    background: $color-bg-subtle;
     color: $color-text-muted;
-    border-color: $color-border-strong;
+    border-color: $color-border;
   }
 }
 
@@ -642,7 +658,8 @@ $transition-base: all 0.2s ease;
 .release-chip {
   display: inline-flex;
   align-items: center;
-  padding: 4px 12px;
+  gap: 6px;
+  padding: 4px 8px 4px 12px;
   border-radius: $radius-pill;
   background: $color-bg-subtle;
   border: 1px solid $color-border;
@@ -650,6 +667,25 @@ $transition-base: all 0.2s ease;
   font-weight: 600;
   color: $color-text-body;
   font-family: $font-mono;
+  transition: all 0.2s ease;
+
+  &__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    color: $color-text-muted;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.15);
+      color: $color-danger;
+    }
+  }
 }
 
 .release-chip-empty {
@@ -731,6 +767,7 @@ $transition-base: all 0.2s ease;
 
     --color-purple:       #7c3aed;
     --color-purple-bg:    #f5f3ff;
+    --color-loading-bg:   rgba(255, 255, 255, 0.7);
   }
 
   body.dark-theme {
@@ -754,6 +791,7 @@ $transition-base: all 0.2s ease;
     --color-danger-bg:    #7f1d1d;
     --color-danger-border:#b91c1c;
     --color-purple-bg:    #4c1d95;
+    --color-loading-bg:   rgba(15, 23, 42, 0.7);
 
     // Angular Material Dark Mode overrides
     .mat-mdc-dialog-container .mdc-dialog__surface {
@@ -804,6 +842,29 @@ $transition-base: all 0.2s ease;
       .mdc-text-field--outlined:not(.mdc-text-field--disabled):hover .mdc-notched-outline__trailing {
         border-color: var(--color-border-strong) !important;
       }
+
+      // Labels (floating and stacked)
+      .mdc-floating-label,
+      .mat-mdc-form-field-label {
+        color: var(--color-text-muted) !important;
+      }
+
+      // Focused label
+      &.mat-focused .mdc-floating-label {
+        color: var(--color-brand) !important;
+      }
+
+      // Placeholders
+      input::placeholder,
+      textarea::placeholder,
+      .mat-mdc-select-placeholder {
+        color: var(--color-text-faint) !important;
+      }
+
+      // Select arrow icon
+      .mat-mdc-select-arrow {
+        color: var(--color-text-muted) !important;
+      }
     }
 
     .sidebar {
@@ -824,6 +885,16 @@ $transition-base: all 0.2s ease;
     .mat-mdc-card {
       background-color: var(--color-bg-surface) !important;
       color: var(--color-text-primary) !important;
+    }
+
+    // Outlined / Stroked button overrides
+    .mat-mdc-outlined-button:not(.mdc-button--disabled) {
+      color: var(--color-text-body) !important;
+      border-color: var(--color-border) !important;
+      
+      .mat-icon {
+        color: var(--color-text-muted) !important;
+      }
     }
   }
 }
@@ -853,7 +924,7 @@ $transition-base: all 0.2s ease;
   .hierarchical-accordion {
     margin-top: 16px;
     padding-left: 20px;
-    border-left: 2px dashed $color-border;
+    border-left: 2px solid rgba($color-brand, 0.15);
     margin-bottom: 0;
   }
 }
@@ -919,6 +990,26 @@ $transition-base: all 0.2s ease;
     margin-left: 4px;
   }
 
+  &__add-sub {
+    margin-left: 8px;
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.65;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease;
+    color: inherit;
+
+    &:hover {
+      opacity: 1;
+      color: $color-brand !important;
+      transform: scale(1.2);
+    }
+  }
+
   mat-panel-description {
     justify-content: flex-end;
     align-items: center;
@@ -975,5 +1066,49 @@ $transition-base: all 0.2s ease;
     font-size: 10px;
     font-weight: 400;
     color: $color-text-muted;
+  }
+}
+
+// Colored row action buttons with hover backgrounds (SaaS style)
+.row-actions {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+
+  button.mat-mdc-icon-button {
+    width: 32px !important;
+    height: 32px !important;
+    line-height: 32px !important;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    .mat-icon {
+      font-size: 18px !important;
+      width: 18px !important;
+      height: 18px !important;
+    }
+
+    &[color="primary"] {
+      color: $color-brand !important;
+      opacity: 0.7;
+
+      &:hover {
+        opacity: 1;
+        background: rgba(59, 130, 246, 0.08) !important;
+      }
+    }
+
+    &[color="warn"] {
+      color: $color-danger !important;
+      opacity: 0.7;
+
+      &:hover {
+        opacity: 1;
+        background: rgba(220, 38, 38, 0.08) !important;
+      }
+    }
   }
 }

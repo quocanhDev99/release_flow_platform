@@ -310,7 +310,7 @@ export class DeploymentItemsService {
                 ticketId: item.ticketId,
                 summary: item.summary || '',
                 changeType: item.changeType || 'Feature',
-                qcStatus: item.qcStatus || 'waiting for QC test',
+                qcStatus: item.qcStatus || '—',
                 pendingIssues: item.pendingIssues || '',
               },
             ],
@@ -323,8 +323,17 @@ export class DeploymentItemsService {
   }
 
   async remove(id: number) {
-    return this.prisma.deploymentItem.delete({
-      where: { id },
+    return this.prisma.$transaction(async (tx) => {
+      // Manually delete related child records first to bypass any DB-level constraint locks
+      await tx.ticket.deleteMany({
+        where: { deploymentItemId: id },
+      });
+      await tx.build.deleteMany({
+        where: { deploymentItemId: id },
+      });
+      return tx.deploymentItem.delete({
+        where: { id },
+      });
     });
   }
 }
