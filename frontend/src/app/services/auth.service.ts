@@ -10,7 +10,7 @@ export class AuthService {
   private http = inject(HttpClient);
   private apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:3000/api'
-    : 'https://release-flow-backend-demo.onrender.com/api'; // Thay thế bằng URL thực tế sau khi tạo Web Service trên Render
+    : 'https://release-flow-backend-z76u.onrender.com/api'; // Thay thế bằng URL thực tế sau khi tạo Web Service trên Render
 
   private _currentUser: User | null = null;
 

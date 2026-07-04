@@ -115,73 +115,83 @@
       <mat-spinner diameter="48"></mat-spinner>
     </div>
 
-    <!-- Grouped View (Hierarchical Expansion Panels) -->
-    <ng-container *ngIf="isGrouped(); else flatView">
-      <mat-accordion class="hierarchical-accordion" multi="true">
-        <mat-expansion-panel *ngFor="let l1 of groupedHierarchicalData()" class="version-panel version-panel--l1" [expanded]="true">
-          <mat-expansion-panel-header>
-            <mat-panel-title>
-              <mat-icon class="version-panel__icon">account_tree</mat-icon>
-              <span class="version-panel__label">Release Group</span>
-              <span class="version-panel__name">{{ l1.versionKey }}{{ l1.versionKey === 'Unclassified' ? '' : 'x' }}</span>
-            </mat-panel-title>
-            <mat-panel-description>
-              <span class="version-panel__count">{{ l1.totalCount }} items</span>
-            </mat-panel-description>
-          </mat-expansion-panel-header>
+    <!-- Empty State -->
+    <div class="data-grid__empty-state" *ngIf="!isLoading() && filteredItems().length === 0">
+      <mat-icon class="data-grid__empty-icon">search_off</mat-icon>
+      <p class="data-grid__empty-title">No Records Found</p>
+      <span class="data-grid__empty-subtitle">No items match your current filter or search criteria.</span>
+    </div>
 
-          <div class="version-panel__content">
-            <!-- Direct items at Level 1 -->
-            <ng-container *ngIf="l1.directItems.length > 0">
-              <ng-container *ngTemplateOutlet="itemTable; context: { items: l1.directItems }"></ng-container>
-            </ng-container>
+    <!-- Data Views -->
+    <ng-container *ngIf="filteredItems().length > 0">
+      <!-- Grouped View (Hierarchical Expansion Panels) -->
+      <ng-container *ngIf="isGrouped(); else flatView">
+        <mat-accordion class="hierarchical-accordion" multi="true">
+          <mat-expansion-panel *ngFor="let l1 of groupedHierarchicalData()" class="version-panel version-panel--l1" [expanded]="true">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon class="version-panel__icon">account_tree</mat-icon>
+                <span class="version-panel__label">Release Group</span>
+                <span class="version-panel__name">{{ l1.versionKey }}{{ l1.versionKey === 'Unclassified' ? '' : 'x' }}</span>
+              </mat-panel-title>
+              <mat-panel-description>
+                <span class="version-panel__count">{{ l1.totalCount }} items</span>
+              </mat-panel-description>
+            </mat-expansion-panel-header>
 
-            <!-- Level 2 Sub-releases -->
-            <mat-accordion *ngIf="l1.subNodes.length > 0" class="hierarchical-accordion" multi="true">
-              <mat-expansion-panel *ngFor="let l2 of l1.subNodes" class="version-panel version-panel--l2" [expanded]="true">
-                <mat-expansion-panel-header>
-                  <mat-panel-title>
-                    <mat-icon class="version-panel__icon">subdirectory_arrow_right</mat-icon>
-                    <span class="version-panel__label">Sub-release</span>
-                    <span class="version-panel__name">{{ l2.versionKey }}x</span>
-                  </mat-panel-title>
-                  <mat-panel-description>
-                    <span class="version-panel__count">{{ l2.totalCount }} items</span>
-                  </mat-panel-description>
-                </mat-expansion-panel-header>
+            <div class="version-panel__content">
+              <!-- Direct items at Level 1 -->
+              <ng-container *ngIf="l1.directItems.length > 0">
+                <ng-container *ngTemplateOutlet="itemTable; context: { items: l1.directItems }"></ng-container>
+              </ng-container>
 
-                <div class="version-panel__content">
-                  <!-- Direct items at Level 2 -->
-                  <ng-container *ngIf="l2.directItems.length > 0">
-                    <ng-container *ngTemplateOutlet="itemTable; context: { items: l2.directItems }"></ng-container>
-                  </ng-container>
+              <!-- Level 2 Sub-releases -->
+              <mat-accordion *ngIf="l1.subNodes.length > 0" class="hierarchical-accordion" multi="true">
+                <mat-expansion-panel *ngFor="let l2 of l1.subNodes" class="version-panel version-panel--l2" [expanded]="true">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      <mat-icon class="version-panel__icon">subdirectory_arrow_right</mat-icon>
+                      <span class="version-panel__label">Sub-release</span>
+                      <span class="version-panel__name">{{ l2.versionKey }}x</span>
+                    </mat-panel-title>
+                    <mat-panel-description>
+                      <span class="version-panel__count">{{ l2.totalCount }} items</span>
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
 
-                  <!-- Level 3 Patches -->
-                  <mat-accordion *ngIf="l2.subNodes.length > 0" class="hierarchical-accordion" multi="true">
-                    <mat-expansion-panel *ngFor="let l3 of l2.subNodes" class="version-panel version-panel--l3" [expanded]="true">
-                      <mat-expansion-panel-header>
-                        <mat-panel-title>
-                          <mat-icon class="version-panel__icon">tag</mat-icon>
-                          <span class="version-panel__label">Patch</span>
-                          <span class="version-panel__name">{{ l3.versionKey }}x</span>
-                        </mat-panel-title>
-                        <mat-panel-description>
-                          <span class="version-panel__count">{{ l3.totalCount }} items</span>
-                        </mat-panel-description>
-                      </mat-expansion-panel-header>
+                  <div class="version-panel__content">
+                    <!-- Direct items at Level 2 -->
+                    <ng-container *ngIf="l2.directItems.length > 0">
+                      <ng-container *ngTemplateOutlet="itemTable; context: { items: l2.directItems }"></ng-container>
+                    </ng-container>
 
-                      <div class="version-panel__content">
-                        <!-- Direct items at Level 3 -->
-                        <ng-container *ngTemplateOutlet="itemTable; context: { items: l3.directItems }"></ng-container>
-                      </div>
-                    </mat-expansion-panel>
-                  </mat-accordion>
-                </div>
-              </mat-expansion-panel>
-            </mat-accordion>
-          </div>
-        </mat-expansion-panel>
-      </mat-accordion>
+                    <!-- Level 3 Patches -->
+                    <mat-accordion *ngIf="l2.subNodes.length > 0" class="hierarchical-accordion" multi="true">
+                      <mat-expansion-panel *ngFor="let l3 of l2.subNodes" class="version-panel version-panel--l3" [expanded]="true">
+                        <mat-expansion-panel-header>
+                          <mat-panel-title>
+                            <mat-icon class="version-panel__icon">tag</mat-icon>
+                            <span class="version-panel__label">Patch</span>
+                            <span class="version-panel__name">{{ l3.versionKey }}x</span>
+                          </mat-panel-title>
+                          <mat-panel-description>
+                            <span class="version-panel__count">{{ l3.totalCount }} items</span>
+                          </mat-panel-description>
+                        </mat-expansion-panel-header>
+
+                        <div class="version-panel__content">
+                          <!-- Direct items at Level 3 -->
+                          <ng-container *ngTemplateOutlet="itemTable; context: { items: l3.directItems }"></ng-container>
+                        </div>
+                      </mat-expansion-panel>
+                    </mat-accordion>
+                  </div>
+                </mat-expansion-panel>
+              </mat-accordion>
+            </div>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </ng-container>
     </ng-container>
 
     <!-- Flat View (No grouping) -->

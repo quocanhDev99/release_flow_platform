@@ -10,7 +10,7 @@ export class ReleaseService {
   private http = inject(HttpClient);
   private apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:3000/api'
-    : 'https://release-flow-backend-demo.onrender.com/api'; // Đường dẫn API Backend NestJS (Thay thế bằng URL Render của bạn)
+    : 'https://release-flow-backend-z76u.onrender.com/api'; // Đường dẫn API Backend NestJS (Thay thế bằng URL Render của bạn)
 
   // Dashboard / Deployment Items (Excel-like Grid rows)
   getDeploymentItems(params?: {
