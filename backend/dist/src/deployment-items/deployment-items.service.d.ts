@@ -47,6 +47,8 @@ export declare class DeploymentItemsService {
                 updatedAt: Date;
                 username: string;
                 email: string;
+                password: string;
+                theme: string;
             };
             releaseStream: {
                 id: number;
@@ -115,6 +117,8 @@ export declare class DeploymentItemsService {
             updatedAt: Date;
             username: string;
             email: string;
+            password: string;
+            theme: string;
         };
         releaseStream: {
             id: number;
@@ -146,7 +150,7 @@ export declare class DeploymentItemsService {
         userId: number;
         releaseStreamId: number | null;
     }) | null>;
-    create(data: any): Promise<{
+    create(data: any): Promise<({
         repository: {
             id: number;
             name: string;
@@ -179,6 +183,8 @@ export declare class DeploymentItemsService {
             updatedAt: Date;
             username: string;
             email: string;
+            password: string;
+            theme: string;
         };
         releaseStream: {
             id: number;
@@ -209,7 +215,7 @@ export declare class DeploymentItemsService {
         repositoryId: number;
         userId: number;
         releaseStreamId: number | null;
-    }>;
+    }) | null>;
     update(id: number, data: any): Promise<({
         repository: {
             id: number;
@@ -243,6 +249,8 @@ export declare class DeploymentItemsService {
             updatedAt: Date;
             username: string;
             email: string;
+            password: string;
+            theme: string;
         };
         releaseStream: {
             id: number;
@@ -307,6 +315,8 @@ export declare class DeploymentItemsService {
             updatedAt: Date;
             username: string;
             email: string;
+            password: string;
+            theme: string;
         };
         releaseStream: {
             id: number;

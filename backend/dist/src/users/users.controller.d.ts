@@ -8,5 +8,37 @@ export declare class UsersController {
         updatedAt: Date;
         username: string;
         email: string;
+        theme: string;
     }[]>;
+    register(body: {
+        username: string;
+        email: string;
+        password: string;
+    }): Promise<{
+        id: number;
+        createdAt: Date;
+        updatedAt: Date;
+        username: string;
+        email: string;
+        theme: string;
+    }>;
+    login(body: {
+        username: string;
+        password: string;
+    }): Promise<{
+        id: number;
+        createdAt: Date;
+        updatedAt: Date;
+        username: string;
+        email: string;
+        theme: string;
+    }>;
+    updateTheme(id: number, theme: string): import("@prisma/client").Prisma.Prisma__UserClient<{
+        id: number;
+        createdAt: Date;
+        updatedAt: Date;
+        username: string;
+        email: string;
+        theme: string;
+    }, never, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
 }

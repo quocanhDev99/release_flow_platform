@@ -138,7 +138,7 @@ export class DeploymentItemsService {
 
   async create(data: any) {
     const releaseStreamId = await this.resolveReleaseStreamId(data.releaseVersion, data.releaseStreamId);
-    return this.prisma.deploymentItem.create({
+    const newItem = await this.prisma.deploymentItem.create({
       data: {
         sourceBranch: data.sourceBranch,
         status: data.status || 'merged',
@@ -150,18 +150,26 @@ export class DeploymentItemsService {
           create: data.tickets || [],
         },
       },
-      include: {
-        repository: true,
-        user: true,
-        releaseStream: true,
-        tickets: true,
-        builds: {
-          include: {
-            environment: true,
-          },
-        },
-      },
     });
+
+    if (data.branchBuilds && Array.isArray(data.branchBuilds)) {
+      for (const envName of data.branchBuilds) {
+        const env = await this.prisma.environment.upsert({
+          where: { name: envName },
+          update: {},
+          create: { name: envName, description: `Môi trường ${envName}` },
+        });
+        await this.prisma.build.create({
+          data: {
+            status: 'SUCCESS',
+            deploymentItemId: newItem.id,
+            environmentId: env.id,
+          }
+        });
+      }
+    }
+
+    return this.findOne(newItem.id);
   }
 
   async update(id: number, data: any) {
@@ -189,6 +197,33 @@ export class DeploymentItemsService {
             },
           });
         }
+      }
+    }
+
+    if (data.branchBuilds && Array.isArray(data.branchBuilds)) {
+      const managedEnvs = ['dev', 'dev2', 'devel'];
+      await this.prisma.build.deleteMany({
+        where: {
+          deploymentItemId: id,
+          environment: {
+            name: { in: managedEnvs }
+          }
+        }
+      });
+
+      for (const envName of data.branchBuilds) {
+        const env = await this.prisma.environment.upsert({
+          where: { name: envName },
+          update: {},
+          create: { name: envName, description: `Môi trường ${envName}` },
+        });
+        await this.prisma.build.create({
+          data: {
+            status: 'SUCCESS',
+            deploymentItemId: id,
+            environmentId: env.id,
+          }
+        });
       }
     }
 

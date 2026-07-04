@@ -23,4 +23,11 @@
 
 ---
 
+## Authentication & User Settings (Xác thực & Người dùng)
+* **POST `/users/register`**: Đăng ký một tài khoản nhà phát triển mới.
+* **POST `/users/login`**: Xác thực thông tin đăng nhập và trả về hồ sơ người dùng (không bao gồm mật khẩu).
+* **PATCH `/users/{id}/theme`**: Cấu hình chế độ sáng/tối (Light/Dark mode) của người dùng hiện tại và lưu vào DB.
+
+---
+
 *Lưu ý: Các API về Pipeline và Deployment Window sẽ được bổ sung khi phát triển tiếp lên các phiên bản sau.*

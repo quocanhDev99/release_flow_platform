@@ -21,6 +21,8 @@ erDiagram
         int id PK
         string username
         string email
+        string password
+        string theme
     }
 
     RELEASE_STREAM {
@@ -75,7 +77,7 @@ erDiagram
 * Quản lý các repository chứa mã nguồn (ví dụ: `Core`, `E-com`).
 
 ### 2. USER
-* Quản lý thông tin tài khoản người dùng thực hiện merge code.
+* Quản lý thông tin tài khoản người dùng thực hiện merge code. Lưu mật khẩu đã mã hóa (`password`) và tùy chọn hiển thị sáng/tối (`theme`).
 
 ### 3. RELEASE_STREAM
 * Quản lý danh sách các phiên bản phát hành (Fix version - cột C trong Excel).

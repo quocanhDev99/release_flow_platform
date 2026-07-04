@@ -1,9 +1,13 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('Seeding default database values...');
+
+  const defaultPassword = await bcrypt.hash('password123', 10);
+
 
   // 1. Seed Repositories
   const repoCore = await prisma.repository.upsert({
@@ -49,19 +53,21 @@ async function main() {
   // 3. Seed Users
   const userJohn = await prisma.user.upsert({
     where: { username: 'john_doe' },
-    update: {},
+    update: { password: defaultPassword },
     create: {
       username: 'john_doe',
       email: 'john@example.com',
+      password: defaultPassword,
     },
   });
 
   const userAlice = await prisma.user.upsert({
     where: { username: 'alice_smith' },
-    update: {},
+    update: { password: defaultPassword },
     create: {
       username: 'alice_smith',
       email: 'alice@example.com',
+      password: defaultPassword,
     },
   });
   console.log('Seed Users completed.');

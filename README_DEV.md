@@ -18,7 +18,7 @@ Từ thư mục gốc của dự án (`RELEASE_FLOW_PLATFORM/`), chạy lệnh s
 docker compose up -d
 ```
 Lệnh này sẽ khởi động:
-* **PostgreSQL** trên cổng `5432`
+* **PostgreSQL** trên cổng `5431`
 * **Redis** trên cổng `6379`
 
 ---
