@@ -32,6 +32,17 @@ export declare class UsersController {
         username: string;
         email: string;
         theme: string;
+        resetToken: string | null;
+        resetTokenExpires: Date | null;
+    }>;
+    forgotPassword(email: string): Promise<{
+        message: string;
+    }>;
+    resetPassword(body: {
+        token: string;
+        password?: string;
+    }): Promise<{
+        message: string;
     }>;
     updateTheme(id: number, theme: string): import("@prisma/client").Prisma.Prisma__UserClient<{
         id: number;

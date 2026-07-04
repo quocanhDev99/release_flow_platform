@@ -195,6 +195,61 @@ $radius-pill:  9999px;
     mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
   }
 
+  &__success {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #059669;
+    font-size: 13px;
+    font-weight: 500;
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
+  }
+
+  &__forgot-link-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: -4px;
+    margin-bottom: 4px;
+  }
+
+  &__forgot-link, &__back-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: $brand;
+    text-decoration: none;
+    transition: color 0.15s ease;
+
+    &:hover {
+      color: $brand-dark;
+      text-decoration: underline;
+    }
+  }
+
+  &__back-link-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  &__form-title {
+    margin: 4px 0 2px;
+    font-size: 16px;
+    font-weight: 700;
+    color: $text-primary;
+  }
+
+  &__form-subtitle {
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: $text-muted;
+    line-height: 1.4;
+  }
+
   &__hint {
     margin: 8px 0 0;
     text-align: center;

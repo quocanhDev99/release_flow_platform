@@ -38,6 +38,8 @@ export declare class DeploymentItemsController {
                 email: string;
                 password: string;
                 theme: string;
+                resetToken: string | null;
+                resetTokenExpires: Date | null;
             };
             releaseStream: {
                 id: number;
@@ -120,6 +122,8 @@ export declare class DeploymentItemsController {
             email: string;
             password: string;
             theme: string;
+            resetToken: string | null;
+            resetTokenExpires: Date | null;
         };
         releaseStream: {
             id: number;
@@ -186,6 +190,8 @@ export declare class DeploymentItemsController {
             email: string;
             password: string;
             theme: string;
+            resetToken: string | null;
+            resetTokenExpires: Date | null;
         };
         releaseStream: {
             id: number;
@@ -252,6 +258,8 @@ export declare class DeploymentItemsController {
             email: string;
             password: string;
             theme: string;
+            resetToken: string | null;
+            resetTokenExpires: Date | null;
         };
         releaseStream: {
             id: number;
@@ -318,6 +326,8 @@ export declare class DeploymentItemsController {
             email: string;
             password: string;
             theme: string;
+            resetToken: string | null;
+            resetTokenExpires: Date | null;
         };
         releaseStream: {
             id: number;

@@ -22,14 +22,16 @@ model Repository {
 }
 
 model User {
-  id              Int              @id @default(autoincrement())
-  username        String           @unique
-  email           String
-  password        String           @default("")
-  theme           String           @default("light")
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  deploymentItems DeploymentItem[]
+  id                Int              @id @default(autoincrement())
+  username          String           @unique
+  email             String
+  password          String           @default("")
+  theme             String           @default("light")
+  resetToken        String?
+  resetTokenExpires DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  deploymentItems   DeploymentItem[]
 
   @@map("users")
 }

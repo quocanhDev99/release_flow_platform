@@ -48,6 +48,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
 const bcrypt = __importStar(require("bcrypt"));
+const crypto = __importStar(require("crypto"));
 const prisma_service_1 = require("../prisma/prisma.service");
 let UsersController = class UsersController {
     prisma;
@@ -86,6 +87,57 @@ let UsersController = class UsersController {
         const { password: _pwd, ...safeUser } = user;
         return safeUser;
     }
+    async forgotPassword(email) {
+        if (!email) {
+            throw new common_1.BadRequestException('Email is required');
+        }
+        const user = await this.prisma.user.findFirst({
+            where: { email: { equals: email, mode: 'insensitive' } }
+        });
+        if (!user) {
+            return { message: 'If the email exists, a reset link will be logged.' };
+        }
+        const token = crypto.randomBytes(32).toString('hex');
+        const expires = new Date();
+        expires.setHours(expires.getHours() + 1);
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                resetToken: token,
+                resetTokenExpires: expires
+            }
+        });
+        console.log('\n==================================================');
+        console.log(`[RESET PASSWORD] Link for user: ${user.username} (${user.email})`);
+        console.log(`Link: http://localhost:4200/reset-password?token=${token}`);
+        console.log('==================================================\n');
+        return { message: 'Reset token generated successfully' };
+    }
+    async resetPassword(body) {
+        const { token, password } = body;
+        if (!token || !password) {
+            throw new common_1.BadRequestException('Token and password are required');
+        }
+        const user = await this.prisma.user.findFirst({
+            where: {
+                resetToken: token,
+                resetTokenExpires: { gte: new Date() }
+            }
+        });
+        if (!user) {
+            throw new common_1.BadRequestException('Invalid or expired reset token');
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                password: hashedPassword,
+                resetToken: null,
+                resetTokenExpires: null
+            }
+        });
+        return { message: 'Password reset successfully' };
+    }
     updateTheme(id, theme) {
         return this.prisma.user.update({
             where: { id },
@@ -115,6 +167,20 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "login", null);
+__decorate([
+    (0, common_1.Post)('forgot-password'),
+    __param(0, (0, common_1.Body)('email')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "forgotPassword", null);
+__decorate([
+    (0, common_1.Post)('reset-password'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "resetPassword", null);
 __decorate([
     (0, common_1.Patch)(':id/theme'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),

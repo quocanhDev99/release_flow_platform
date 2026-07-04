@@ -32,6 +32,10 @@ Nằm tại thư mục `frontend/`, được phát triển bằng **Angular 20**
 
 *   **Xác thực người dùng & Bảo mật (Authentication & Security):**
     *   Trang đăng nhập (**Sign In**) và đăng ký (**Create Account**) tích hợp mượt mà thông qua thẻ tab Angular Material.
+    *   **Quên & Thiết lập lại Mật khẩu (Forgot & Reset Password):**
+        *   Tích hợp form yêu cầu quên mật khẩu trực tiếp trong giao diện Sign In. Hệ thống tự động gửi yêu cầu và tạo mã Reset Token an toàn có thời hạn 1 giờ ở Backend.
+        *   Để phục vụ thử nghiệm local, mã Reset Link sẽ được ghi nhận (simulate) trực tiếp trong logs của Backend console.
+        *   Trang nhập mật khẩu mới `/reset-password` tự động phân tích Token, xác thực thời hạn, mã hóa bcrypt mật khẩu mới và cập nhật cơ sở dữ liệu an toàn.
     *   Tự động lưu trữ thông tin đăng nhập trong `localStorage` để duy trì phiên làm việc.
     *   Bảo vệ tuyến đường trang chủ bằng `authGuard` để chuyển hướng người dùng chưa đăng nhập về trang `/login`.
 *   **Chuyển đổi Giao diện (Theme Switcher):**

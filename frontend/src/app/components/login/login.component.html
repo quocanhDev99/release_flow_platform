@@ -23,55 +23,103 @@
       <!-- ─── LOGIN TAB ─── -->
       <mat-tab label="Sign In">
         <div class="login-card__form">
+          @if (!isForgotPasswordMode()) {
+            <mat-form-field appearance="outline" class="login-card__field">
+              <mat-label>Username</mat-label>
+              <mat-icon matPrefix>person_outline</mat-icon>
+              <input id="login-username" matInput [(ngModel)]="loginUsername"
+                     placeholder="your_username"
+                     (keyup.enter)="onLogin()">
+            </mat-form-field>
 
-          <mat-form-field appearance="outline" class="login-card__field">
-            <mat-label>Username</mat-label>
-            <mat-icon matPrefix>person_outline</mat-icon>
-            <input id="login-username" matInput [(ngModel)]="loginUsername"
-                   placeholder="your_username"
-                   (keyup.enter)="onLogin()">
-          </mat-form-field>
+            <mat-form-field appearance="outline" class="login-card__field">
+              <mat-label>Password</mat-label>
+              <mat-icon matPrefix>lock_outline</mat-icon>
+              <input id="login-password" matInput
+                     [type]="showLoginPassword ? 'text' : 'password'"
+                     [(ngModel)]="loginPassword"
+                     placeholder="••••••••"
+                     (keyup.enter)="onLogin()">
+              <button mat-icon-button matSuffix type="button"
+                      (click)="showLoginPassword = !showLoginPassword"
+                      [attr.aria-label]="showLoginPassword ? 'Hide password' : 'Show password'">
+                <mat-icon>{{ showLoginPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+            </mat-form-field>
 
-          <mat-form-field appearance="outline" class="login-card__field">
-            <mat-label>Password</mat-label>
-            <mat-icon matPrefix>lock_outline</mat-icon>
-            <input id="login-password" matInput
-                   [type]="showLoginPassword ? 'text' : 'password'"
-                   [(ngModel)]="loginPassword"
-                   placeholder="••••••••"
-                   (keyup.enter)="onLogin()">
-            <button mat-icon-button matSuffix type="button"
-                    (click)="showLoginPassword = !showLoginPassword"
-                    [attr.aria-label]="showLoginPassword ? 'Hide password' : 'Show password'">
-              <mat-icon>{{ showLoginPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            <div class="login-card__forgot-link-wrapper">
+              <a href="javascript:void(0)" (click)="isForgotPasswordMode.set(true)" class="login-card__forgot-link">Forgot Password?</a>
+            </div>
+
+            @if (loginError()) {
+              <div class="login-card__error">
+                <mat-icon>error_outline</mat-icon>
+                {{ loginError() }}
+              </div>
+            }
+
+            <button id="login-submit-btn"
+                    mat-flat-button
+                    class="login-card__submit"
+                    (click)="onLogin()"
+                    [disabled]="loginLoading()">
+              @if (loginLoading()) {
+                <mat-spinner diameter="20" class="login-card__spinner"></mat-spinner>
+              } @else {
+                <ng-container matButtonIcon>
+                  <mat-icon>login</mat-icon>
+                  <span>Sign In</span>
+                </ng-container>
+              }
             </button>
-          </mat-form-field>
 
-          @if (loginError()) {
-            <div class="login-card__error">
-              <mat-icon>error_outline</mat-icon>
-              {{ loginError() }}
+            <p class="login-card__hint">
+              Default accounts: <strong>john_doe</strong> or <strong>alice_smith</strong> — password: <code>password123</code>
+            </p>
+          } @else {
+            <h2 class="login-card__form-title">Reset Password</h2>
+            <p class="login-card__form-subtitle">Enter your email and we will simulate a reset link logged to the backend console.</p>
+
+            <mat-form-field appearance="outline" class="login-card__field">
+              <mat-label>Email Address</mat-label>
+              <mat-icon matPrefix>email</mat-icon>
+              <input id="forgot-email" matInput [(ngModel)]="forgotEmail" type="email"
+                     placeholder="your@email.com"
+                     (keyup.enter)="onForgotPassword()">
+            </mat-form-field>
+
+            @if (forgotError()) {
+              <div class="login-card__error">
+                <mat-icon>error_outline</mat-icon>
+                {{ forgotError() }}
+              </div>
+            }
+            @if (forgotSuccess()) {
+              <div class="login-card__success">
+                <mat-icon>check_circle_outline</mat-icon>
+                {{ forgotSuccess() }}
+              </div>
+            }
+
+            <button id="forgot-submit-btn"
+                    mat-flat-button
+                    class="login-card__submit"
+                    (click)="onForgotPassword()"
+                    [disabled]="forgotLoading()">
+              @if (forgotLoading()) {
+                <mat-spinner diameter="20" class="login-card__spinner"></mat-spinner>
+              } @else {
+                <ng-container matButtonIcon>
+                  <mat-icon>send</mat-icon>
+                  <span>Send Reset Link</span>
+                </ng-container>
+              }
+            </button>
+
+            <div class="login-card__back-link-wrapper">
+              <a href="javascript:void(0)" (click)="isForgotPasswordMode.set(false)" class="login-card__back-link">Back to Sign In</a>
             </div>
           }
-
-          <button id="login-submit-btn"
-                  mat-flat-button
-                  class="login-card__submit"
-                  (click)="onLogin()"
-                  [disabled]="loginLoading()">
-            @if (loginLoading()) {
-              <mat-spinner diameter="20" class="login-card__spinner"></mat-spinner>
-            } @else {
-              <ng-container matButtonIcon>
-                <mat-icon>login</mat-icon>
-                <span>Sign In</span>
-              </ng-container>
-            }
-          </button>
-
-          <p class="login-card__hint">
-            Default accounts: <strong>john_doe</strong> or <strong>alice_smith</strong> — password: <code>password123</code>
-          </p>
         </div>
       </mat-tab>
 

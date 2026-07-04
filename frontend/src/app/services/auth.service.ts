@@ -59,6 +59,14 @@ export class AuthService {
     localStorage.removeItem(STORAGE_KEY);
   }
 
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/users/forgot-password`, { email });
+  }
+
+  resetPassword(token: string, password: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/users/reset-password`, { token, password });
+  }
+
   private setUser(user: User): void {
     this._currentUser = user;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));

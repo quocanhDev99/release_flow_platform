@@ -37,6 +37,13 @@ export class LoginComponent {
   loginLoading = signal(false);
   showLoginPassword = false;
 
+  // Forgot password form
+  isForgotPasswordMode = signal(false);
+  forgotEmail = '';
+  forgotError = signal('');
+  forgotSuccess = signal('');
+  forgotLoading = signal(false);
+
   // Register form
   regUsername = '';
   regEmail = '';
@@ -45,6 +52,29 @@ export class LoginComponent {
   regError = signal('');
   regLoading = signal(false);
   showRegPassword = false;
+
+  onForgotPassword() {
+    if (!this.forgotEmail.trim()) {
+      this.forgotError.set('Please enter your email address.');
+      this.forgotSuccess.set('');
+      return;
+    }
+    this.forgotLoading.set(true);
+    this.forgotError.set('');
+    this.forgotSuccess.set('');
+
+    this.auth.forgotPassword(this.forgotEmail.trim()).subscribe({
+      next: (res) => {
+        this.forgotLoading.set(false);
+        this.forgotSuccess.set('Success! If the email exists, a reset link has been logged in the backend console.');
+        this.forgotEmail = '';
+      },
+      error: (err) => {
+        this.forgotLoading.set(false);
+        this.forgotError.set(err.error?.message || 'An error occurred. Please try again.');
+      }
+    });
+  }
 
   onLogin() {
     if (!this.loginUsername.trim() || !this.loginPassword.trim()) {
