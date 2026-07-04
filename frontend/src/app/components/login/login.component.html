@@ -1,0 +1,143 @@
+<div class="login-page">
+  <!-- Background decoration -->
+  <div class="login-page__bg">
+    <div class="login-page__orb login-page__orb--1"></div>
+    <div class="login-page__orb login-page__orb--2"></div>
+    <div class="login-page__orb login-page__orb--3"></div>
+  </div>
+
+  <!-- Card -->
+  <div class="login-card">
+    <!-- Logo / Brand -->
+    <div class="login-card__brand">
+      <span class="login-card__brand-icon">🚀</span>
+      <div>
+        <h1 class="login-card__title">Release Flow Platform</h1>
+        <p class="login-card__subtitle">Manage your deployment pipeline</p>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <mat-tab-group id="auth-tabs" animationDuration="200ms" class="login-card__tabs">
+
+      <!-- ─── LOGIN TAB ─── -->
+      <mat-tab label="Sign In">
+        <div class="login-card__form">
+
+          <mat-form-field appearance="outline" class="login-card__field">
+            <mat-label>Username</mat-label>
+            <mat-icon matPrefix>person_outline</mat-icon>
+            <input id="login-username" matInput [(ngModel)]="loginUsername"
+                   placeholder="your_username"
+                   (keyup.enter)="onLogin()">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="login-card__field">
+            <mat-label>Password</mat-label>
+            <mat-icon matPrefix>lock_outline</mat-icon>
+            <input id="login-password" matInput
+                   [type]="showLoginPassword ? 'text' : 'password'"
+                   [(ngModel)]="loginPassword"
+                   placeholder="••••••••"
+                   (keyup.enter)="onLogin()">
+            <button mat-icon-button matSuffix type="button"
+                    (click)="showLoginPassword = !showLoginPassword"
+                    [attr.aria-label]="showLoginPassword ? 'Hide password' : 'Show password'">
+              <mat-icon>{{ showLoginPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </mat-form-field>
+
+          @if (loginError()) {
+            <div class="login-card__error">
+              <mat-icon>error_outline</mat-icon>
+              {{ loginError() }}
+            </div>
+          }
+
+          <button id="login-submit-btn"
+                  mat-flat-button
+                  class="login-card__submit"
+                  (click)="onLogin()"
+                  [disabled]="loginLoading()">
+            @if (loginLoading()) {
+              <mat-spinner diameter="20" class="login-card__spinner"></mat-spinner>
+            } @else {
+              <ng-container matButtonIcon>
+                <mat-icon>login</mat-icon>
+                <span>Sign In</span>
+              </ng-container>
+            }
+          </button>
+
+          <p class="login-card__hint">
+            Default accounts: <strong>john_doe</strong> or <strong>alice_smith</strong> — password: <code>password123</code>
+          </p>
+        </div>
+      </mat-tab>
+
+      <!-- ─── REGISTER TAB ─── -->
+      <mat-tab label="Create Account">
+        <div class="login-card__form">
+
+          <mat-form-field appearance="outline" class="login-card__field">
+            <mat-label>Username</mat-label>
+            <mat-icon matPrefix>badge</mat-icon>
+            <input id="reg-username" matInput [(ngModel)]="regUsername" placeholder="Choose a username">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="login-card__field">
+            <mat-label>Email</mat-label>
+            <mat-icon matPrefix>email</mat-icon>
+            <input id="reg-email" matInput [(ngModel)]="regEmail" type="email" placeholder="your@email.com">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="login-card__field">
+            <mat-label>Password</mat-label>
+            <mat-icon matPrefix>lock_outline</mat-icon>
+            <input id="reg-password" matInput
+                   [type]="showRegPassword ? 'text' : 'password'"
+                   [(ngModel)]="regPassword"
+                   placeholder="Min. 6 characters">
+            <button mat-icon-button matSuffix type="button"
+                    (click)="showRegPassword = !showRegPassword">
+              <mat-icon>{{ showRegPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="login-card__field">
+            <mat-label>Confirm Password</mat-label>
+            <mat-icon matPrefix>lock_reset</mat-icon>
+            <input id="reg-confirm-password" matInput
+                   [type]="showRegPassword ? 'text' : 'password'"
+                   [(ngModel)]="regConfirmPassword"
+                   placeholder="Repeat password"
+                   (keyup.enter)="onRegister()">
+          </mat-form-field>
+
+          @if (regError()) {
+            <div class="login-card__error">
+              <mat-icon>error_outline</mat-icon>
+              {{ regError() }}
+            </div>
+          }
+
+          <button id="register-submit-btn"
+                  mat-flat-button
+                  class="login-card__submit"
+                  (click)="onRegister()"
+                  [disabled]="regLoading()">
+            @if (regLoading()) {
+              <mat-spinner diameter="20" class="login-card__spinner"></mat-spinner>
+            } @else {
+              <ng-container matButtonIcon>
+                <mat-icon>person_add</mat-icon>
+                <span>Create Account</span>
+              </ng-container>
+            }
+          </button>
+        </div>
+      </mat-tab>
+
+    </mat-tab-group>
+  </div>
+</div>

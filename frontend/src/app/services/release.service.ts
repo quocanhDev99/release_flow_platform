@@ -8,7 +8,9 @@ import { DeploymentItem, ReleaseStream, Ticket, Repository, User } from '../mode
 })
 export class ReleaseService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000/api'; // Đường dẫn API Backend NestJS
+  private apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/api'
+    : 'https://release-flow-backend-demo.onrender.com/api'; // Đường dẫn API Backend NestJS (Thay thế bằng URL Render của bạn)
 
   // Dashboard / Deployment Items (Excel-like Grid rows)
   getDeploymentItems(params?: {
@@ -66,6 +68,10 @@ export class ReleaseService {
   // Users
   getUsers(): Observable<User[]> {
     return this.http.get<User[]>(`${this.apiUrl}/users`);
+  }
+
+  updateUserTheme(userId: number, theme: string): Observable<User> {
+    return this.http.patch<User>(`${this.apiUrl}/users/${userId}/theme`, { theme });
   }
 
   // Bulk Create

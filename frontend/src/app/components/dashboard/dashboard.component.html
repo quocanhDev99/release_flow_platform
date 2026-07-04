@@ -9,6 +9,26 @@
     </div>
 
     <div class="navbar__actions">
+      <!-- Theme toggle -->
+      <button mat-icon-button (click)="toggleTheme()"
+              class="navbar__theme-btn"
+              [matTooltip]="currentUser()?.theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+        <mat-icon>{{ currentUser()?.theme === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+
+      <!-- Logged-in user display -->
+      <div class="navbar__user-info">
+        <mat-icon class="navbar__user-icon">person</mat-icon>
+        <span class="navbar__username">{{ currentUser()?.username || 'Guest' }}</span>
+      </div>
+
+      <!-- Logout -->
+      <button mat-icon-button (click)="logout()" class="navbar__logout-btn" matTooltip="Sign Out">
+        <mat-icon>logout</mat-icon>
+      </button>
+
+      <div class="navbar__divider"></div>
+
       <input #fileInput type="file" (change)="onExcelUpload($event)" accept=".xlsx,.xls,.csv" style="display:none">
       <button mat-stroked-button (click)="fileInput.click()">
         <mat-icon>upload_file</mat-icon> Import
@@ -95,175 +115,234 @@
       <mat-spinner diameter="48"></mat-spinner>
     </div>
 
-    <table mat-table [dataSource]="groupedDataSource()" class="data-grid__table">
+    <!-- Grouped View (Hierarchical Expansion Panels) -->
+    <ng-container *ngIf="isGrouped(); else flatView">
+      <mat-accordion class="hierarchical-accordion" multi="true">
+        <mat-expansion-panel *ngFor="let l1 of groupedHierarchicalData()" class="version-panel version-panel--l1" [expanded]="true">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon class="version-panel__icon">account_tree</mat-icon>
+              <span class="version-panel__label">Release Group</span>
+              <span class="version-panel__name">{{ l1.versionKey }}{{ l1.versionKey === 'Unclassified' ? '' : 'x' }}</span>
+            </mat-panel-title>
+            <mat-panel-description>
+              <span class="version-panel__count">{{ l1.totalCount }} items</span>
+            </mat-panel-description>
+          </mat-expansion-panel-header>
 
-      <!-- Group Header Column -->
-      <ng-container matColumnDef="groupHeader">
-        <td mat-cell *matCellDef="let group" [attr.colspan]="displayedColumns.length"
-            class="release-group-cell"
-            [class.release-group-cell--level-2]="group.level === 2"
-            [class.release-group-cell--level-3]="group.level === 3">
-          <div class="release-group-cell__inner">
-            <mat-icon class="release-group-cell__icon">account_tree</mat-icon>
-            <span class="release-group-cell__label">
-              {{ group.level === 1 ? 'Release Group' : group.level === 2 ? 'Sub-release' : 'Patch' }}
-            </span>
-            <span class="release-group-cell__name">{{ group.groupName }}</span>
-            <span class="release-group-cell__count">{{ group.count }} items</span>
+          <div class="version-panel__content">
+            <!-- Direct items at Level 1 -->
+            <ng-container *ngIf="l1.directItems.length > 0">
+              <ng-container *ngTemplateOutlet="itemTable; context: { items: l1.directItems }"></ng-container>
+            </ng-container>
+
+            <!-- Level 2 Sub-releases -->
+            <mat-accordion *ngIf="l1.subNodes.length > 0" class="hierarchical-accordion" multi="true">
+              <mat-expansion-panel *ngFor="let l2 of l1.subNodes" class="version-panel version-panel--l2" [expanded]="true">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-icon class="version-panel__icon">subdirectory_arrow_right</mat-icon>
+                    <span class="version-panel__label">Sub-release</span>
+                    <span class="version-panel__name">{{ l2.versionKey }}x</span>
+                  </mat-panel-title>
+                  <mat-panel-description>
+                    <span class="version-panel__count">{{ l2.totalCount }} items</span>
+                  </mat-panel-description>
+                </mat-expansion-panel-header>
+
+                <div class="version-panel__content">
+                  <!-- Direct items at Level 2 -->
+                  <ng-container *ngIf="l2.directItems.length > 0">
+                    <ng-container *ngTemplateOutlet="itemTable; context: { items: l2.directItems }"></ng-container>
+                  </ng-container>
+
+                  <!-- Level 3 Patches -->
+                  <mat-accordion *ngIf="l2.subNodes.length > 0" class="hierarchical-accordion" multi="true">
+                    <mat-expansion-panel *ngFor="let l3 of l2.subNodes" class="version-panel version-panel--l3" [expanded]="true">
+                      <mat-expansion-panel-header>
+                        <mat-panel-title>
+                          <mat-icon class="version-panel__icon">tag</mat-icon>
+                          <span class="version-panel__label">Patch</span>
+                          <span class="version-panel__name">{{ l3.versionKey }}x</span>
+                        </mat-panel-title>
+                        <mat-panel-description>
+                          <span class="version-panel__count">{{ l3.totalCount }} items</span>
+                        </mat-panel-description>
+                      </mat-expansion-panel-header>
+
+                      <div class="version-panel__content">
+                        <!-- Direct items at Level 3 -->
+                        <ng-container *ngTemplateOutlet="itemTable; context: { items: l3.directItems }"></ng-container>
+                      </div>
+                    </mat-expansion-panel>
+                  </mat-accordion>
+                </div>
+              </mat-expansion-panel>
+            </mat-accordion>
           </div>
-        </td>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </ng-container>
 
-      </ng-container>
-
-      <!-- Repo Column -->
-      <ng-container matColumnDef="repo">
-        <th mat-header-cell *matHeaderCellDef>Repo</th>
-        <td mat-cell *matCellDef="let item">
-          <span class="row-badge" [ngClass]="getRepoBadgeClass(item.repository.name)">
-            {{ item.repository.name }}
-          </span>
-        </td>
-      </ng-container>
-
-      <!-- Ticket Column -->
-      <ng-container matColumnDef="ticket">
-        <th mat-header-cell *matHeaderCellDef>Ticket</th>
-        <td mat-cell *matCellDef="let item">
-          <div *ngFor="let t of item.tickets" class="ticket-id">{{ t.ticketId }}</div>
-        </td>
-      </ng-container>
-
-      <!-- Fix Version Column -->
-      <ng-container matColumnDef="fixVersion">
-        <th mat-header-cell *matHeaderCellDef>Fix Version</th>
-        <td mat-cell *matCellDef="let item">{{ item.releaseStream?.version || '—' }}</td>
-      </ng-container>
-
-      <!-- Source Branch Column -->
-      <ng-container matColumnDef="sourceBranch">
-        <th mat-header-cell *matHeaderCellDef>Branch</th>
-        <td mat-cell *matCellDef="let item" [title]="item.sourceBranch">
-          <span class="code-chip">{{ item.sourceBranch }}</span>
-        </td>
-      </ng-container>
-
-      <!-- Status Column -->
-      <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef>Status</th>
-        <td mat-cell *matCellDef="let item">
-          <span class="row-badge" [ngClass]="getStatusBadgeClass(item.status)">
-            {{ item.status | uppercase }}
-          </span>
-        </td>
-      </ng-container>
-
-      <!-- Branch Build Column -->
-      <ng-container matColumnDef="branchBuilds">
-        <th mat-header-cell *matHeaderCellDef>Branch Build</th>
-        <td mat-cell *matCellDef="let item">
-          <span class="code-chip">{{ getBuildsString(item) }}</span>
-        </td>
-      </ng-container>
-
-      <!-- Merge on Devel Column -->
-      <ng-container matColumnDef="isMergedOnDevel">
-        <th mat-header-cell *matHeaderCellDef class="col--center">Merge on Devel</th>
-        <td mat-cell *matCellDef="let item" class="col--center">
-          <mat-checkbox [checked]="item.isMergedOnDevel" (change)="onMergeDevelChange(item, $event.checked)"></mat-checkbox>
-        </td>
-      </ng-container>
-
-      <!-- Change Type Column -->
-      <ng-container matColumnDef="changeType">
-        <th mat-header-cell *matHeaderCellDef>Type</th>
-        <td mat-cell *matCellDef="let item">
-          <div *ngFor="let t of item.tickets">
-            <span class="row-badge" [ngClass]="getChangeTypeClass(t.changeType)">{{ t.changeType }}</span>
-          </div>
-        </td>
-      </ng-container>
-
-      <!-- QC Status Column -->
-      <ng-container matColumnDef="qcStatus">
-        <th mat-header-cell *matHeaderCellDef>QC Ready</th>
-        <td mat-cell *matCellDef="let item">
-          <div *ngFor="let t of item.tickets">
-            <select
-              [ngModel]="t.qcStatus"
-              (ngModelChange)="onQCStatusChange(t, $event)"
-              class="qc-select"
-              [ngClass]="getQCStatusClass(t.qcStatus)">
-              <option *ngFor="let opt of qcStatuses" [value]="opt">{{ opt }}</option>
-            </select>
-          </div>
-        </td>
-      </ng-container>
-
-      <!-- Pending Issues Column -->
-      <ng-container matColumnDef="pendingIssues">
-        <th mat-header-cell *matHeaderCellDef>Pending Issues</th>
-        <td mat-cell *matCellDef="let item">
-          <div *ngFor="let t of item.tickets" class="pending-text" [title]="t.pendingIssues || ''">
-            {{ t.pendingIssues || '—' }}
-          </div>
-        </td>
-      </ng-container>
-
-      <!-- Developer Column -->
-      <ng-container matColumnDef="developer">
-        <th mat-header-cell *matHeaderCellDef>Developer</th>
-        <td mat-cell *matCellDef="let item">
-          <span class="user-avatar" [title]="item.user?.email || ''">
-            <mat-icon style="font-size: 14px; width: 14px; height: 14px; margin-right: 4px; vertical-align: middle;">person</mat-icon>
-            {{ item.user?.username || '—' }}
-          </span>
-        </td>
-      </ng-container>
-
-      <!-- Created At Column -->
-      <ng-container matColumnDef="createdAt">
-        <th mat-header-cell *matHeaderCellDef>Created</th>
-        <td mat-cell *matCellDef="let item" class="meta-cell">
-          {{ formatDate(item.createdAt) }}
-        </td>
-      </ng-container>
-
-      <!-- Updated At Column -->
-      <ng-container matColumnDef="updatedAt">
-        <th mat-header-cell *matHeaderCellDef>Updated</th>
-        <td mat-cell *matCellDef="let item" class="meta-cell">
-          {{ formatDate(item.updatedAt) }}
-        </td>
-      </ng-container>
-
-      <!-- Actions Column -->
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef class="col--center">Actions</th>
-        <td mat-cell *matCellDef="let item">
-          <div *ngFor="let t of item.tickets" class="row-actions">
-            <button mat-icon-button color="primary" (click)="openEditPanel(item, t)" title="Edit record">
-              <mat-icon>edit</mat-icon>
-            </button>
-            <button mat-icon-button color="warn" (click)="deleteItem(item)" title="Delete record">
-              <mat-icon>delete_outline</mat-icon>
-            </button>
-          </div>
-        </td>
-      </ng-container>
-
-      <!-- Header and Row definitions -->
-      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-      <tr mat-row *matRowDef="let row; columns: ['groupHeader']; when: isGroupHeaderRow" class="release-group-row"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-
-      <!-- Empty state -->
-      <tr class="mat-row" *mat-noDataRow>
-        <td class="mat-cell data-grid__empty-cell" colspan="11">
-          No records match the current filter criteria.
-        </td>
-      </tr>
-    </table>
+    <!-- Flat View (No grouping) -->
+    <ng-template #flatView>
+      <ng-container *ngTemplateOutlet="itemTable; context: { items: filteredItems() }"></ng-container>
+    </ng-template>
   </div>
+
+  <!-- Reusable Table Template -->
+  <ng-template #itemTable let-items="items">
+    <div class="data-grid__table-wrapper">
+      <table mat-table [dataSource]="items" class="data-grid__table">
+        <!-- Repo Column -->
+        <ng-container matColumnDef="repo">
+          <th mat-header-cell *matHeaderCellDef>Repo</th>
+          <td mat-cell *matCellDef="let item">
+            <span class="row-badge" [ngClass]="getRepoBadgeClass(item.repository.name)">
+              {{ item.repository.name }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Ticket Column -->
+        <ng-container matColumnDef="ticket">
+          <th mat-header-cell *matHeaderCellDef>Ticket</th>
+          <td mat-cell *matCellDef="let item">
+            <div *ngFor="let t of item.tickets" class="ticket-id">{{ t.ticketId }}</div>
+          </td>
+        </ng-container>
+
+        <!-- Fix Version Column -->
+        <ng-container matColumnDef="fixVersion">
+          <th mat-header-cell *matHeaderCellDef>Fix Version</th>
+          <td mat-cell *matCellDef="let item">{{ item.releaseStream?.version || '—' }}</td>
+        </ng-container>
+
+        <!-- Source Branch Column -->
+        <ng-container matColumnDef="sourceBranch">
+          <th mat-header-cell *matHeaderCellDef>Branch</th>
+          <td mat-cell *matCellDef="let item" [title]="item.sourceBranch">
+            <span class="code-chip">{{ item.sourceBranch }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let item">
+            <span class="row-badge" [ngClass]="getStatusBadgeClass(item.status)">
+              {{ item.status | uppercase }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Branch Build Column -->
+        <ng-container matColumnDef="branchBuilds">
+          <th mat-header-cell *matHeaderCellDef>Branch Build</th>
+          <td mat-cell *matCellDef="let item">
+            <span class="code-chip">{{ getBuildsString(item) }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Merge on Devel Column -->
+        <ng-container matColumnDef="isMergedOnDevel">
+          <th mat-header-cell *matHeaderCellDef class="col--center">Merge on Devel</th>
+          <td mat-cell *matCellDef="let item" class="col--center">
+            <mat-checkbox [checked]="item.isMergedOnDevel" (change)="onMergeDevelChange(item, $event.checked)"></mat-checkbox>
+          </td>
+        </ng-container>
+
+        <!-- Change Type Column -->
+        <ng-container matColumnDef="changeType">
+          <th mat-header-cell *matHeaderCellDef>Type</th>
+          <td mat-cell *matCellDef="let item">
+            <div *ngFor="let t of item.tickets">
+              <span class="row-badge" [ngClass]="getChangeTypeClass(t.changeType)">{{ t.changeType }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- QC Status Column -->
+        <ng-container matColumnDef="qcStatus">
+          <th mat-header-cell *matHeaderCellDef>QC Ready</th>
+          <td mat-cell *matCellDef="let item">
+            <div *ngFor="let t of item.tickets">
+              <select
+                [ngModel]="t.qcStatus"
+                (ngModelChange)="onQCStatusChange(t, $event)"
+                class="qc-select"
+                [ngClass]="getQCStatusClass(t.qcStatus)">
+                <option *ngFor="let opt of qcStatuses" [value]="opt">{{ opt }}</option>
+              </select>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Pending Issues Column -->
+        <ng-container matColumnDef="pendingIssues">
+          <th mat-header-cell *matHeaderCellDef>Pending Issues</th>
+          <td mat-cell *matCellDef="let item">
+            <div *ngFor="let t of item.tickets" class="pending-text" [title]="t.pendingIssues || ''">
+              {{ t.pendingIssues || '—' }}
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Developer Column -->
+        <ng-container matColumnDef="developer">
+          <th mat-header-cell *matHeaderCellDef>Developer</th>
+          <td mat-cell *matCellDef="let item">
+            <span class="user-avatar" [title]="item.user?.email || ''">
+              <mat-icon style="font-size: 14px; width: 14px; height: 14px; margin-right: 4px; vertical-align: middle;">person</mat-icon>
+              {{ item.user?.username || '—' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Created At Column -->
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef>Created</th>
+          <td mat-cell *matCellDef="let item" class="meta-cell">
+            {{ formatDate(item.createdAt) }}
+          </td>
+        </ng-container>
+
+        <!-- Updated At Column -->
+        <ng-container matColumnDef="updatedAt">
+          <th mat-header-cell *matHeaderCellDef>Updated</th>
+          <td mat-cell *matCellDef="let item" class="meta-cell">
+            {{ formatDate(item.updatedAt) }}
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="col--center">Actions</th>
+          <td mat-cell *matCellDef="let item">
+            <div *ngFor="let t of item.tickets" class="row-actions">
+              <button mat-icon-button color="primary" (click)="openEditPanel(item, t)" title="Edit record">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="deleteItem(item)" title="Delete record">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Header and Row definitions -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+        <!-- Empty state -->
+        <tr class="mat-row" *mat-noDataRow>
+          <td class="mat-cell data-grid__empty-cell" colspan="14">
+            No records match the current filter criteria.
+          </td>
+        </tr>
+      </table>
+    </div>
+  </ng-template>
 
   <!-- ─── Paginator ───────────────────────────────────────────────────── -->
   <mat-paginator
@@ -301,12 +380,12 @@
         </mat-select>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Developer *</mat-label>
-        <mat-select [(ngModel)]="newUserId">
-          <mat-option *ngFor="let u of users()" [value]="u.id">{{ u.username }}</mat-option>
-        </mat-select>
-      </mat-form-field>
+      <!-- Developer auto-filled from logged-in account -->
+      <div class="sidebar__user-badge">
+        <mat-icon>person</mat-icon>
+        <span>{{ currentUser()?.username || '—' }}</span>
+        <small>Auto-filled from your account</small>
+      </div>
 
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>Release Stream (Fix Version)</mat-label>
@@ -363,6 +442,13 @@
         <textarea matInput rows="3" [(ngModel)]="newPendingIssues" placeholder="Enter any pending issues..."></textarea>
       </mat-form-field>
 
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Branch Build</mat-label>
+        <mat-select [(ngModel)]="newBranchBuilds" multiple>
+          <mat-option *ngFor="let opt of branchBuildOptions" [value]="opt">{{ opt }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
       <mat-checkbox [(ngModel)]="newIsMergedOnDevel">Merged to Devel</mat-checkbox>
     </div>
 
@@ -386,6 +472,13 @@
         <mat-label>Developer *</mat-label>
         <mat-select [(ngModel)]="activeItem.userId">
           <mat-option *ngFor="let u of users()" [value]="u.id">{{ u.username }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Branch Build</mat-label>
+        <mat-select [(ngModel)]="activeBranchBuilds" multiple>
+          <mat-option *ngFor="let opt of branchBuildOptions" [value]="opt">{{ opt }}</mat-option>
         </mat-select>
       </mat-form-field>
 

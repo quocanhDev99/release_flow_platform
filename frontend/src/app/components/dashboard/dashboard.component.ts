@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
@@ -12,7 +13,10 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ReleaseService } from '../../services/release.service';
+import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { ToastComponent } from '../toast/toast.component';
@@ -37,6 +41,8 @@ import * as XLSX from 'xlsx';
     MatChipsModule,
     MatPaginatorModule,
     MatProgressSpinnerModule,
+    MatExpansionModule,
+    MatTooltipModule,
     ToastComponent
   ],
   templateUrl: './dashboard.component.html',
@@ -44,6 +50,8 @@ import * as XLSX from 'xlsx';
 })
 export class DashboardComponent implements OnInit {
   private releaseService = inject(ReleaseService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
   private dialog = inject(MatDialog);
   private toast = inject(ToastService);
 
@@ -54,6 +62,7 @@ export class DashboardComponent implements OnInit {
   releases = signal<ReleaseStream[]>([]);
   repositories = signal<Repository[]>([]);
   users = signal<User[]>([]);
+  currentUser = signal<User | null>(this.authService.getCurrentUser());
 
   // Grouping state & helpers
   isGrouped = signal<boolean>(true);
@@ -121,6 +130,113 @@ export class DashboardComponent implements OnInit {
       result.push(...groupItems);
     }
     return result;
+  });
+
+  groupedHierarchicalData = computed(() => {
+    const items = this.filteredItems();
+    const rootNodes: any[] = [];
+    const level1Map = new Map<string, any>();
+
+    for (const item of items) {
+      const key = this.getVersionKey(item);
+      if (key === 'unclassified') {
+        let unclassNode = rootNodes.find(n => n.versionKey === 'Unclassified');
+        if (!unclassNode) {
+          unclassNode = { versionKey: 'Unclassified', level: 1, directItems: [], subNodes: [], totalCount: 0 };
+          rootNodes.push(unclassNode);
+        }
+        unclassNode.directItems.push(item);
+        continue;
+      }
+
+      const parts = key.split('.').map(Number);
+      const l1Key = parts.slice(0, 2).join('.');
+      
+      let l1Node = level1Map.get(l1Key);
+      if (!l1Node) {
+        l1Node = { versionKey: l1Key, level: 1, directItems: [], subNodes: [], totalCount: 0 };
+        level1Map.set(l1Key, l1Node);
+      }
+
+      if (parts.length <= 2) {
+        l1Node.directItems.push(item);
+      } else {
+        const l2Key = parts.slice(0, 3).join('.');
+        let l2Node = l1Node.subNodes.find((n: any) => n.versionKey === l2Key);
+        if (!l2Node) {
+          l2Node = { versionKey: l2Key, level: 2, directItems: [], subNodes: [], totalCount: 0 };
+          l1Node.subNodes.push(l2Node);
+        }
+
+        if (parts.length === 3) {
+          l2Node.directItems.push(item);
+        } else {
+          const l3Key = parts.slice(0, 4).join('.');
+          let l3Node = l2Node.subNodes.find((n: any) => n.versionKey === l3Key);
+          if (!l3Node) {
+            l3Node = { versionKey: l3Key, level: 3, directItems: [], subNodes: [], totalCount: 0 };
+            l2Node.subNodes.push(l3Node);
+          }
+          l3Node.directItems.push(item);
+        }
+      }
+    }
+
+    const list = Array.from(level1Map.values());
+    list.sort((a, b) => {
+      const pa = a.versionKey.split('.').map(Number);
+      const pb = b.versionKey.split('.').map(Number);
+      for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+        const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
+        if (diff !== 0) return diff;
+      }
+      return 0;
+    });
+
+    for (const l1 of list) {
+      l1.subNodes.sort((a: any, b: any) => {
+        const pa = a.versionKey.split('.').map(Number);
+        const pb = b.versionKey.split('.').map(Number);
+        for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+          const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
+          if (diff !== 0) return diff;
+        }
+        return 0;
+      });
+
+      for (const l2 of l1.subNodes) {
+        l2.subNodes.sort((a: any, b: any) => {
+          const pa = a.versionKey.split('.').map(Number);
+          const pb = b.versionKey.split('.').map(Number);
+          for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+            const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
+            if (diff !== 0) return diff;
+          }
+          return 0;
+        });
+      }
+    }
+
+    const calcCounts = (node: any): number => {
+      let count = node.directItems.length;
+      for (const sub of node.subNodes) {
+        count += calcCounts(sub);
+      }
+      node.totalCount = count;
+      return count;
+    };
+
+    for (const node of list) {
+      calcCounts(node);
+    }
+
+    const unclass = rootNodes.find(n => n.versionKey === 'Unclassified');
+    if (unclass) {
+      calcCounts(unclass);
+      list.push(unclass);
+    }
+
+    return list;
   });
 
   isGroupHeaderRow = (index: number, item: any): boolean => {
@@ -226,6 +342,11 @@ export class DashboardComponent implements OnInit {
   newIsMergedOnDevel = false;
   newStatus = 'merged';
 
+  // New Branch Build selections
+  newBranchBuilds: string[] = [];
+  activeBranchBuilds: string[] = [];
+  branchBuildOptions = ['dev', 'dev2', 'devel'];
+
   // Table configuration
   displayedColumns: string[] = [
     'repo',
@@ -262,7 +383,42 @@ export class DashboardComponent implements OnInit {
   activeItem: DeploymentItem | null = null;
   activeTicket: Ticket | null = null;
 
+  applyTheme(theme: string) {
+    if (theme === 'dark') {
+      document.body.classList.add('dark-theme');
+    } else {
+      document.body.classList.remove('dark-theme');
+    }
+  }
+
+  toggleTheme() {
+    const user = this.currentUser();
+    if (!user) return;
+    const newTheme = user.theme === 'dark' ? 'light' : 'dark';
+
+    // Update local state
+    const updated = { ...user, theme: newTheme };
+    this.currentUser.set(updated);
+    this.applyTheme(newTheme);
+
+    // Save to DB and update localStorage via AuthService
+    this.authService.updateTheme(newTheme).subscribe({
+      next: () => this.toast.success(`Theme switched to ${newTheme} mode.`),
+      error: (err) => console.error('Failed to save theme in DB', err)
+    });
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+
   ngOnInit() {
+    const user = this.authService.getCurrentUser();
+    if (user) {
+      this.currentUser.set(user);
+      this.applyTheme(user.theme || 'light');
+    }
     this.loadData();
   }
 
@@ -384,12 +540,19 @@ export class DashboardComponent implements OnInit {
     this.isCreateMode = false;
     this.activeItem = { ...item };
     this.activeTicket = { ...ticket };
+    const managedEnvs = ['dev', 'dev2', 'devel'];
+    this.activeBranchBuilds = item.builds
+      ? item.builds
+          .filter(b => b.status === 'SUCCESS' && b.environment && managedEnvs.includes(b.environment.name))
+          .map(b => b.environment.name)
+      : [];
   }
 
   openCreatePanel() {
     this.isCreateMode = true;
     this.newRepoId = this.repositories().length > 0 ? this.repositories()[0].id : null;
-    this.newUserId = this.users().length > 0 ? this.users()[0].id : null;
+    // Auto-fill userId from logged-in account
+    this.newUserId = this.currentUser()?.id ?? null;
     this.newReleaseVersion = '';
     this.newSourceBranch = '';
     this.newTicketId = '';
@@ -399,6 +562,7 @@ export class DashboardComponent implements OnInit {
     this.newPendingIssues = '';
     this.newIsMergedOnDevel = false;
     this.newStatus = 'merged';
+    this.newBranchBuilds = [];
 
     // Use dummy items to open the panel
     this.activeItem = {} as any;
@@ -441,18 +605,21 @@ export class DashboardComponent implements OnInit {
   // Save details from panel
   saveTicketDetails() {
     if (this.isCreateMode) {
-      if (!this.newRepoId || !this.newUserId || !this.newTicketId.trim() || !this.newSourceBranch.trim()) {
-        this.toast.warn('Please fill in all required fields: Repository, Developer, Ticket ID, and Branch.');
+      // Validate: use logged-in user ID, not dropdown
+      const userId = this.currentUser()?.id;
+      if (!this.newRepoId || !userId || !this.newTicketId.trim() || !this.newSourceBranch.trim()) {
+        this.toast.warn('Please fill in all required fields: Repository, Ticket ID, and Branch.');
         return;
       }
 
       const payload = {
         repositoryId: this.newRepoId,
-        userId: this.newUserId,
+        userId: userId,
         releaseVersion: this.newReleaseVersion,
         sourceBranch: this.newSourceBranch,
         isMergedOnDevel: this.newIsMergedOnDevel,
         status: this.newStatus,
+        branchBuilds: this.newBranchBuilds,
         tickets: [
           {
             ticketId: this.newTicketId,
@@ -484,6 +651,7 @@ export class DashboardComponent implements OnInit {
         releaseStreamId: this.activeItem.releaseStreamId,
         status: this.activeItem.status,
         userId: this.activeItem.userId,
+        branchBuilds: this.activeBranchBuilds,
         tickets: [
           {
             id: this.activeTicket.id,
