@@ -381,7 +381,7 @@ export class DashboardComponent implements OnInit {
   // New Branch Build selections
   newBranchBuilds: string[] = [];
   activeBranchBuilds: string[] = [];
-  branchBuildOptions = ['dev', 'dev2', 'devel'];
+  branchBuildOptions = ['dev', 'dev2', 'devel', 'STG', 'UAT', 'Production'];
 
   // Table configuration
   displayedColumns: string[] = [
@@ -584,10 +584,9 @@ export class DashboardComponent implements OnInit {
     this.isCreateMode = false;
     this.activeItem = { ...item };
     this.activeTicket = { ...ticket };
-    const managedEnvs = ['dev', 'dev2', 'devel'];
     this.activeBranchBuilds = item.builds
       ? item.builds
-        .filter(b => b.status === 'SUCCESS' && b.environment && managedEnvs.includes(b.environment.name))
+        .filter(b => b.status === 'SUCCESS' && b.environment && this.branchBuildOptions.includes(b.environment.name))
         .map(b => b.environment.name)
       : [];
   }
@@ -723,6 +722,15 @@ export class DashboardComponent implements OnInit {
         return;
       }
 
+      let branchBuilds = [...this.newBranchBuilds];
+      if (this.newIsMergedOnDevel) {
+        if (!branchBuilds.includes('devel')) {
+          branchBuilds.push('devel');
+        }
+      } else {
+        branchBuilds = branchBuilds.filter(b => b !== 'devel');
+      }
+
       const payload = {
         repositoryId: this.newRepoId,
         userId: userId,
@@ -730,7 +738,7 @@ export class DashboardComponent implements OnInit {
         sourceBranch: this.newSourceBranch,
         isMergedOnDevel: this.newIsMergedOnDevel,
         status: this.newStatus,
-        branchBuilds: this.newBranchBuilds,
+        branchBuilds,
         tickets: [
           {
             ticketId: this.newTicketId,
@@ -756,13 +764,22 @@ export class DashboardComponent implements OnInit {
     } else {
       if (!this.activeItem || !this.activeTicket) return;
 
+      let branchBuilds = [...this.activeBranchBuilds];
+      if (this.activeItem.isMergedOnDevel) {
+        if (!branchBuilds.includes('devel')) {
+          branchBuilds.push('devel');
+        }
+      } else {
+        branchBuilds = branchBuilds.filter(b => b !== 'devel');
+      }
+
       const payload = {
         sourceBranch: this.activeItem.sourceBranch,
         isMergedOnDevel: this.activeItem.isMergedOnDevel,
         releaseStreamId: this.activeItem.releaseStreamId,
         status: this.activeItem.status,
         userId: this.activeItem.userId,
-        branchBuilds: this.activeBranchBuilds,
+        branchBuilds,
         tickets: [
           {
             id: this.activeTicket.id,
@@ -820,6 +837,7 @@ export class DashboardComponent implements OnInit {
         const idxQC = getColIndex(['ready for qc', 'qc status', 'trạng thái qc', 'qc']);
         const idxPending = getColIndex(['pending issues', 'tồn đọng', 'lỗi']);
         const idxUser = getColIndex(['user', 'developer', 'người merge', 'tài khoản']);
+        const idxBranchBuild = getColIndex(['branch build', 'build']);
 
         if (idxTicket === -1) {
           this.toast.error('Column "Ticket ID" or "Ticket" was not found in the uploaded file.');
@@ -845,7 +863,34 @@ export class DashboardComponent implements OnInit {
           const pendingIssues = idxPending !== -1 && row[idxPending] ? String(row[idxPending]).trim() : '';
           const username = idxUser !== -1 && row[idxUser] ? String(row[idxUser]).trim() : 'system';
 
-          items.push({ repoName, ticketId, summary, changeType, releaseVersion, sourceBranch, isMergedOnDevel, qcStatus, pendingIssues, username });
+          // Parse Branch Build UAT/Production column
+          const branchBuildsVal = idxBranchBuild !== -1 && row[idxBranchBuild] ? String(row[idxBranchBuild]).trim() : '';
+          const rawBuilds = branchBuildsVal ? branchBuildsVal.split(',').map(s => s.trim().toLowerCase()).filter(Boolean) : [];
+          const branchBuilds: string[] = [];
+
+          for (const rb of rawBuilds) {
+            if (rb.includes('devel')) {
+              if (!branchBuilds.includes('devel')) branchBuilds.push('devel');
+            } else if (rb.includes('dev2') || rb.includes('dev-2')) {
+              if (!branchBuilds.includes('dev2')) branchBuilds.push('dev2');
+            } else if (rb.includes('dev')) {
+              if (!branchBuilds.includes('dev')) branchBuilds.push('dev');
+            } else if (rb.includes('prod') || rb.includes('production')) {
+              if (!branchBuilds.includes('Production')) branchBuilds.push('Production');
+            } else if (rb.includes('stg') || rb.includes('staging')) {
+              if (!branchBuilds.includes('STG')) branchBuilds.push('STG');
+            } else if (rb.includes('uat')) {
+              if (!branchBuilds.includes('UAT')) branchBuilds.push('UAT');
+            } else {
+              if (!branchBuilds.includes(rb)) branchBuilds.push(rb);
+            }
+          }
+
+          if (isMergedOnDevel && !branchBuilds.includes('devel')) {
+            branchBuilds.push('devel');
+          }
+
+          items.push({ repoName, ticketId, summary, changeType, releaseVersion, sourceBranch, isMergedOnDevel, qcStatus, pendingIssues, username, branchBuilds });
         }
 
         if (items.length === 0) {
