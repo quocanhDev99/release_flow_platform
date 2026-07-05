@@ -153,8 +153,12 @@ let DeploymentItemsService = class DeploymentItemsService {
                 },
             },
         });
-        if (data.branchBuilds && Array.isArray(data.branchBuilds)) {
-            for (const envName of data.branchBuilds) {
+        let branchBuilds = data.branchBuilds && Array.isArray(data.branchBuilds) ? [...data.branchBuilds] : [];
+        if (data.isMergedOnDevel && !branchBuilds.includes('devel')) {
+            branchBuilds.push('devel');
+        }
+        if (branchBuilds.length > 0) {
+            for (const envName of branchBuilds) {
                 const env = await this.prisma.environment.upsert({
                     where: { name: envName },
                     update: {},
@@ -198,16 +202,21 @@ let DeploymentItemsService = class DeploymentItemsService {
             }
         }
         if (data.branchBuilds && Array.isArray(data.branchBuilds)) {
-            const managedEnvs = ['dev', 'dev2', 'devel'];
+            let branchBuilds = [...data.branchBuilds];
+            if (data.isMergedOnDevel === true) {
+                if (!branchBuilds.includes('devel')) {
+                    branchBuilds.push('devel');
+                }
+            }
+            else if (data.isMergedOnDevel === false) {
+                branchBuilds = branchBuilds.filter(b => b !== 'devel');
+            }
             await this.prisma.build.deleteMany({
                 where: {
                     deploymentItemId: id,
-                    environment: {
-                        name: { in: managedEnvs }
-                    }
                 }
             });
-            for (const envName of data.branchBuilds) {
+            for (const envName of branchBuilds) {
                 const env = await this.prisma.environment.upsert({
                     where: { name: envName },
                     update: {},
@@ -225,6 +234,41 @@ let DeploymentItemsService = class DeploymentItemsService {
         return this.findOne(id);
     }
     async patchMergeDevel(id, isMergedOnDevel) {
+        if (isMergedOnDevel) {
+            const env = await this.prisma.environment.upsert({
+                where: { name: 'devel' },
+                update: {},
+                create: { name: 'devel', description: 'Môi trường tích hợp mã nguồn chung (Development server)' },
+            });
+            const existingBuild = await this.prisma.build.findFirst({
+                where: {
+                    deploymentItemId: id,
+                    environmentId: env.id,
+                },
+            });
+            if (!existingBuild) {
+                await this.prisma.build.create({
+                    data: {
+                        status: 'SUCCESS',
+                        deploymentItemId: id,
+                        environmentId: env.id,
+                    },
+                });
+            }
+        }
+        else {
+            const env = await this.prisma.environment.findUnique({
+                where: { name: 'devel' },
+            });
+            if (env) {
+                await this.prisma.build.deleteMany({
+                    where: {
+                        deploymentItemId: id,
+                        environmentId: env.id,
+                    },
+                });
+            }
+        }
         return this.prisma.deploymentItem.update({
             where: { id },
             data: { isMergedOnDevel },
@@ -320,6 +364,26 @@ let DeploymentItemsService = class DeploymentItemsService {
                     },
                 },
             });
+            let branchBuilds = item.branchBuilds && Array.isArray(item.branchBuilds) ? [...item.branchBuilds] : [];
+            if (isMergedOnDevel && !branchBuilds.includes('devel')) {
+                branchBuilds.push('devel');
+            }
+            if (branchBuilds.length > 0) {
+                for (const envName of branchBuilds) {
+                    const env = await this.prisma.environment.upsert({
+                        where: { name: envName },
+                        update: {},
+                        create: { name: envName, description: `Môi trường ${envName}` },
+                    });
+                    await this.prisma.build.create({
+                        data: {
+                            status: 'SUCCESS',
+                            deploymentItemId: dbItem.id,
+                            environmentId: env.id,
+                        }
+                    });
+                }
+            }
             results.push(dbItem);
         }
         return results;

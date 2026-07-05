@@ -4,11 +4,11 @@ export declare class UsersController {
     constructor(prisma: PrismaService);
     findAll(): import("@prisma/client").Prisma.PrismaPromise<{
         id: number;
+        createdAt: Date;
+        updatedAt: Date;
         username: string;
         email: string;
         theme: string;
-        createdAt: Date;
-        updatedAt: Date;
     }[]>;
     register(body: {
         username: string;
@@ -16,24 +16,24 @@ export declare class UsersController {
         password: string;
     }): Promise<{
         id: number;
+        createdAt: Date;
+        updatedAt: Date;
         username: string;
         email: string;
         theme: string;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     login(body: {
         email: string;
         password: string;
     }): Promise<{
         id: number;
+        createdAt: Date;
+        updatedAt: Date;
         username: string;
         email: string;
         theme: string;
         resetToken: string | null;
         resetTokenExpires: Date | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     forgotPassword(email: string): Promise<{
         message: string;
@@ -46,11 +46,11 @@ export declare class UsersController {
     }>;
     updateTheme(id: number, theme: string): import("@prisma/client").Prisma.Prisma__UserClient<{
         id: number;
+        createdAt: Date;
+        updatedAt: Date;
         username: string;
         email: string;
         theme: string;
-        createdAt: Date;
-        updatedAt: Date;
     }, never, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
     updateProfile(id: number, body: {
         username?: string;
@@ -58,10 +58,10 @@ export declare class UsersController {
         password?: string;
     }): Promise<{
         id: number;
+        createdAt: Date;
+        updatedAt: Date;
         username: string;
         email: string;
         theme: string;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
 }
