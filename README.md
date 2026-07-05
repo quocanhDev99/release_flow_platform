@@ -51,13 +51,13 @@ Nằm tại thư mục `frontend/`, được phát triển bằng **Angular 20**
     *   Tự xây dựng `ToastService` dạng hàng đợi (Queue Queue) độc lập dựa trên Signals để phát thông báo động khắp ứng dụng.
 *   **Giao diện & Thành phần UI:**
     *   **Bảng dữ liệu Excel-like Grid:** Sử dụng `<table mat-table>` kết hợp phân trang máy chủ (`<mat-paginator>`). Tích hợp hiệu ứng làm mờ kính (`backdrop-blur` overlay) và spinner loading thông minh ngăn chặn bấm nhầm dữ liệu.
-    *   **Bộ lọc Branch Build thông minh:** Thêm hộp chọn dropdown **Branch Build** (`dev`, `dev2`, `devel`) trực tiếp trên thanh bộ lọc Dashboard giúp tìm kiếm chéo nhanh chóng theo môi trường triển khai mã nguồn.
+    *   **Bộ lọc Branch Build thông minh & Cấu hình Động (Dynamic Environments):** Khác biệt hoàn toàn so với các Dropdown cứng ngắc truyền thống, bộ lọc và thẻ chọn Branch Build được liên kết trực tiếp với cơ sở dữ liệu. Hỗ trợ cấu hình động bất kỳ tên môi trường nào (ví dụ: `release/v11.1-pre-release.3`, `STG`, `UAT`). Nếu Upload CSV chứa tên mới, hệ thống tự động học và thêm vào danh sách bộ lọc ngay lập tức!
     *   **Gom nhóm đa cấp độ động dạng Cây (Tree-indented Grouping):** Thuật toán bóc tách và loại bỏ ký tự `x` dư thừa ở đuôi phiên bản, tự động tổ chức hiển thị dạng cây phân cấp trực quan:
         *   **Cấp 1 (Ví dụ: `1.12`):** Group chính (Release Group), nhãn chữ xanh lam làm chuẩn kèm viền nhấn trái.
         *   **Cấp 2 (Ví dụ: `1.12.1`):** Sub-release thụt lề vào trong, nhãn chữ xanh ngọc.
         *   **Cấp 3 (Ví dụ: `1.12.1.1`):** Patch thụt lề sâu hơn, nhãn chữ tím.
     *   **Khởi tạo Bản ghi ngữ cảnh (Contextual Quick-create):** Click trực tiếp biểu tượng **`+`** tại bất kỳ tiêu đề phiên bản nào (`1.12`, `1.12.1`...) để mở form tạo mới, hệ thống tự động điền sẵn phiên bản tương ứng giúp loại bỏ thao tác chọn thủ công.
-    *   **Quản lý Cấu hình Động & Xóa liên tầng (Cascade Deletion):** Hỗ trợ thêm/xóa nhanh Repository và Release Stream dưới dạng các thẻ Chip trong bảng điều khiển. Việc xóa được bảo vệ bằng cửa sổ xác nhận an toàn (Confirm Popup) và tự động dọn sạch các bản ghi phụ thuộc (cascade deletion) trong một Database Transaction duy nhất để bảo đảm toàn vẹn dữ liệu.
+    *   **Quản lý Cấu hình Động & Xóa liên tầng (Cascade Deletion):** Hỗ trợ thêm/xóa nhanh Repository, Release Stream, và **Branch Build Environments** dưới dạng các thẻ Chip trong bảng điều khiển. Việc xóa được bảo vệ bằng cửa sổ xác nhận an toàn (Confirm Popup) và tự động dọn sạch các bản ghi phụ thuộc (cascade deletion) trong một Database Transaction duy nhất để bảo đảm toàn vẹn dữ liệu.
     *   **Nâng cấp Giao diện Chuẩn Doanh nghiệp (Enterprise UI/UX):**
         *   Tông màu chủ đạo chuyển sang **Navy & Teal** mang tính chất doanh nghiệp/công nghệ đáng tin cậy.
         *   Màu sắc Repository (`Core`, `CMS`...) và Status được cải tiến sang dạng nền bán trong suốt nhẹ nhàng phối hợp viền tinh tế, tự động tương thích Light/Dark mode.
@@ -65,9 +65,9 @@ Nằm tại thư mục `frontend/`, được phát triển bằng **Angular 20**
         *   Đường liên kết phân cấp dạng cây chuyển từ nét đứt sang nét liền xanh dương thanh lịch.
         *   Tiêu đề bảng sử dụng font chữ mỏng trung bình (`weight: 600`) cho cảm giác thoáng đãng và chuyên nghiệp hơn.
     *   **Dynamic Sorting (Sắp xếp Động):** Người dùng có thể nhấn nút Sort xoay vòng trực quan trên Action Bar để đổi thứ tự sắp xếp theo `Ngày tạo` hoặc `Phiên bản Release` từ xa qua API.
-    *   **Custom Modals & Toasts:** Thay thế hoàn toàn các hàm `alert()` và `confirm()` gốc của trình duyệt bằng `ToastComponent` động góc phải màn hình và hộp thoại xác nhận chuyên nghiệp `ConfirmDialogComponent`.
+    *   **Custom Modals, Tooltips & Toasts:** Tích hợp `matTooltip` thông minh (ví dụ: hiển thị chi tiết toàn bộ chuỗi Branch Build dài khi rê chuột). Thay thế hoàn toàn các hàm `alert()` và `confirm()` gốc của trình duyệt bằng `ToastComponent` động góc phải màn hình và hộp thoại xác nhận chuyên nghiệp `ConfirmDialogComponent`.
     *   **Hộp lọc thả xuống thông minh:** Phân loại Fix Version theo dạng nhóm cây gọn gàng thông qua component `<mat-optgroup>`.
-    *   **Sidebar Panels:** Ngăn trượt từ bên phải màn hình (slide-over panel) hỗ trợ hai chế độ nhập liệu/chỉnh sửa thông tin nhánh, ticket, gán người sửa và quản lý danh sách phiên bản phát hành.
+    *   **Sidebar Panels:** Ngăn trượt từ bên phải màn hình (slide-over panel) hỗ trợ hai chế độ nhập liệu/chỉnh sửa thông tin nhánh, ticket, gán người sửa và quản lý danh sách phiên bản/môi trường.
 *   **Hệ thống Styling (CSS/SCSS):**
     *   Viết lại toàn bộ bằng **SCSS** với các Token thiết kế trung tâm (`$color-brand`, `$radius-lg`, `$shadow-card`, v.v.).
     *   Tuân thủ nghiêm ngặt chuẩn đặt tên lớp **BEM** (`block__element--modifier`) để tăng khả năng tái sử dụng CSS và tránh xung đột cấu trúc.
@@ -96,10 +96,10 @@ Nằm tại thư mục `backend/`, được phát triển bằng **NestJS** kế
         *   `ReleaseStream` (1) ↔ `DeploymentItem` (N): Quản lý dòng phát hành.
         *   `DeploymentItem` (1) ↔ `Ticket` (N): Cho phép gộp nhiều mã Ticket (`MAG-xxxxx`) vào trong cùng một sự kiện Merge duy nhất.
         *   `DeploymentItem` (1) ↔ `Build` (N) ↔ `Environment` (1): Theo dõi lịch sử trạng thái build trên từng máy chủ (dev, devel, STG, UAT, Production).
-*   **Logic Nghiệp vụ API (DeploymentItemsService):**
-    *   **Dynamic Filters:** Hỗ trợ tìm kiếm không dấu/chữ hoa chữ thường, lọc chéo theo Repository, Fix Version, Trạng thái nhánh (`merged`, `pending`, `closed`), Trạng thái kiểm thử QC và **Branch Build**.
-    *   **Server-side Sorting & Pagination:** Đảm bảo tải trang nhanh với lượng dữ liệu lớn nhờ cơ chế tính toán tổng trang và sắp xếp trực tiếp trên cơ sở dữ liệu (Database Engine).
-    *   **Excel/CSV Bulk Parser:** Cho phép upload tệp bảng tính Excel, tự động phân tích tiêu đề cột, ánh xạ dữ liệu và thực hiện cơ chế cập nhật tự động (Upsert Repo/User) để ghi nhận hàng loạt bản ghi nhanh chóng. Tự động nhận diện Fix Version từ tên nhánh nếu cột phiên bản bị bỏ trống.
+    *   **Logic Nghiệp vụ API (DeploymentItemsService):**
+        *   **Dynamic Filters:** Hỗ trợ tìm kiếm không dấu/chữ hoa chữ thường, lọc chéo theo Repository, Fix Version, Trạng thái nhánh (`merged`, `pending`, `closed`), Trạng thái kiểm thử QC và **Branch Build**.
+        *   **Server-side Sorting & Pagination:** Đảm bảo tải trang nhanh với lượng dữ liệu lớn nhờ cơ chế tính toán tổng trang và sắp xếp trực tiếp trên cơ sở dữ liệu (Database Engine).
+        *   **Excel/CSV Bulk Parser (Có tính năng học thông minh & UPSERT):** Cho phép upload tệp bảng tính Excel, tự động phân tích tiêu đề cột, ánh xạ dữ liệu và thực hiện cơ chế cập nhật tự động (**UPSERT Repo/User/Ticket**). Nếu ticket đã tồn tại, nó sẽ tự động cập nhật bản ghi cũ thay vì bỏ qua, giúp bạn dễ dàng re-import để ghi đè Branch Build. Tự động nhận diện Fix Version từ tên nhánh nếu cột phiên bản bị bỏ trống. Đặc biệt, bộ phân tích giữ nguyên định dạng chữ hoa/chữ thường (original casing) cho các môi trường Build tuỳ chỉnh để tự động lưu chúng vào CSDL.
     *   **Tự động Migrate trên Cloud (Auto DB Migration):** Tích hợp lệnh `npx prisma migrate deploy` trực tiếp vào quá trình biên dịch (`build` script) trên Render để đồng bộ cấu trúc DB tức thì khi triển khai code mới.
 
 ---
