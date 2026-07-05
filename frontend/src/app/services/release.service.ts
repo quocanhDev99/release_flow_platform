@@ -90,4 +90,17 @@ export class ReleaseService {
   bulkCreateDeploymentItems(items: any[]): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deployment-items/bulk`, items);
   }
+
+  // Environments
+  getEnvironments(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/environments`);
+  }
+
+  createEnvironment(name: string, description?: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/environments`, { name, description });
+  }
+
+  deleteEnvironment(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/environments/${id}`);
+  }
 }

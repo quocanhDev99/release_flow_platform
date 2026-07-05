@@ -263,7 +263,7 @@
         <!-- Branch Build Column -->
         <ng-container matColumnDef="branchBuilds">
           <th mat-header-cell *matHeaderCellDef>Branch Build</th>
-          <td mat-cell *matCellDef="let item">
+          <td mat-cell *matCellDef="let item" [matTooltip]="getBuildsString(item)">
             <span class="code-chip">{{ getBuildsString(item) }}</span>
           </td>
         </ng-container>
@@ -579,6 +579,27 @@
 
       <button mat-flat-button color="primary" class="w-full" (click)="addRepository()">
         <mat-icon>add</mat-icon> Add Repository
+      </button>
+
+      <hr class="sidebar__divider" style="margin-top: 16px;">
+
+      <!-- 3. Branch Build / Environments section -->
+      <p class="sidebar__section-title">Branch Builds (Environments)</p>
+      <div class="release-chip-list">
+        <span *ngFor="let env of environments()" class="release-chip">
+          {{ env.name }}
+          <mat-icon class="release-chip__remove" (click)="deleteEnvironment(env, $event)">close</mat-icon>
+        </span>
+        <span *ngIf="environments().length === 0" class="release-chip-empty">No dynamic branch builds configured.</span>
+      </div>
+
+      <mat-form-field appearance="outline" class="w-full" style="margin-top: 8px;">
+        <mat-label>Branch Build Name (e.g. release/v1.1.1)</mat-label>
+        <input matInput [(ngModel)]="newEnvironmentName" placeholder="e.g. release/v1.1.1">
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" class="w-full" (click)="addEnvironment()">
+        <mat-icon>add</mat-icon> Add Branch Build
       </button>
     </div>
 

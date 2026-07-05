@@ -62,6 +62,7 @@ export class DashboardComponent implements OnInit {
   releases = signal<ReleaseStream[]>([]);
   repositories = signal<Repository[]>([]);
   users = signal<User[]>([]);
+  environments = signal<any[]>([]);
   currentUser = signal<User | null>(this.authService.getCurrentUser());
 
   // Grouping state & helpers
@@ -377,6 +378,7 @@ export class DashboardComponent implements OnInit {
   newPendingIssues = '';
   newIsMergedOnDevel = false;
   newStatus = 'merged';
+  newEnvironmentName = '';
 
   // New Branch Build selections
   newBranchBuilds: string[] = [];
@@ -517,6 +519,21 @@ export class DashboardComponent implements OnInit {
       next: (usr) => this.users.set(usr),
       error: (err) => console.error('Failed to load users', err)
     });
+
+    this.loadEnvironments();
+  }
+
+  loadEnvironments() {
+    this.releaseService.getEnvironments().subscribe({
+      next: (envs) => {
+        this.environments.set(envs);
+        // Ensure we always have these defaults plus any from DB
+        const defaults = ['dev', 'dev2', 'devel', 'STG', 'UAT', 'Production'];
+        const dbNames = envs.map((e: any) => e.name);
+        this.branchBuildOptions = Array.from(new Set([...defaults, ...dbNames]));
+      },
+      error: (err) => console.error('Failed to load environments', err)
+    });
   }
 
   applyFilters() {
@@ -627,6 +644,7 @@ export class DashboardComponent implements OnInit {
     this.newReleaseVersionName = '';
     this.newRepoName = '';
     this.newRepoGitUrl = '';
+    this.newEnvironmentName = '';
     // Use dummy activeItem to open sidebar
     this.activeItem = {} as any;
   }
@@ -711,6 +729,42 @@ export class DashboardComponent implements OnInit {
       error: (err) => {
         console.error(err);
         this.toast.error(err.error?.message || 'Failed to delete repository.');
+      }
+    });
+  }
+
+  addEnvironment() {
+    const trimmed = this.newEnvironmentName.trim();
+    if (!trimmed) {
+      this.toast.warn('Please enter a valid branch build / environment name.');
+      return;
+    }
+    this.releaseService.createEnvironment(trimmed, `Môi trường ${trimmed}`).subscribe({
+      next: () => {
+        this.toast.success(`Branch Build/Environment "${trimmed}" added successfully.`);
+        this.newEnvironmentName = '';
+        this.loadEnvironments();
+      },
+      error: (err) => {
+        console.error(err);
+        this.toast.error('Failed to add branch build.');
+      }
+    });
+  }
+
+  deleteEnvironment(env: any, event: MouseEvent) {
+    event.stopPropagation();
+    const confirmed = confirm(`Are you sure you want to delete branch build "${env.name}"? Builds associated with this environment will be deleted.`);
+    if (!confirmed) return;
+
+    this.releaseService.deleteEnvironment(env.id).subscribe({
+      next: () => {
+        this.toast.success(`Branch Build "${env.name}" deleted successfully.`);
+        this.loadEnvironments();
+      },
+      error: (err) => {
+        console.error(err);
+        this.toast.error(err.error?.message || 'Failed to delete branch build.');
       }
     });
   }
@@ -868,10 +922,11 @@ export class DashboardComponent implements OnInit {
 
           // Parse Branch Build UAT/Production column
           const branchBuildsVal = idxBranchBuild !== -1 && row[idxBranchBuild] ? String(row[idxBranchBuild]).trim() : '';
-          const rawBuilds = branchBuildsVal ? branchBuildsVal.split(',').map(s => s.trim().toLowerCase()).filter(Boolean) : [];
+          const rawBuilds = branchBuildsVal ? branchBuildsVal.split(',').map(s => s.trim()).filter(Boolean) : [];
           const branchBuilds: string[] = [];
 
-          for (const rb of rawBuilds) {
+          for (const raw of rawBuilds) {
+            const rb = raw.toLowerCase();
             if (rb.includes('devel')) {
               if (!branchBuilds.includes('devel')) branchBuilds.push('devel');
             } else if (rb.includes('dev2') || rb.includes('dev-2')) {
@@ -885,7 +940,8 @@ export class DashboardComponent implements OnInit {
             } else if (rb.includes('uat')) {
               if (!branchBuilds.includes('UAT')) branchBuilds.push('UAT');
             } else {
-              if (!branchBuilds.includes(rb)) branchBuilds.push(rb);
+              // Fallback to original casing for custom branches (e.g. release/v1.1.1-pre-release.3)
+              if (!branchBuilds.includes(raw)) branchBuilds.push(raw);
             }
           }
 

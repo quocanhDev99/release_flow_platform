@@ -9,6 +9,7 @@ import { RepositoriesController } from './repositories/repositories.controller';
 import { UsersController } from './users/users.controller';
 import { NotificationsModule } from './notifications/notifications.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
+import { EnvironmentsModule } from './environments/environments.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     DeploymentItemsModule,
     NotificationsModule,
     WebhooksModule,
+    EnvironmentsModule,
   ],
   controllers: [AppController, RepositoriesController, UsersController],
   providers: [AppService],

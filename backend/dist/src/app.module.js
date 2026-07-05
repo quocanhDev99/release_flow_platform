@@ -18,6 +18,7 @@ const repositories_controller_1 = require("./repositories/repositories.controlle
 const users_controller_1 = require("./users/users.controller");
 const notifications_module_1 = require("./notifications/notifications.module");
 const webhooks_module_1 = require("./webhooks/webhooks.module");
+const environments_module_1 = require("./environments/environments.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -30,6 +31,7 @@ exports.AppModule = AppModule = __decorate([
             deployment_items_module_1.DeploymentItemsModule,
             notifications_module_1.NotificationsModule,
             webhooks_module_1.WebhooksModule,
+            environments_module_1.EnvironmentsModule,
         ],
         controllers: [app_controller_1.AppController, repositories_controller_1.RepositoriesController, users_controller_1.UsersController],
         providers: [app_service_1.AppService],
