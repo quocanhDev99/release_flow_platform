@@ -27,19 +27,26 @@ timeline
 
 ---
 
-## 🔹 Version 2: Tích hợp CI/CD & Tự động hóa (Automation Phase)
+## 🔹 Version 2: Tích hợp CI/CD & Tự động hóa (Đã Hoàn Thành)
 *Trọng tâm: Loại bỏ hoàn toàn các thao tác nhập liệu thủ công bằng cách kết nối trực tiếp với các nền tảng quản lý mã nguồn.*
 
-### 1. GitHub/Bitbucket Webhook Integration
-*   **Kịch bản:** Khi lập trình viên merge Pull Request (PR) hoặc Pull Request được chấp nhận trên các nhánh quan trọng (như `main`, `develop` hoặc `release/*`), GitHub/Bitbucket sẽ bắn một Webhook event về Backend của Release Flow Platform.
-*   **Xử lý ở Backend:**
-    *   Tự động trích xuất thông tin PR (Mã Ticket `MAG-xxxxx` từ tên PR/Commit, tên nhánh nguồn, tên lập trình viên thực hiện).
-    *   Tự động phát hiện phiên bản đích (**Fix Version**) dựa trên tên nhánh đích (ví dụ: merge vào `release/1.12` sẽ tự điền Fix Version là `1.12`).
-    *   Tự động tạo bản ghi Deployment ở trạng thái `IN PROGRESS`.
+### 1. GitHub/Bitbucket Webhook Integration (Hoàn thành)
+*   **Xử lý tự động ở Backend:**
+    *   Tự động trích xuất thông tin PR (Mã Ticket `MAG-\d+` từ tên PR/Commit, tên nhánh nguồn, tên lập trình viên thực hiện).
+    *   Tự động phát hiện phiên bản đích (**Fix Version**) dựa trên tên nhánh đích (nhánh `release/1.12` -> `sow/1.12.x`, `main`/`master` -> `sow/main`, `dev`/`develop` -> `sow/dev`).
+    *   Tự động tạo bản ghi Deployment ở trạng thái `IN PROGRESS` và tự động lọc trùng dữ liệu (lọc trùng lặp an toàn).
 
-### 2. Tự động thông báo qua Chatbot (ChatOps)
+### 2. Tự động thông báo qua Chatbot (ChatOps) (Hoàn thành)
 *   Tích hợp dịch vụ webhook của **Slack** và **Microsoft Teams**.
-*   Ngay khi có bản ghi mới được sinh tự động hoặc thay đổi trạng thái phát hành, chatbot sẽ tự động nhắn thông tin vào kênh phát triển của dự án để đội ngũ lập trình và kiểm thử nắm bắt tức thì.
+*   Ngay khi có bản ghi mới được sinh tự động hoặc thay đổi trạng thái phát hành, chatbot sẽ tự động gửi thông báo trực quan vào kênh làm việc.
+
+### 3. Cập nhật Thông tin & Avatar Cá nhân (Hoàn thành)
+*   Cho phép người dùng tùy chọn cập nhật tên, địa chỉ email, mật khẩu trực tiếp tại trang `/profile`.
+*   Tích hợp tính năng tải lên hình ảnh đại diện (avatar upload) dạng base64, lưu trữ và đồng bộ hóa tự động qua `localStorage` cho từng tài khoản.
+
+### 4. Bộ lọc Môi trường & Branch Build (Hoàn thành)
+*   Bổ sung thanh lọc thả xuống thông minh ở Dashboard cho phép lọc chéo theo **Branch Build** (`dev`, `dev2`, `devel`) được lưu giữ trong cơ sở dữ liệu.
+*   Tích hợp cơ chế tự động migrate cơ sở dữ liệu production trên Render (`npx prisma migrate deploy` trong build step).
 
 ---
 

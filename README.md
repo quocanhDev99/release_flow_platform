@@ -32,10 +32,14 @@ Hệ thống được thiết kế theo mô hình **Chuẩn hóa ở Backend** n
 Nằm tại thư mục `frontend/`, được phát triển bằng **Angular 20** và **Angular Material**.
 
 *   **Xác thực người dùng & Bảo mật (Authentication & Security):**
-    *   Trang đăng nhập (**Sign In**) và đăng ký (**Create Account**) tích hợp mượt mà thông qua thẻ tab Angular Material.
+    *   Trang đăng nhập (**Sign In**) và đăng ký (**Create Account**) sử dụng **Email & Password** thay thế hoàn toàn cho trường Username cũ để đồng bộ hóa danh tính doanh nghiệp.
+    *   **Quản lý thông tin & Avatar cá nhân (Profile Settings):**
+        *   Trang `/profile` riêng biệt, truy cập nhanh từ thanh navbar.
+        *   Cho phép người dùng cập nhật username, email và đổi mật khẩu mới.
+        *   Tính năng tải ảnh đại diện lên trực tiếp (Avatar upload) dạng base64, lưu trữ và khôi phục tự động theo phiên làm việc `userId` trong `localStorage`.
     *   **Quên & Thiết lập lại Mật khẩu (Forgot & Reset Password):**
-        *   Tích hợp form yêu cầu quên mật khẩu trực tiếp trong giao diện Sign In. Hệ thống tự động gửi yêu cầu và tạo mã Reset Token an toàn có thời hạn 1 giờ ở Backend.
-        *   Để phục vụ thử nghiệm local, mã Reset Link sẽ được ghi nhận (simulate) trực tiếp trong logs của Backend console.
+        *   Tích hợp form yêu cầu quên mật khẩu trực tiếp trong giao diện Sign In. Hệ thống tự động tạo mã Reset Token an toàn có thời hạn 1 giờ ở Backend.
+        *   Để phục vụ thử nghiệm local, mã Reset Link sẽ được ghi nhận trực tiếp trong logs của Backend console.
         *   Trang nhập mật khẩu mới `/reset-password` tự động phân tích Token, xác thực thời hạn, mã hóa bcrypt mật khẩu mới và cập nhật cơ sở dữ liệu an toàn.
     *   Tự động lưu trữ thông tin đăng nhập trong `localStorage` để duy trì phiên làm việc.
     *   Bảo vệ tuyến đường trang chủ bằng `authGuard` để chuyển hướng người dùng chưa đăng nhập về trang `/login`.
@@ -47,6 +51,7 @@ Nằm tại thư mục `frontend/`, được phát triển bằng **Angular 20**
     *   Tự xây dựng `ToastService` dạng hàng đợi (Queue Queue) độc lập dựa trên Signals để phát thông báo động khắp ứng dụng.
 *   **Giao diện & Thành phần UI:**
     *   **Bảng dữ liệu Excel-like Grid:** Sử dụng `<table mat-table>` kết hợp phân trang máy chủ (`<mat-paginator>`). Tích hợp hiệu ứng làm mờ kính (`backdrop-blur` overlay) và spinner loading thông minh ngăn chặn bấm nhầm dữ liệu.
+    *   **Bộ lọc Branch Build thông minh:** Thêm hộp chọn dropdown **Branch Build** (`dev`, `dev2`, `devel`) trực tiếp trên thanh bộ lọc Dashboard giúp tìm kiếm chéo nhanh chóng theo môi trường triển khai mã nguồn.
     *   **Gom nhóm đa cấp độ động dạng Cây (Tree-indented Grouping):** Thuật toán bóc tách và loại bỏ ký tự `x` dư thừa ở đuôi phiên bản, tự động tổ chức hiển thị dạng cây phân cấp trực quan:
         *   **Cấp 1 (Ví dụ: `1.12`):** Group chính (Release Group), nhãn chữ xanh lam làm chuẩn kèm viền nhấn trái.
         *   **Cấp 2 (Ví dụ: `1.12.1`):** Sub-release thụt lề vào trong, nhãn chữ xanh ngọc.
@@ -54,6 +59,7 @@ Nằm tại thư mục `frontend/`, được phát triển bằng **Angular 20**
     *   **Khởi tạo Bản ghi ngữ cảnh (Contextual Quick-create):** Click trực tiếp biểu tượng **`+`** tại bất kỳ tiêu đề phiên bản nào (`1.12`, `1.12.1`...) để mở form tạo mới, hệ thống tự động điền sẵn phiên bản tương ứng giúp loại bỏ thao tác chọn thủ công.
     *   **Quản lý Cấu hình Động & Xóa liên tầng (Cascade Deletion):** Hỗ trợ thêm/xóa nhanh Repository và Release Stream dưới dạng các thẻ Chip trong bảng điều khiển. Việc xóa được bảo vệ bằng cửa sổ xác nhận an toàn (Confirm Popup) và tự động dọn sạch các bản ghi phụ thuộc (cascade deletion) trong một Database Transaction duy nhất để bảo đảm toàn vẹn dữ liệu.
     *   **Nâng cấp Giao diện Chuẩn Doanh nghiệp (Enterprise UI/UX):**
+        *   Tông màu chủ đạo chuyển sang **Navy & Teal** mang tính chất doanh nghiệp/công nghệ đáng tin cậy.
         *   Màu sắc Repository (`Core`, `CMS`...) và Status được cải tiến sang dạng nền bán trong suốt nhẹ nhàng phối hợp viền tinh tế, tự động tương thích Light/Dark mode.
         *   Các nút thao tác Chỉnh sửa/Xóa trong bảng mặc định được làm mờ nhẹ (muted) giảm nhiễu thị giác, tự động sáng rõ và đổi màu đặc trưng khi di chuột qua.
         *   Đường liên kết phân cấp dạng cây chuyển từ nét đứt sang nét liền xanh dương thanh lịch.
@@ -65,6 +71,7 @@ Nằm tại thư mục `frontend/`, được phát triển bằng **Angular 20**
 *   **Hệ thống Styling (CSS/SCSS):**
     *   Viết lại toàn bộ bằng **SCSS** với các Token thiết kế trung tâm (`$color-brand`, `$radius-lg`, `$shadow-card`, v.v.).
     *   Tuân thủ nghiêm ngặt chuẩn đặt tên lớp **BEM** (`block__element--modifier`) để tăng khả năng tái sử dụng CSS và tránh xung đột cấu trúc.
+    *   Đã fix triệt để các cảnh báo lỗi cấu trúc của phiên bản Dart Sass 3.0.0 mới.
 
 ---
 
@@ -74,6 +81,14 @@ Nằm tại thư mục `backend/`, được phát triển bằng **NestJS** kế
 *   **Xác thực & Mã hóa (Authentication & Encryption):**
     *   Mã hóa mật khẩu an toàn bằng giải pháp hashing **bcrypt** (độ khó `10`) trước khi lưu vào DB.
     *   Xây dựng API đăng ký và đăng nhập bảo mật trong `UsersController`.
+*   **Tự động hóa CI/CD qua Webhook (GitHub & Bitbucket Webhooks):**
+    *   Hỗ trợ endpoint nhận sự kiện Webhook từ bên thứ ba (`POST /api/webhooks/github` và `POST /api/webhooks/bitbucket`).
+    *   **Tự động trích xuất thông tin:** Quét mã Ticket (`MAG-\d+`), tên nhánh, người sửa từ Payload.
+    *   **Ánh xạ tự động (Branch Mapping):** Nhánh đích `release/1.12` tự ánh xạ thành phiên bản phát hành `sow/1.12.x`, nhánh `main`/`master` ánh xạ thành `sow/main`, còn lại gán mặc định `sow/dev` hoặc `sow/unknown`.
+    *   **Tránh trùng lặp (Deduplication):** Tự động kiểm tra trùng lặp trên DB trước khi tạo bản ghi mới để đảm bảo tính toàn vẹn dữ liệu.
+*   **Chatbot Alerts (Slack & MS Teams):**
+    *   Tích hợp dịch vụ webhook của **Slack** và **Microsoft Teams** (cấu hình qua các biến môi trường `SLACK_WEBHOOK_URL` và `TEAMS_WEBHOOK_URL`).
+    *   Tự động phát thông báo Markdown / Adaptive Cards thời gian thực đến kênh chat ngay khi nhận ghi nhận merge mới từ webhook hoặc có thay đổi bản ghi.
 *   **Mô hình cơ sở dữ liệu (Domain DB Schema):**
     *   Cấu trúc dữ liệu đã được chuẩn hóa tối đa:
         *   `Repository` (1) ↔ `DeploymentItem` (N): Quản lý liên kết kho mã nguồn.
@@ -82,9 +97,10 @@ Nằm tại thư mục `backend/`, được phát triển bằng **NestJS** kế
         *   `DeploymentItem` (1) ↔ `Ticket` (N): Cho phép gộp nhiều mã Ticket (`MAG-xxxxx`) vào trong cùng một sự kiện Merge duy nhất.
         *   `DeploymentItem` (1) ↔ `Build` (N) ↔ `Environment` (1): Theo dõi lịch sử trạng thái build trên từng máy chủ (dev, devel, STG, UAT, Production).
 *   **Logic Nghiệp vụ API (DeploymentItemsService):**
-    *   **Dynamic Filters:** Hỗ trợ tìm kiếm không dấu/chữ hoa chữ thường, lọc chéo theo Repository, Fix Version, Trạng thái nhánh (`merged`, `pending`, `closed`) và Trạng thái kiểm thử QC.
+    *   **Dynamic Filters:** Hỗ trợ tìm kiếm không dấu/chữ hoa chữ thường, lọc chéo theo Repository, Fix Version, Trạng thái nhánh (`merged`, `pending`, `closed`), Trạng thái kiểm thử QC và **Branch Build**.
     *   **Server-side Sorting & Pagination:** Đảm bảo tải trang nhanh với lượng dữ liệu lớn nhờ cơ chế tính toán tổng trang và sắp xếp trực tiếp trên cơ sở dữ liệu (Database Engine).
     *   **Excel/CSV Bulk Parser:** Cho phép upload tệp bảng tính Excel, tự động phân tích tiêu đề cột, ánh xạ dữ liệu và thực hiện cơ chế cập nhật tự động (Upsert Repo/User) để ghi nhận hàng loạt bản ghi nhanh chóng. Tự động nhận diện Fix Version từ tên nhánh nếu cột phiên bản bị bỏ trống.
+    *   **Tự động Migrate trên Cloud (Auto DB Migration):** Tích hợp lệnh `npx prisma migrate deploy` trực tiếp vào quá trình biên dịch (`build` script) trên Render để đồng bộ cấu trúc DB tức thì khi triển khai code mới.
 
 ---
 
@@ -163,8 +179,8 @@ Thư mục dự án Frontend nằm tại [frontend/](file:///d:/PROGRAMMING/PROJ
 ## 🗺️ Lộ trình Phát triển Tiếp theo (Future Roadmap)
 
 Dự án có định hướng phát triển lâu dài phục vụ tự động hóa luồng phát hành doanh nghiệp:
-*   **V2: CI/CD Webhooks & Automation:** Tự động kết xuất bản ghi từ GitHub/Bitbucket PR và bắn thông báo qua Slack/Teams.
-*   **V3: QA/QC Verification Hub:** Cổng xác thực QA/QC độc lập, liên kết Jira cảnh báo blocker bug.
-*   **V4: Analytics & Changelog Generator:** Tự động sinh tài liệu báo cáo Changelog (PDF/Markdown) và đo lường tần suất phát hành.
+*   **V2: CI/CD Webhooks & Automation (Đã Hoàn Thành):** Tự động kết xuất bản ghi từ GitHub/Bitbucket PR, lọc trùng lặp, cập nhật profile/avatar và bắn thông báo qua Slack/Teams.
+*   **V3: QA/QC Verification Hub (Kế hoạch):** Cổng xác thực QA/QC độc lập, liên kết Jira cảnh báo blocker bug, đính kèm Test Report.
+*   **V4: Analytics & Changelog Generator (Kế hoạch):** Tự động sinh tài liệu báo cáo Changelog (PDF/Markdown) và đo lường tần suất phát hành.
 
 👉 Xem lộ trình chi tiết tại: [docs/08-roadmap.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/08-roadmap.md)
