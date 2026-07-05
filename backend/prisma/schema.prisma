@@ -24,7 +24,7 @@ model Repository {
 model User {
   id                Int              @id @default(autoincrement())
   username          String           @unique
-  email             String
+  email             String           @unique
   password          String           @default("")
   theme             String           @default("light")
   resetToken        String?

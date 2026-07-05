@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Body, ParseIntPipe, UnauthorizedException, ConflictException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Put, Param, Body, ParseIntPipe, UnauthorizedException, ConflictException, BadRequestException, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -19,9 +19,14 @@ export class UsersController {
   async register(@Body() body: { username: string; email: string; password: string }) {
     const { username, email, password } = body;
 
-    const existing = await this.prisma.user.findUnique({ where: { username } });
-    if (existing) {
+    const existingUsername = await this.prisma.user.findUnique({ where: { username } });
+    if (existingUsername) {
       throw new ConflictException('Username already taken');
+    }
+
+    const existingEmail = await this.prisma.user.findUnique({ where: { email } });
+    if (existingEmail) {
+      throw new ConflictException('Email already registered');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -33,17 +38,17 @@ export class UsersController {
   }
 
   @Post('login')
-  async login(@Body() body: { username: string; password: string }) {
-    const { username, password } = body;
+  async login(@Body() body: { email: string; password: string }) {
+    const { email, password } = body;
 
-    const user = await this.prisma.user.findUnique({ where: { username } });
+    const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
-      throw new UnauthorizedException('Invalid username or password');
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      throw new UnauthorizedException('Invalid username or password');
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     // Return user without password
@@ -130,5 +135,46 @@ export class UsersController {
       data: { theme },
       select: { id: true, username: true, email: true, theme: true, createdAt: true, updatedAt: true },
     });
+  }
+
+  @Put(':id')
+  async updateProfile(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { username?: string; email?: string; password?: string },
+  ) {
+    const { username, email, password } = body;
+    const updateData: any = {};
+
+    if (username) {
+      const existingUsername = await this.prisma.user.findFirst({
+        where: { username, id: { not: id } },
+      });
+      if (existingUsername) {
+        throw new ConflictException('Username already taken');
+      }
+      updateData.username = username;
+    }
+
+    if (email) {
+      const existingEmail = await this.prisma.user.findFirst({
+        where: { email, id: { not: id } },
+      });
+      if (existingEmail) {
+        throw new ConflictException('Email already registered');
+      }
+      updateData.email = email;
+    }
+
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: updateData,
+      select: { id: true, username: true, email: true, theme: true, createdAt: true, updatedAt: true },
+    });
+
+    return updatedUser;
   }
 }

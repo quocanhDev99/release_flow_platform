@@ -34,8 +34,8 @@ export class AuthService {
     return this._currentUser !== null;
   }
 
-  login(username: string, password: string): Observable<User> {
-    return this.http.post<User>(`${this.apiUrl}/users/login`, { username, password }).pipe(
+  login(email: string, password: string): Observable<User> {
+    return this.http.post<User>(`${this.apiUrl}/users/login`, { email, password }).pipe(
       tap(user => this.setUser(user))
     );
   }
@@ -43,6 +43,14 @@ export class AuthService {
   register(username: string, email: string, password: string): Observable<User> {
     return this.http.post<User>(`${this.apiUrl}/users/register`, { username, email, password }).pipe(
       tap(user => this.setUser(user))
+    );
+  }
+
+  updateProfile(data: { username?: string; email?: string; password?: string }): Observable<User> {
+    const user = this._currentUser;
+    if (!user) throw new Error('Not logged in');
+    return this.http.put<User>(`${this.apiUrl}/users/${user.id}`, data).pipe(
+      tap(updated => this.setUser(updated))
     );
   }
 

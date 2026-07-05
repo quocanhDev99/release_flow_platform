@@ -25,10 +25,10 @@
         <div class="login-card__form">
           @if (!isForgotPasswordMode()) {
             <mat-form-field appearance="outline" class="login-card__field">
-              <mat-label>Username</mat-label>
-              <mat-icon matPrefix>person_outline</mat-icon>
-              <input id="login-username" matInput [(ngModel)]="loginUsername"
-                     placeholder="your_username"
+              <mat-label>Email Address</mat-label>
+              <mat-icon matPrefix>email</mat-icon>
+              <input id="login-email" matInput [(ngModel)]="loginEmail" type="email"
+                     placeholder="your@email.com"
                      (keyup.enter)="onLogin()">
             </mat-form-field>
 
@@ -74,7 +74,7 @@
             </button>
 
             <p class="login-card__hint">
-              Default accounts: <strong>john_doe</strong> or <strong>alice_smith</strong> — password: <code>password123</code>
+              Default accounts: <strong>john&#64;example.com</strong> or <strong>alice&#64;example.com</strong> — password: <code>password123</code>
             </p>
           } @else {
             <h2 class="login-card__form-title">Reset Password</h2>

@@ -14,6 +14,7 @@ export class DeploymentItemsController {
     @Query('releaseVersion') releaseVersion?: string,
     @Query('qcStatus') qcStatus?: string,
     @Query('status') status?: string,
+    @Query('branchBuild') branchBuild?: string,
     @Query('sortBy') sortBy?: string,
     @Query('sortOrder') sortOrder?: string,
   ) {
@@ -25,6 +26,7 @@ export class DeploymentItemsController {
       releaseVersion,
       qcStatus,
       status,
+      branchBuild,
       sortBy,
       sortOrder: (sortOrder === 'asc' || sortOrder === 'desc') ? sortOrder : undefined,
     });

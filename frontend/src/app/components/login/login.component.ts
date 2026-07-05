@@ -31,7 +31,7 @@ export class LoginComponent {
   private router = inject(Router);
 
   // Login form
-  loginUsername = '';
+  loginEmail = '';
   loginPassword = '';
   loginError = signal('');
   loginLoading = signal(false);
@@ -77,21 +77,21 @@ export class LoginComponent {
   }
 
   onLogin() {
-    if (!this.loginUsername.trim() || !this.loginPassword.trim()) {
+    if (!this.loginEmail.trim() || !this.loginPassword.trim()) {
       this.loginError.set('Please fill in all fields.');
       return;
     }
     this.loginLoading.set(true);
     this.loginError.set('');
 
-    this.auth.login(this.loginUsername.trim(), this.loginPassword).subscribe({
+    this.auth.login(this.loginEmail.trim(), this.loginPassword).subscribe({
       next: () => {
         this.loginLoading.set(false);
         this.router.navigate(['/']);
       },
       error: (err) => {
         this.loginLoading.set(false);
-        this.loginError.set(err.error?.message || 'Invalid username or password.');
+        this.loginError.set(err.error?.message || 'Invalid email or password.');
       },
     });
   }

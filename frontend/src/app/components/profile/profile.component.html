@@ -1,0 +1,140 @@
+<div class="profile-page">
+  <app-toast></app-toast>
+
+  <div class="profile-page__bg">
+    <div class="orb orb--1"></div>
+    <div class="orb orb--2"></div>
+  </div>
+
+  <div class="profile-wrapper">
+
+    <!-- Back nav -->
+    <button mat-button (click)="onBack()" class="profile-back-btn">
+      <mat-icon>arrow_back_ios_new</mat-icon>
+      Back to Dashboard
+    </button>
+
+    <div class="profile-layout">
+
+      <!-- ── Left: Identity Card ── -->
+      <div class="identity-card">
+        <div class="identity-card__banner"></div>
+
+        <div class="identity-card__body">
+          <!-- Avatar upload area -->
+          <div class="identity-card__avatar" (click)="triggerAvatarUpload()" [matTooltip]="'Click to change photo'">
+            <img *ngIf="avatarUrl()" [src]="avatarUrl()" alt="Avatar" class="identity-card__avatar-img">
+            <span *ngIf="!avatarUrl()" class="identity-card__avatar-initials">{{ avatarInitials() }}</span>
+            <div class="identity-card__avatar-overlay">
+              <mat-icon>photo_camera</mat-icon>
+            </div>
+          </div>
+          <input #avatarInput type="file" accept="image/*" style="display:none"
+                 (change)="onAvatarFileChange($event)">
+
+          <h2 class="identity-card__name">{{ username || 'Your Name' }}</h2>
+          <p class="identity-card__email">{{ email || 'your&#64;email.com' }}</p>
+
+          <div class="identity-card__meta">
+            <div class="identity-card__meta-item">
+              <mat-icon>verified_user</mat-icon>
+              <span>Active Member</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Right: Edit Form ── -->
+      <div class="edit-card">
+
+        <!-- Account Info section -->
+        <div class="edit-card__section">
+          <h3 class="edit-card__section-title edit-card__section-title--info">
+            <mat-icon>manage_accounts</mat-icon>
+            Account Information
+          </h3>
+
+          <div class="edit-card__fields">
+            <div class="field-group">
+              <label class="field-label">Username</label>
+              <mat-form-field appearance="outline" class="field-input">
+                <input id="profile-username" matInput [(ngModel)]="username" placeholder="Enter username">
+                <mat-icon matSuffix>badge</mat-icon>
+              </mat-form-field>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Email Address</label>
+              <mat-form-field appearance="outline" class="field-input">
+                <input id="profile-email" matInput [(ngModel)]="email" type="email" placeholder="your&#64;email.com">
+                <mat-icon matSuffix>alternate_email</mat-icon>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="edit-card__divider"><span>Security</span></div>
+
+        <!-- Password section -->
+        <div class="edit-card__section">
+          <h3 class="edit-card__section-title edit-card__section-title--security">
+            <mat-icon>lock</mat-icon>
+            Change Password
+            <span class="edit-card__badge">Optional</span>
+          </h3>
+
+          <div class="edit-card__fields">
+            <div class="field-group">
+              <label class="field-label">New Password</label>
+              <mat-form-field appearance="outline" class="field-input">
+                <input id="profile-password" matInput
+                       [type]="showPassword ? 'text' : 'password'"
+                       [(ngModel)]="password"
+                       placeholder="Leave blank to keep current">
+                <button mat-icon-button matSuffix type="button" (click)="showPassword = !showPassword">
+                  <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+              </mat-form-field>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Confirm Password</label>
+              <mat-form-field appearance="outline" class="field-input">
+                <input id="profile-confirm-password" matInput
+                       [type]="showPassword ? 'text' : 'password'"
+                       [(ngModel)]="confirmPassword"
+                       placeholder="Repeat new password"
+                       (keyup.enter)="onUpdate()">
+                <mat-icon matSuffix>lock_reset</mat-icon>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="edit-card__actions">
+          <button mat-stroked-button class="btn-cancel" (click)="onBack()">
+            Cancel
+          </button>
+          <button id="profile-submit-btn"
+                  mat-flat-button
+                  class="btn-save"
+                  (click)="onUpdate()"
+                  [disabled]="loading()">
+            @if (loading()) {
+              <mat-spinner diameter="18"></mat-spinner>
+              <span>Saving…</span>
+            } @else {
+              <span class="btn-save__inner">
+                <mat-icon>check</mat-icon>
+                <span>Save Changes</span>
+              </span>
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

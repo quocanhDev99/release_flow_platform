@@ -16,12 +16,21 @@ const tickets_module_1 = require("./tickets/tickets.module");
 const deployment_items_module_1 = require("./deployment-items/deployment-items.module");
 const repositories_controller_1 = require("./repositories/repositories.controller");
 const users_controller_1 = require("./users/users.controller");
+const notifications_module_1 = require("./notifications/notifications.module");
+const webhooks_module_1 = require("./webhooks/webhooks.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, releases_module_1.ReleasesModule, tickets_module_1.TicketsModule, deployment_items_module_1.DeploymentItemsModule],
+        imports: [
+            prisma_module_1.PrismaModule,
+            releases_module_1.ReleasesModule,
+            tickets_module_1.TicketsModule,
+            deployment_items_module_1.DeploymentItemsModule,
+            notifications_module_1.NotificationsModule,
+            webhooks_module_1.WebhooksModule,
+        ],
         controllers: [app_controller_1.AppController, repositories_controller_1.RepositoriesController, users_controller_1.UsersController],
         providers: [app_service_1.AppService],
     })

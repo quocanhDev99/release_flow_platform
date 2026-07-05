@@ -63,9 +63,13 @@ let UsersController = class UsersController {
     }
     async register(body) {
         const { username, email, password } = body;
-        const existing = await this.prisma.user.findUnique({ where: { username } });
-        if (existing) {
+        const existingUsername = await this.prisma.user.findUnique({ where: { username } });
+        if (existingUsername) {
             throw new common_1.ConflictException('Username already taken');
+        }
+        const existingEmail = await this.prisma.user.findUnique({ where: { email } });
+        if (existingEmail) {
+            throw new common_1.ConflictException('Email already registered');
         }
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = await this.prisma.user.create({
@@ -75,14 +79,14 @@ let UsersController = class UsersController {
         return user;
     }
     async login(body) {
-        const { username, password } = body;
-        const user = await this.prisma.user.findUnique({ where: { username } });
+        const { email, password } = body;
+        const user = await this.prisma.user.findUnique({ where: { email } });
         if (!user) {
-            throw new common_1.UnauthorizedException('Invalid username or password');
+            throw new common_1.UnauthorizedException('Invalid email or password');
         }
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            throw new common_1.UnauthorizedException('Invalid username or password');
+            throw new common_1.UnauthorizedException('Invalid email or password');
         }
         const { password: _pwd, ...safeUser } = user;
         return safeUser;
@@ -145,6 +149,37 @@ let UsersController = class UsersController {
             select: { id: true, username: true, email: true, theme: true, createdAt: true, updatedAt: true },
         });
     }
+    async updateProfile(id, body) {
+        const { username, email, password } = body;
+        const updateData = {};
+        if (username) {
+            const existingUsername = await this.prisma.user.findFirst({
+                where: { username, id: { not: id } },
+            });
+            if (existingUsername) {
+                throw new common_1.ConflictException('Username already taken');
+            }
+            updateData.username = username;
+        }
+        if (email) {
+            const existingEmail = await this.prisma.user.findFirst({
+                where: { email, id: { not: id } },
+            });
+            if (existingEmail) {
+                throw new common_1.ConflictException('Email already registered');
+            }
+            updateData.email = email;
+        }
+        if (password) {
+            updateData.password = await bcrypt.hash(password, 10);
+        }
+        const updatedUser = await this.prisma.user.update({
+            where: { id },
+            data: updateData,
+            select: { id: true, username: true, email: true, theme: true, createdAt: true, updatedAt: true },
+        });
+        return updatedUser;
+    }
 };
 exports.UsersController = UsersController;
 __decorate([
@@ -189,6 +224,14 @@ __decorate([
     __metadata("design:paramtypes", [Number, String]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "updateTheme", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "updateProfile", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])

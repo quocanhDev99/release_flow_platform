@@ -11,6 +11,7 @@ export declare class DeploymentItemsService {
         releaseVersion?: string;
         qcStatus?: string;
         status?: string;
+        branchBuild?: string;
         sortBy?: string;
         sortOrder?: 'asc' | 'desc';
     }): Promise<{

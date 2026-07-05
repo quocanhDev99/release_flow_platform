@@ -2,7 +2,7 @@ import { DeploymentItemsService } from './deployment-items.service';
 export declare class DeploymentItemsController {
     private readonly deploymentItemsService;
     constructor(deploymentItemsService: DeploymentItemsService);
-    findAll(page?: string, pageSize?: string, search?: string, repoName?: string, releaseVersion?: string, qcStatus?: string, status?: string, sortBy?: string, sortOrder?: string): Promise<{
+    findAll(page?: string, pageSize?: string, search?: string, repoName?: string, releaseVersion?: string, qcStatus?: string, status?: string, branchBuild?: string, sortBy?: string, sortOrder?: string): Promise<{
         data: ({
             repository: {
                 id: number;
@@ -23,20 +23,20 @@ export declare class DeploymentItemsController {
                 resetTokenExpires: Date | null;
             };
             releaseStream: {
-                id: number;
                 status: string;
+                id: number;
                 createdAt: Date;
                 updatedAt: Date;
                 version: string;
             } | null;
             tickets: {
+                qcStatus: string;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
                 ticketId: string;
                 summary: string | null;
                 changeType: string;
-                qcStatus: string;
                 pendingIssues: string | null;
                 deploymentItemId: number;
             }[];
@@ -49,8 +49,8 @@ export declare class DeploymentItemsController {
                     description: string | null;
                 };
             } & {
-                id: number;
                 status: string;
+                id: number;
                 createdAt: Date;
                 updatedAt: Date;
                 deploymentItemId: number;
@@ -60,9 +60,9 @@ export declare class DeploymentItemsController {
                 environmentId: number;
             })[];
         } & {
+            status: string;
             id: number;
             sourceBranch: string;
-            status: string;
             isMergedOnDevel: boolean;
             mergedAt: Date;
             createdAt: Date;
@@ -76,9 +76,9 @@ export declare class DeploymentItemsController {
         pageSize: number;
     }>;
     bulkCreate(items: any[]): Promise<{
+        status: string;
         id: number;
         sourceBranch: string;
-        status: string;
         isMergedOnDevel: boolean;
         mergedAt: Date;
         createdAt: Date;
@@ -107,20 +107,20 @@ export declare class DeploymentItemsController {
             resetTokenExpires: Date | null;
         };
         releaseStream: {
-            id: number;
             status: string;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             version: string;
         } | null;
         tickets: {
+            qcStatus: string;
             id: number;
             createdAt: Date;
             updatedAt: Date;
             ticketId: string;
             summary: string | null;
             changeType: string;
-            qcStatus: string;
             pendingIssues: string | null;
             deploymentItemId: number;
         }[];
@@ -133,8 +133,8 @@ export declare class DeploymentItemsController {
                 description: string | null;
             };
         } & {
-            id: number;
             status: string;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             deploymentItemId: number;
@@ -144,9 +144,9 @@ export declare class DeploymentItemsController {
             environmentId: number;
         })[];
     } & {
+        status: string;
         id: number;
         sourceBranch: string;
-        status: string;
         isMergedOnDevel: boolean;
         mergedAt: Date;
         createdAt: Date;
@@ -175,20 +175,20 @@ export declare class DeploymentItemsController {
             resetTokenExpires: Date | null;
         };
         releaseStream: {
-            id: number;
             status: string;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             version: string;
         } | null;
         tickets: {
+            qcStatus: string;
             id: number;
             createdAt: Date;
             updatedAt: Date;
             ticketId: string;
             summary: string | null;
             changeType: string;
-            qcStatus: string;
             pendingIssues: string | null;
             deploymentItemId: number;
         }[];
@@ -201,8 +201,8 @@ export declare class DeploymentItemsController {
                 description: string | null;
             };
         } & {
-            id: number;
             status: string;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             deploymentItemId: number;
@@ -212,9 +212,9 @@ export declare class DeploymentItemsController {
             environmentId: number;
         })[];
     } & {
+        status: string;
         id: number;
         sourceBranch: string;
-        status: string;
         isMergedOnDevel: boolean;
         mergedAt: Date;
         createdAt: Date;
@@ -243,20 +243,20 @@ export declare class DeploymentItemsController {
             resetTokenExpires: Date | null;
         };
         releaseStream: {
-            id: number;
             status: string;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             version: string;
         } | null;
         tickets: {
+            qcStatus: string;
             id: number;
             createdAt: Date;
             updatedAt: Date;
             ticketId: string;
             summary: string | null;
             changeType: string;
-            qcStatus: string;
             pendingIssues: string | null;
             deploymentItemId: number;
         }[];
@@ -269,8 +269,8 @@ export declare class DeploymentItemsController {
                 description: string | null;
             };
         } & {
-            id: number;
             status: string;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             deploymentItemId: number;
@@ -280,9 +280,9 @@ export declare class DeploymentItemsController {
             environmentId: number;
         })[];
     } & {
+        status: string;
         id: number;
         sourceBranch: string;
-        status: string;
         isMergedOnDevel: boolean;
         mergedAt: Date;
         createdAt: Date;
@@ -311,20 +311,20 @@ export declare class DeploymentItemsController {
             resetTokenExpires: Date | null;
         };
         releaseStream: {
-            id: number;
             status: string;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             version: string;
         } | null;
         tickets: {
+            qcStatus: string;
             id: number;
             createdAt: Date;
             updatedAt: Date;
             ticketId: string;
             summary: string | null;
             changeType: string;
-            qcStatus: string;
             pendingIssues: string | null;
             deploymentItemId: number;
         }[];
@@ -337,8 +337,8 @@ export declare class DeploymentItemsController {
                 description: string | null;
             };
         } & {
-            id: number;
             status: string;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             deploymentItemId: number;
@@ -348,9 +348,9 @@ export declare class DeploymentItemsController {
             environmentId: number;
         })[];
     } & {
+        status: string;
         id: number;
         sourceBranch: string;
-        status: string;
         isMergedOnDevel: boolean;
         mergedAt: Date;
         createdAt: Date;
@@ -360,9 +360,9 @@ export declare class DeploymentItemsController {
         releaseStreamId: number | null;
     }>;
     remove(id: number): Promise<{
+        status: string;
         id: number;
         sourceBranch: string;
-        status: string;
         isMergedOnDevel: boolean;
         mergedAt: Date;
         createdAt: Date;

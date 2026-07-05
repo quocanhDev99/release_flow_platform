@@ -36,6 +36,7 @@ export class DeploymentItemsService {
     releaseVersion?: string;
     qcStatus?: string;
     status?: string;
+    branchBuild?: string;
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
   }) {
@@ -72,6 +73,15 @@ export class DeploymentItemsService {
     if (params?.qcStatus) {
       where.tickets = {
         some: { qcStatus: params.qcStatus },
+      };
+    }
+    if (params?.branchBuild) {
+      where.builds = {
+        some: {
+          environment: {
+            name: { equals: params.branchBuild, mode: 'insensitive' },
+          },
+        },
       };
     }
 

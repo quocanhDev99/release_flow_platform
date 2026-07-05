@@ -10,7 +10,7 @@ Tài liệu này mô tả chi tiết lộ trình phát triển của hệ thốn
 timeline
     title Release Flow Platform Roadmap
     MVP (Version 1) : Nền tảng Core & UI/UX : Tree Accordion View : Xác thực Người dùng : Quên & Đặt lại mật khẩu
-    Version 2 : Tích hợp CI/CD & Tự động hóa : GitHub/GitLab Webhooks : Tự động tạo bản ghi : Chatbot Alerts (Slack/Teams)
+    Version 2 : Tích hợp CI/CD & Tự động hóa : GitHub/Bitbucket Webhooks : Tự động tạo bản ghi : Chatbot Alerts (Slack/Teams)
     Version 3 : Cổng Xác thực Chất lượng : Phân quyền QA/QC/Dev : Đính kèm Test Reports : Jira Blocker Checks
     Version 4 : Báo cáo & Phân tích : Tự động xuất Changelog : Release Velocity Graphs : Thống kê lỗi/build
 ```
@@ -30,10 +30,10 @@ timeline
 ## 🔹 Version 2: Tích hợp CI/CD & Tự động hóa (Automation Phase)
 *Trọng tâm: Loại bỏ hoàn toàn các thao tác nhập liệu thủ công bằng cách kết nối trực tiếp với các nền tảng quản lý mã nguồn.*
 
-### 1. GitHub/GitLab Webhook Integration
-*   **Kịch bản:** Khi lập trình viên merge Pull Request (PR) vào các nhánh quan trọng (như `main`, `develop` hoặc `release/*`), GitHub/GitLab sẽ bắn một Webhook event về Backend của Release Flow Platform.
+### 1. GitHub/Bitbucket Webhook Integration
+*   **Kịch bản:** Khi lập trình viên merge Pull Request (PR) hoặc Pull Request được chấp nhận trên các nhánh quan trọng (như `main`, `develop` hoặc `release/*`), GitHub/Bitbucket sẽ bắn một Webhook event về Backend của Release Flow Platform.
 *   **Xử lý ở Backend:**
-    *   Tự động trích xuất thông tin PR (Mã Ticket `MAG-xxxxx` từ tên PR, tên nhánh nguồn, tên lập trình viên thực hiện PR).
+    *   Tự động trích xuất thông tin PR (Mã Ticket `MAG-xxxxx` từ tên PR/Commit, tên nhánh nguồn, tên lập trình viên thực hiện).
     *   Tự động phát hiện phiên bản đích (**Fix Version**) dựa trên tên nhánh đích (ví dụ: merge vào `release/1.12` sẽ tự điền Fix Version là `1.12`).
     *   Tự động tạo bản ghi Deployment ở trạng thái `IN PROGRESS`.
 
@@ -51,8 +51,8 @@ timeline
 *   **QA/QC:** Có quyền cập nhật cột `QC Status` (`Testing`, `Passed`, `Failed`), đính kèm link tài liệu kiểm thử hoặc báo cáo tự động (Test Automation Report).
 *   **Release Manager (Quản lý phát hành):** Chỉ có vai trò này mới được phép chuyển trạng thái tổng của cả một nhóm phát hành (Release Group) sang `COMPLETED` để kích hoạt Deploy lên Production.
 
-### 2. Tích hợp Jira/GitHub Issues Checkers
-*   Hệ thống tự động đồng bộ chéo với **Jira API** hoặc **GitHub API** để kiểm tra trạng thái của các Ticket tương ứng.
+### 2. Tích hợp Jira/GitHub/Bitbucket Issues Checkers
+*   Hệ thống tự động đồng bộ chéo với **Jira API**, **GitHub API**, hoặc **Bitbucket API** để kiểm tra trạng thái của các Ticket tương ứng.
 *   *Luật phát hành:* Nếu trong danh sách Deployment Items của phiên bản sắp phát hành có chứa bất kỳ Ticket nào đang có trạng thái lỗi nghiêm trọng (Blocker/Critical Bug) đang mở, hệ thống sẽ cảnh báo đỏ và ngăn không cho chuyển trạng thái phát hành Production.
 
 ---

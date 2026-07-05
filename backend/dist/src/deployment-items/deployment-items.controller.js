@@ -20,7 +20,7 @@ let DeploymentItemsController = class DeploymentItemsController {
     constructor(deploymentItemsService) {
         this.deploymentItemsService = deploymentItemsService;
     }
-    findAll(page, pageSize, search, repoName, releaseVersion, qcStatus, status, sortBy, sortOrder) {
+    findAll(page, pageSize, search, repoName, releaseVersion, qcStatus, status, branchBuild, sortBy, sortOrder) {
         return this.deploymentItemsService.findAll({
             page: page ? Number(page) : undefined,
             pageSize: pageSize ? Number(pageSize) : undefined,
@@ -29,6 +29,7 @@ let DeploymentItemsController = class DeploymentItemsController {
             releaseVersion,
             qcStatus,
             status,
+            branchBuild,
             sortBy,
             sortOrder: (sortOrder === 'asc' || sortOrder === 'desc') ? sortOrder : undefined,
         });
@@ -62,10 +63,11 @@ __decorate([
     __param(4, (0, common_1.Query)('releaseVersion')),
     __param(5, (0, common_1.Query)('qcStatus')),
     __param(6, (0, common_1.Query)('status')),
-    __param(7, (0, common_1.Query)('sortBy')),
-    __param(8, (0, common_1.Query)('sortOrder')),
+    __param(7, (0, common_1.Query)('branchBuild')),
+    __param(8, (0, common_1.Query)('sortBy')),
+    __param(9, (0, common_1.Query)('sortOrder')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String, String, String, String, String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String, String, String, String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], DeploymentItemsController.prototype, "findAll", null);
 __decorate([

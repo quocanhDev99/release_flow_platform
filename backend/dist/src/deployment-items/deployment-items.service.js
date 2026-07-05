@@ -74,6 +74,15 @@ let DeploymentItemsService = class DeploymentItemsService {
                 some: { qcStatus: params.qcStatus },
             };
         }
+        if (params?.branchBuild) {
+            where.builds = {
+                some: {
+                    environment: {
+                        name: { equals: params.branchBuild, mode: 'insensitive' },
+                    },
+                },
+            };
+        }
         const dir = params?.sortOrder ?? 'desc';
         let orderBy;
         switch (params?.sortBy) {

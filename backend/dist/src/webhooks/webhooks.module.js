@@ -6,20 +6,20 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DeploymentItemsModule = void 0;
+exports.WebhooksModule = void 0;
 const common_1 = require("@nestjs/common");
-const deployment_items_service_1 = require("./deployment-items.service");
-const deployment_items_controller_1 = require("./deployment-items.controller");
+const webhooks_controller_1 = require("./webhooks.controller");
+const webhooks_service_1 = require("./webhooks.service");
 const prisma_module_1 = require("../prisma/prisma.module");
-let DeploymentItemsModule = class DeploymentItemsModule {
+const deployment_items_module_1 = require("../deployment-items/deployment-items.module");
+let WebhooksModule = class WebhooksModule {
 };
-exports.DeploymentItemsModule = DeploymentItemsModule;
-exports.DeploymentItemsModule = DeploymentItemsModule = __decorate([
+exports.WebhooksModule = WebhooksModule;
+exports.WebhooksModule = WebhooksModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule],
-        controllers: [deployment_items_controller_1.DeploymentItemsController],
-        providers: [deployment_items_service_1.DeploymentItemsService],
-        exports: [deployment_items_service_1.DeploymentItemsService],
+        imports: [prisma_module_1.PrismaModule, deployment_items_module_1.DeploymentItemsModule],
+        controllers: [webhooks_controller_1.WebhooksController],
+        providers: [webhooks_service_1.WebhooksService],
     })
-], DeploymentItemsModule);
-//# sourceMappingURL=deployment-items.module.js.map
+], WebhooksModule);
+//# sourceMappingURL=webhooks.module.js.map

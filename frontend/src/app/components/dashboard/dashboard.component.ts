@@ -336,6 +336,7 @@ export class DashboardComponent implements OnInit {
   selectedRelease = '';
   selectedQCStatus = '';
   selectedStatus = '';
+  selectedBranchBuild = '';
 
   // Pagination state
   totalItems = signal<number>(0);
@@ -444,6 +445,10 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  goToProfile() {
+    this.router.navigate(['/profile']);
+  }
+
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);
@@ -477,6 +482,9 @@ export class DashboardComponent implements OnInit {
     }
     if (this.selectedStatus) {
       params.status = this.selectedStatus;
+    }
+    if (this.selectedBranchBuild) {
+      params.branchBuild = this.selectedBranchBuild;
     }
     params.sortBy = this.currentSort.sortBy;
     params.sortOrder = this.currentSort.sortOrder;

@@ -29,7 +29,7 @@ Xây dựng một Nền tảng Trí tuệ Phát hành Nội bộ (Internal Relea
 * **Cấu hình giao diện cá nhân**: Cho phép người dùng chuyển đổi giao diện Sáng/Tối và đồng bộ cấu hình này lên cơ sở dữ liệu.
 
 ### Tầm nhìn dài hạn (Version 2+)
-* **Tự động hóa qua Webhook (Version 2)**: Tích hợp trực tiếp với GitHub/GitLab Webhooks để tự động hóa khâu tạo bản ghi deployment từ PR/Merge events và phát thông báo qua Slack/Teams.
+* **Tự động hóa qua Webhook (Version 2)**: Tích hợp trực tiếp với GitHub/Bitbucket Webhooks để tự động hóa khâu tạo bản ghi deployment từ PR/Merge events và phát thông báo qua Slack/Teams.
 * **Cổng xác thực chất lượng & Phân quyền (Version 3)**: Xây dựng cổng kiểm thử QA/QC, phân quyền người dùng (Dev, QA, Release Manager) và kết nối Jira API để tự động chặn phát hành nếu phát hiện lỗi blocker.
 * **Báo cáo & Phân tích thông minh (Version 4)**: Tự động xuất tài liệu Release Notes / Changelog (PDF/Markdown) theo Change Type và đo lường tần suất phát hành qua biểu đồ trực quan.
 
