@@ -534,7 +534,10 @@ export class DashboardComponent implements OnInit {
   onMergeDevelChange(item: DeploymentItem, checked: boolean) {
     item.isMergedOnDevel = checked;
     this.releaseService.patchMergeDevel(item.id, checked).subscribe({
-      next: () => console.log(`Updated merge-devel for item ${item.id}`),
+      next: () => {
+        console.log(`Updated merge-devel for item ${item.id}`);
+        this.loadData();
+      },
       error: (err) => {
         console.error(err);
         item.isMergedOnDevel = !checked; // revert UI on failure
