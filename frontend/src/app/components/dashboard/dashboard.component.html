@@ -245,7 +245,7 @@
         <!-- Source Branch Column -->
         <ng-container matColumnDef="sourceBranch">
           <th mat-header-cell *matHeaderCellDef>Branch</th>
-          <td mat-cell *matCellDef="let item" [title]="item.sourceBranch">
+          <td mat-cell *matCellDef="let item" [matTooltip]="item.sourceBranch">
             <span class="code-chip">{{ item.sourceBranch }}</span>
           </td>
         </ng-container>
