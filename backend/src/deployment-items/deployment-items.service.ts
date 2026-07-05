@@ -250,6 +250,8 @@ export class DeploymentItemsService {
 
   async bulkCreate(items: any[]) {
     const results = [];
+    const processedKeys = new Set<string>();
+
     for (const item of items) {
       if (!item.ticketId) continue;
 
@@ -288,6 +290,30 @@ export class DeploymentItemsService {
           create: { version: releaseVersion },
         });
         releaseStreamId = release.id;
+      }
+
+      // Check for duplicates within this batch to prevent self-duplication
+      const batchKey = `${item.ticketId.trim().toLowerCase()}_${repository.id}_${releaseStreamId || 0}`;
+      if (processedKeys.has(batchKey)) {
+        console.log(`[IMPORT] Skipping duplicate ticket ${item.ticketId} in same upload batch`);
+        continue;
+      }
+      processedKeys.add(batchKey);
+
+      // Check for duplicates against existing DB records
+      const existingInDb = await this.prisma.ticket.findFirst({
+        where: {
+          ticketId: item.ticketId.trim(),
+          deploymentItem: {
+            repositoryId: repository.id,
+            releaseStreamId: releaseStreamId,
+          },
+        },
+      });
+
+      if (existingInDb) {
+        console.log(`[IMPORT] Skipping duplicate ticket ${item.ticketId} (already exists in DB for repository ${repoName} & release ${releaseVersion || 'unknown'})`);
+        continue;
       }
 
       // 4. Create DeploymentItem & Ticket

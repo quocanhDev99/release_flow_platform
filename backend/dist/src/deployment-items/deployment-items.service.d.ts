@@ -17,30 +17,11 @@ export declare class DeploymentItemsService {
         data: ({
             repository: {
                 id: number;
+                createdAt: Date;
+                updatedAt: Date;
                 name: string;
                 gitUrl: string | null;
-                createdAt: Date;
-                updatedAt: Date;
             };
-            builds: ({
-                environment: {
-                    id: number;
-                    name: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    description: string | null;
-                };
-            } & {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                status: string;
-                buildNumber: string | null;
-                buildUrl: string | null;
-                builtAt: Date;
-                environmentId: number;
-                deploymentItemId: number;
-            })[];
             user: {
                 id: number;
                 createdAt: Date;
@@ -54,10 +35,10 @@ export declare class DeploymentItemsService {
             };
             releaseStream: {
                 id: number;
+                status: string;
                 createdAt: Date;
                 updatedAt: Date;
                 version: string;
-                status: string;
             } | null;
             tickets: {
                 id: number;
@@ -70,14 +51,33 @@ export declare class DeploymentItemsService {
                 pendingIssues: string | null;
                 deploymentItemId: number;
             }[];
+            builds: ({
+                environment: {
+                    id: number;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    name: string;
+                    description: string | null;
+                };
+            } & {
+                id: number;
+                status: string;
+                createdAt: Date;
+                updatedAt: Date;
+                deploymentItemId: number;
+                buildNumber: string | null;
+                buildUrl: string | null;
+                builtAt: Date;
+                environmentId: number;
+            })[];
         } & {
             id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            status: string;
             sourceBranch: string;
+            status: string;
             isMergedOnDevel: boolean;
             mergedAt: Date;
+            createdAt: Date;
+            updatedAt: Date;
             repositoryId: number;
             userId: number;
             releaseStreamId: number | null;
@@ -89,30 +89,11 @@ export declare class DeploymentItemsService {
     findOne(id: number): Promise<({
         repository: {
             id: number;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
             gitUrl: string | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
-        builds: ({
-            environment: {
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                description: string | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            status: string;
-            buildNumber: string | null;
-            buildUrl: string | null;
-            builtAt: Date;
-            environmentId: number;
-            deploymentItemId: number;
-        })[];
         user: {
             id: number;
             createdAt: Date;
@@ -126,10 +107,10 @@ export declare class DeploymentItemsService {
         };
         releaseStream: {
             id: number;
+            status: string;
             createdAt: Date;
             updatedAt: Date;
             version: string;
-            status: string;
         } | null;
         tickets: {
             id: number;
@@ -142,14 +123,33 @@ export declare class DeploymentItemsService {
             pendingIssues: string | null;
             deploymentItemId: number;
         }[];
+        builds: ({
+            environment: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+            };
+        } & {
+            id: number;
+            status: string;
+            createdAt: Date;
+            updatedAt: Date;
+            deploymentItemId: number;
+            buildNumber: string | null;
+            buildUrl: string | null;
+            builtAt: Date;
+            environmentId: number;
+        })[];
     } & {
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
-        status: string;
         sourceBranch: string;
+        status: string;
         isMergedOnDevel: boolean;
         mergedAt: Date;
+        createdAt: Date;
+        updatedAt: Date;
         repositoryId: number;
         userId: number;
         releaseStreamId: number | null;
@@ -157,30 +157,11 @@ export declare class DeploymentItemsService {
     create(data: any): Promise<({
         repository: {
             id: number;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
             gitUrl: string | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
-        builds: ({
-            environment: {
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                description: string | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            status: string;
-            buildNumber: string | null;
-            buildUrl: string | null;
-            builtAt: Date;
-            environmentId: number;
-            deploymentItemId: number;
-        })[];
         user: {
             id: number;
             createdAt: Date;
@@ -194,10 +175,10 @@ export declare class DeploymentItemsService {
         };
         releaseStream: {
             id: number;
+            status: string;
             createdAt: Date;
             updatedAt: Date;
             version: string;
-            status: string;
         } | null;
         tickets: {
             id: number;
@@ -210,14 +191,33 @@ export declare class DeploymentItemsService {
             pendingIssues: string | null;
             deploymentItemId: number;
         }[];
+        builds: ({
+            environment: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+            };
+        } & {
+            id: number;
+            status: string;
+            createdAt: Date;
+            updatedAt: Date;
+            deploymentItemId: number;
+            buildNumber: string | null;
+            buildUrl: string | null;
+            builtAt: Date;
+            environmentId: number;
+        })[];
     } & {
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
-        status: string;
         sourceBranch: string;
+        status: string;
         isMergedOnDevel: boolean;
         mergedAt: Date;
+        createdAt: Date;
+        updatedAt: Date;
         repositoryId: number;
         userId: number;
         releaseStreamId: number | null;
@@ -225,30 +225,11 @@ export declare class DeploymentItemsService {
     update(id: number, data: any): Promise<({
         repository: {
             id: number;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
             gitUrl: string | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
-        builds: ({
-            environment: {
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                description: string | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            status: string;
-            buildNumber: string | null;
-            buildUrl: string | null;
-            builtAt: Date;
-            environmentId: number;
-            deploymentItemId: number;
-        })[];
         user: {
             id: number;
             createdAt: Date;
@@ -262,10 +243,10 @@ export declare class DeploymentItemsService {
         };
         releaseStream: {
             id: number;
+            status: string;
             createdAt: Date;
             updatedAt: Date;
             version: string;
-            status: string;
         } | null;
         tickets: {
             id: number;
@@ -278,14 +259,33 @@ export declare class DeploymentItemsService {
             pendingIssues: string | null;
             deploymentItemId: number;
         }[];
+        builds: ({
+            environment: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+            };
+        } & {
+            id: number;
+            status: string;
+            createdAt: Date;
+            updatedAt: Date;
+            deploymentItemId: number;
+            buildNumber: string | null;
+            buildUrl: string | null;
+            builtAt: Date;
+            environmentId: number;
+        })[];
     } & {
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
-        status: string;
         sourceBranch: string;
+        status: string;
         isMergedOnDevel: boolean;
         mergedAt: Date;
+        createdAt: Date;
+        updatedAt: Date;
         repositoryId: number;
         userId: number;
         releaseStreamId: number | null;
@@ -293,30 +293,11 @@ export declare class DeploymentItemsService {
     patchMergeDevel(id: number, isMergedOnDevel: boolean): Promise<{
         repository: {
             id: number;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
             gitUrl: string | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
-        builds: ({
-            environment: {
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                description: string | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            status: string;
-            buildNumber: string | null;
-            buildUrl: string | null;
-            builtAt: Date;
-            environmentId: number;
-            deploymentItemId: number;
-        })[];
         user: {
             id: number;
             createdAt: Date;
@@ -330,10 +311,10 @@ export declare class DeploymentItemsService {
         };
         releaseStream: {
             id: number;
+            status: string;
             createdAt: Date;
             updatedAt: Date;
             version: string;
-            status: string;
         } | null;
         tickets: {
             id: number;
@@ -346,38 +327,57 @@ export declare class DeploymentItemsService {
             pendingIssues: string | null;
             deploymentItemId: number;
         }[];
+        builds: ({
+            environment: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                name: string;
+                description: string | null;
+            };
+        } & {
+            id: number;
+            status: string;
+            createdAt: Date;
+            updatedAt: Date;
+            deploymentItemId: number;
+            buildNumber: string | null;
+            buildUrl: string | null;
+            builtAt: Date;
+            environmentId: number;
+        })[];
     } & {
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
-        status: string;
         sourceBranch: string;
+        status: string;
         isMergedOnDevel: boolean;
         mergedAt: Date;
+        createdAt: Date;
+        updatedAt: Date;
         repositoryId: number;
         userId: number;
         releaseStreamId: number | null;
     }>;
     bulkCreate(items: any[]): Promise<{
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
-        status: string;
         sourceBranch: string;
+        status: string;
         isMergedOnDevel: boolean;
         mergedAt: Date;
+        createdAt: Date;
+        updatedAt: Date;
         repositoryId: number;
         userId: number;
         releaseStreamId: number | null;
     }[]>;
     remove(id: number): Promise<{
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
-        status: string;
         sourceBranch: string;
+        status: string;
         isMergedOnDevel: boolean;
         mergedAt: Date;
+        createdAt: Date;
+        updatedAt: Date;
         repositoryId: number;
         userId: number;
         releaseStreamId: number | null;

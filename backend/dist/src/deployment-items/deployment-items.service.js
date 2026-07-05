@@ -234,6 +234,7 @@ let DeploymentItemsService = class DeploymentItemsService {
     }
     async bulkCreate(items) {
         const results = [];
+        const processedKeys = new Set();
         for (const item of items) {
             if (!item.ticketId)
                 continue;
@@ -266,6 +267,25 @@ let DeploymentItemsService = class DeploymentItemsService {
                     create: { version: releaseVersion },
                 });
                 releaseStreamId = release.id;
+            }
+            const batchKey = `${item.ticketId.trim().toLowerCase()}_${repository.id}_${releaseStreamId || 0}`;
+            if (processedKeys.has(batchKey)) {
+                console.log(`[IMPORT] Skipping duplicate ticket ${item.ticketId} in same upload batch`);
+                continue;
+            }
+            processedKeys.add(batchKey);
+            const existingInDb = await this.prisma.ticket.findFirst({
+                where: {
+                    ticketId: item.ticketId.trim(),
+                    deploymentItem: {
+                        repositoryId: repository.id,
+                        releaseStreamId: releaseStreamId,
+                    },
+                },
+            });
+            if (existingInDb) {
+                console.log(`[IMPORT] Skipping duplicate ticket ${item.ticketId} (already exists in DB for repository ${repoName} & release ${releaseVersion || 'unknown'})`);
+                continue;
             }
             const isMergedOnDevel = item.isMergedOnDevel === true ||
                 item.isMergedOnDevel === 'true' ||
