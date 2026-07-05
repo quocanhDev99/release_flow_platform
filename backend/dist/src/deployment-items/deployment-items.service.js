@@ -327,6 +327,13 @@ let DeploymentItemsService = class DeploymentItemsService {
                 continue;
             }
             processedKeys.add(batchKey);
+            const isMergedOnDevel = item.isMergedOnDevel === true ||
+                item.isMergedOnDevel === 'true' ||
+                String(item.isMergedOnDevel).toLowerCase() === 'yes';
+            let branchBuilds = item.branchBuilds && Array.isArray(item.branchBuilds) ? [...item.branchBuilds] : [];
+            if (isMergedOnDevel && !branchBuilds.includes('devel')) {
+                branchBuilds.push('devel');
+            }
             const existingInDb = await this.prisma.ticket.findFirst({
                 where: {
                     ticketId: item.ticketId.trim(),
@@ -335,38 +342,47 @@ let DeploymentItemsService = class DeploymentItemsService {
                         releaseStreamId: releaseStreamId,
                     },
                 },
+                include: {
+                    deploymentItem: true
+                }
             });
+            let dbItem;
             if (existingInDb) {
-                console.log(`[IMPORT] Skipping duplicate ticket ${item.ticketId} (already exists in DB for repository ${repoName} & release ${releaseVersion || 'unknown'})`);
-                continue;
+                console.log(`[IMPORT] Updating existing deployment item for ticket ${item.ticketId}...`);
+                dbItem = await this.prisma.deploymentItem.update({
+                    where: { id: existingInDb.deploymentItemId },
+                    data: {
+                        sourceBranch: item.sourceBranch || existingInDb.deploymentItem.sourceBranch,
+                        status: item.status || existingInDb.deploymentItem.status,
+                        isMergedOnDevel,
+                    }
+                });
+                await this.prisma.build.deleteMany({
+                    where: { deploymentItemId: dbItem.id }
+                });
             }
-            const isMergedOnDevel = item.isMergedOnDevel === true ||
-                item.isMergedOnDevel === 'true' ||
-                String(item.isMergedOnDevel).toLowerCase() === 'yes';
-            const dbItem = await this.prisma.deploymentItem.create({
-                data: {
-                    sourceBranch: item.sourceBranch || 'main',
-                    status: item.status || 'merged',
-                    isMergedOnDevel,
-                    repositoryId: repository.id,
-                    userId: user.id,
-                    releaseStreamId,
-                    tickets: {
-                        create: [
-                            {
-                                ticketId: item.ticketId,
-                                summary: item.summary || '',
-                                changeType: item.changeType || 'Feature',
-                                qcStatus: item.qcStatus || '—',
-                                pendingIssues: item.pendingIssues || '',
-                            },
-                        ],
+            else {
+                dbItem = await this.prisma.deploymentItem.create({
+                    data: {
+                        sourceBranch: item.sourceBranch || 'main',
+                        status: item.status || 'merged',
+                        isMergedOnDevel,
+                        repositoryId: repository.id,
+                        userId: user.id,
+                        releaseStreamId,
+                        tickets: {
+                            create: [
+                                {
+                                    ticketId: item.ticketId,
+                                    summary: item.summary || '',
+                                    changeType: item.changeType || 'Feature',
+                                    qcStatus: item.qcStatus || '—',
+                                    pendingIssues: item.pendingIssues || '',
+                                },
+                            ],
+                        },
                     },
-                },
-            });
-            let branchBuilds = item.branchBuilds && Array.isArray(item.branchBuilds) ? [...item.branchBuilds] : [];
-            if (isMergedOnDevel && !branchBuilds.includes('devel')) {
-                branchBuilds.push('devel');
+                });
             }
             if (branchBuilds.length > 0) {
                 for (const envName of branchBuilds) {
