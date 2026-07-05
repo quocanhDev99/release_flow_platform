@@ -624,7 +624,7 @@ export class DashboardComponent implements OnInit {
     this.newQCStatus = '—';
     this.newPendingIssues = '';
     this.newIsMergedOnDevel = false;
-    this.newStatus = 'merged';
+    this.newStatus = 'in progress';
     this.newBranchBuilds = [];
 
     // Use dummy items to open the panel
