@@ -388,14 +388,17 @@
       <h3 class="sidebar__title" *ngIf="!isCreateMode && !isConfigMode && activeTicket">
         Edit — {{ activeTicket.ticketId }}
       </h3>
-      <button mat-icon-button (click)="closeEditPanel()" aria-label="Close panel">
+      <button mat-icon-button (click)="closeEditPanel()" aria-label="Close panel" [disabled]="isSaving()">
         <mat-icon>close</mat-icon>
       </button>
     </div>
 
+    <!-- Header Loading Bar -->
+    <div class="sidebar__loading-bar" *ngIf="isSaving()"></div>
+
     <!-- Create Mode Body -->
-    <div class="sidebar__body" *ngIf="isCreateMode">
-      <p class="sidebar__section-title">Record Details</p>
+    <div class="sidebar__body" *ngIf="isCreateMode" [class.sidebar__body--saving]="isSaving()">
+      <p class="sidebar__section-title">Branch Information</p>
 
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>Repository *</mat-label>
@@ -404,17 +407,16 @@
         </mat-select>
       </mat-form-field>
 
-      <!-- Developer auto-filled from logged-in account -->
-      <div class="sidebar__user-badge">
-        <mat-icon>person</mat-icon>
-        <span>{{ currentUser()?.username || '—' }}</span>
-        <small>Auto-filled from your account</small>
-      </div>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Developer *</mat-label>
+        <mat-select [(ngModel)]="newUserId">
+          <mat-option *ngFor="let u of users()" [value]="u.id">{{ u.username }}</mat-option>
+        </mat-select>
+      </mat-form-field>
 
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>Release Stream (Fix Version)</mat-label>
         <mat-select [(ngModel)]="newReleaseVersion">
-          <mat-select-trigger>{{ newReleaseVersion || 'None' }}</mat-select-trigger>
           <mat-option value="">None</mat-option>
           <mat-option *ngFor="let rel of sortedReleasesWithIndent()" [value]="rel.version">
             <span *ngFor="let space of rel.indentArray" style="display: inline-block; width: 16px;"></span>
@@ -428,8 +430,26 @@
         <input matInput [(ngModel)]="newSourceBranch" placeholder="e.g. feature/auth-fix">
       </mat-form-field>
 
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Branch Status</mat-label>
+        <mat-select [(ngModel)]="newStatus">
+          <mat-option *ngFor="let s of statuses" [value]="s">{{ s | uppercase }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Branch Build</mat-label>
+        <mat-select [(ngModel)]="newBranchBuilds" multiple>
+          <mat-option *ngFor="let opt of branchBuildOptions" [value]="opt">{{ opt }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-checkbox [(ngModel)]="newIsMergedOnDevel" style="margin-top:4px">
+        Merged to Devel
+      </mat-checkbox>
+
       <hr class="sidebar__divider">
-      <p class="sidebar__section-title">Ticket Information</p>
+      <p class="sidebar__section-title">Ticket Details</p>
 
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>Ticket ID *</mat-label>
@@ -456,40 +476,19 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Branch Status</mat-label>
-        <mat-select [(ngModel)]="newStatus">
-          <mat-option *ngFor="let s of statuses" [value]="s">{{ s | uppercase }}</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="w-full">
         <mat-label>Pending Issues / Remarks</mat-label>
         <textarea matInput rows="3" [(ngModel)]="newPendingIssues" placeholder="Enter any pending issues..."></textarea>
       </mat-form-field>
-
-      <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Branch Build</mat-label>
-        <mat-select [(ngModel)]="newBranchBuilds" multiple>
-          <mat-option *ngFor="let opt of branchBuildOptions" [value]="opt">{{ opt }}</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-checkbox [(ngModel)]="newIsMergedOnDevel">Merged to Devel</mat-checkbox>
     </div>
 
     <!-- Edit Mode Body -->
-    <div class="sidebar__body" *ngIf="!isCreateMode && activeItem && activeTicket">
+    <div class="sidebar__body" *ngIf="!isCreateMode && activeItem && activeTicket" [class.sidebar__body--saving]="isSaving()">
       <p class="sidebar__section-title">Branch Information</p>
 
       <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Development Branch</mat-label>
-        <input matInput [(ngModel)]="activeItem.sourceBranch">
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Branch Status</mat-label>
-        <mat-select [(ngModel)]="activeItem.status">
-          <mat-option *ngFor="let s of statuses" [value]="s">{{ s | uppercase }}</mat-option>
+        <mat-label>Repository *</mat-label>
+        <mat-select [(ngModel)]="activeItem.repositoryId">
+          <mat-option *ngFor="let repo of repositories()" [value]="repo.id">{{ repo.name }}</mat-option>
         </mat-select>
       </mat-form-field>
 
@@ -497,6 +496,29 @@
         <mat-label>Developer *</mat-label>
         <mat-select [(ngModel)]="activeItem.userId">
           <mat-option *ngFor="let u of users()" [value]="u.id">{{ u.username }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Release Stream (Fix Version)</mat-label>
+        <mat-select [(ngModel)]="activeItem.releaseVersion">
+          <mat-option value="">None</mat-option>
+          <mat-option *ngFor="let rel of sortedReleasesWithIndent()" [value]="rel.version">
+            <span *ngFor="let space of rel.indentArray" style="display: inline-block; width: 16px;"></span>
+            {{ rel.displayName }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Development Branch *</mat-label>
+        <input matInput [(ngModel)]="activeItem.sourceBranch">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Branch Status</mat-label>
+        <mat-select [(ngModel)]="activeItem.status">
+          <mat-option *ngFor="let s of statuses" [value]="s">{{ s | uppercase }}</mat-option>
         </mat-select>
       </mat-form-field>
 
@@ -515,6 +537,16 @@
       <p class="sidebar__section-title">Ticket Details</p>
 
       <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Ticket ID *</mat-label>
+        <input matInput [(ngModel)]="activeTicket.ticketId" placeholder="e.g. MAG-20479">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Ticket Summary</mat-label>
+        <input matInput [(ngModel)]="activeTicket.summary" placeholder="Short description of the task">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
         <mat-label>Classification (Type)</mat-label>
         <mat-select [(ngModel)]="activeTicket.changeType">
           <mat-option *ngFor="let type of changeTypes" [value]="type">{{ type }}</mat-option>
@@ -530,7 +562,7 @@
 
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>Pending Issues / Remarks</mat-label>
-        <textarea matInput rows="4" [(ngModel)]="activeTicket.pendingIssues" placeholder="Enter pending issues or remarks..."></textarea>
+        <textarea matInput rows="3" [(ngModel)]="activeTicket.pendingIssues" placeholder="Enter pending issues or remarks..."></textarea>
       </mat-form-field>
     </div>
 
@@ -604,9 +636,10 @@
     </div>
 
     <div class="sidebar__footer">
-      <button mat-stroked-button (click)="closeEditPanel()">Cancel</button>
-      <button *ngIf="!isConfigMode" mat-flat-button color="primary" (click)="saveTicketDetails()">
-        Save Changes
+      <button mat-stroked-button (click)="closeEditPanel()" [disabled]="isSaving()">Cancel</button>
+      <button *ngIf="!isConfigMode" mat-flat-button color="primary" (click)="saveTicketDetails()" [disabled]="isSaving()">
+        <span *ngIf="!isSaving()">Save Changes</span>
+        <span *ngIf="isSaving()">Saving...</span>
       </button>
     </div>
   </aside>

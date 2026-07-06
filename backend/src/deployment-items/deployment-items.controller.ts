@@ -1,9 +1,27 @@
-import { Controller, Get, Post, Put, Patch, Delete, Param, Body, Query, ParseIntPipe } from '@nestjs/common';
-import { DeploymentItemsService } from './deployment-items.service';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+  ParseIntPipe,
+} from '@nestjs/common';
+import {
+  DeploymentItemsService,
+  CreateDeploymentItemDto,
+  UpdateDeploymentItemDto,
+  BulkCreateItemDto,
+} from './deployment-items.service';
 
 @Controller('deployment-items')
 export class DeploymentItemsController {
-  constructor(private readonly deploymentItemsService: DeploymentItemsService) {}
+  constructor(
+    private readonly deploymentItemsService: DeploymentItemsService,
+  ) {}
 
   @Get()
   findAll(
@@ -28,12 +46,13 @@ export class DeploymentItemsController {
       status,
       branchBuild,
       sortBy,
-      sortOrder: (sortOrder === 'asc' || sortOrder === 'desc') ? sortOrder : undefined,
+      sortOrder:
+        sortOrder === 'asc' || sortOrder === 'desc' ? sortOrder : undefined,
     });
   }
 
   @Post('bulk')
-  bulkCreate(@Body() items: any[]) {
+  bulkCreate(@Body() items: BulkCreateItemDto[]) {
     return this.deploymentItemsService.bulkCreate(items);
   }
 
@@ -43,12 +62,15 @@ export class DeploymentItemsController {
   }
 
   @Post()
-  create(@Body() data: any) {
+  create(@Body() data: CreateDeploymentItemDto) {
     return this.deploymentItemsService.create(data);
   }
 
   @Put(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: UpdateDeploymentItemDto,
+  ) {
     return this.deploymentItemsService.update(id, data);
   }
 

@@ -55,8 +55,9 @@ export class DashboardComponent implements OnInit {
   private dialog = inject(MatDialog);
   private toast = inject(ToastService);
 
-  // States
+  // Component States
   isLoading = signal<boolean>(false);
+  isSaving = signal<boolean>(false);
   deploymentItems = signal<DeploymentItem[]>([]);
   filteredItems = signal<DeploymentItem[]>([]);
   releases = signal<ReleaseStream[]>([]);
@@ -601,8 +602,12 @@ export class DashboardComponent implements OnInit {
 
   // open panel to edit ticket detail (Pending Issues, builds)
   openEditPanel(item: DeploymentItem, ticket: Ticket) {
+    console.log("🚀 ~ DashboardComponent ~ openEditPanel ~ item:", item)
     this.isCreateMode = false;
-    this.activeItem = { ...item };
+    this.activeItem = {
+      ...item,
+      releaseVersion: item.releaseStream ? this.cleanVersion(item.releaseStream.version) : ''
+    };
     this.activeTicket = { ...ticket };
     this.activeBranchBuilds = item.builds
       ? item.builds
@@ -772,10 +777,10 @@ export class DashboardComponent implements OnInit {
   // Save details from panel
   saveTicketDetails() {
     if (this.isCreateMode) {
-      // Validate: use logged-in user ID, not dropdown
-      const userId = this.currentUser()?.id;
+      // Validate: use selected user ID, or fallback to logged-in user ID
+      const userId = this.newUserId || this.currentUser()?.id;
       if (!this.newRepoId || !userId || !this.newTicketId.trim() || !this.newSourceBranch.trim()) {
-        this.toast.warn('Please fill in all required fields: Repository, Ticket ID, and Branch.');
+        this.toast.warn('Please fill in all required fields: Repository, Developer, Ticket ID, and Branch.');
         return;
       }
 
@@ -807,19 +812,28 @@ export class DashboardComponent implements OnInit {
         ]
       };
 
+      this.isSaving.set(true);
       this.releaseService.createDeploymentItem(payload).subscribe({
         next: () => {
           this.toast.success('Deployment record created successfully.');
           this.loadData();
           this.closeEditPanel();
+          this.isSaving.set(false);
         },
         error: (err) => {
           console.error('Failed to create deployment item', err);
           this.toast.error('Failed to create the record. Please try again.');
+          this.isSaving.set(false);
         }
       });
     } else {
       if (!this.activeItem || !this.activeTicket) return;
+
+      const userId = this.activeItem.userId || this.currentUser()?.id;
+      if (!this.activeItem.repositoryId || !userId || !this.activeTicket.ticketId.trim() || !this.activeItem.sourceBranch.trim()) {
+        this.toast.warn('Please fill in all required fields: Repository, Developer, Ticket ID, and Branch.');
+        return;
+      }
 
       let branchBuilds = [...this.activeBranchBuilds];
       if (this.activeItem.isMergedOnDevel) {
@@ -831,15 +845,19 @@ export class DashboardComponent implements OnInit {
       }
 
       const payload = {
+        repositoryId: this.activeItem.repositoryId,
+        userId: userId,
         sourceBranch: this.activeItem.sourceBranch,
         isMergedOnDevel: this.activeItem.isMergedOnDevel,
-        releaseStreamId: this.activeItem.releaseStreamId,
+        releaseVersion: (this.activeItem as any).releaseVersion || null,
+        releaseStreamId: (this.activeItem as any).releaseVersion ? undefined : null,
         status: this.activeItem.status,
-        userId: this.activeItem.userId,
         branchBuilds,
         tickets: [
           {
             id: this.activeTicket.id,
+            ticketId: this.activeTicket.ticketId,
+            summary: this.activeTicket.summary,
             changeType: this.activeTicket.changeType,
             qcStatus: this.activeTicket.qcStatus,
             pendingIssues: this.activeTicket.pendingIssues
@@ -847,15 +865,18 @@ export class DashboardComponent implements OnInit {
         ]
       };
 
+      this.isSaving.set(true);
       this.releaseService.updateDeploymentItem(this.activeItem.id, payload).subscribe({
         next: () => {
           this.toast.success('Record updated successfully.');
           this.loadData();
           this.closeEditPanel();
+          this.isSaving.set(false);
         },
         error: (err) => {
           console.error('Failed to save details', err);
           this.toast.error('Failed to save changes. Please try again.');
+          this.isSaving.set(false);
         }
       });
     }

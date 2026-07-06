@@ -61,6 +61,7 @@ export interface DeploymentItem {
   userId: number;
   releaseStream?: ReleaseStream;
   releaseStreamId?: number;
+  releaseVersion?: string;
   tickets: Ticket[];
   builds: Build[];
 }

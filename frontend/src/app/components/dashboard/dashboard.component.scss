@@ -599,6 +599,15 @@ $transition-base: all 0.2s ease;
     font-family: $font-primary;
   }
 
+  // ── Loading Bar ────────────────────────────────────────────────────────
+  &__loading-bar {
+    height: 3px;
+    width: 100%;
+    background: linear-gradient(90deg, $color-brand 0%, $color-purple 50%, $color-brand 100%);
+    background-size: 200% 100%;
+    animation: loadingBarMove 1.5s infinite linear;
+  }
+
   // ── Body ────────────────────────────────────────────────────────────────
   &__body {
     padding: 24px;
@@ -607,6 +616,12 @@ $transition-base: all 0.2s ease;
     display: flex;
     flex-direction: column;
     gap: 16px;
+    transition: opacity 0.2s ease;
+
+    &--saving {
+      opacity: 0.6;
+      pointer-events: none;
+    }
   }
 
   &__section-title {
@@ -632,6 +647,15 @@ $transition-base: all 0.2s ease;
     justify-content: flex-end;
     gap: 10px;
     background: $color-bg-subtle;
+  }
+}
+
+@keyframes loadingBarMove {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }
 

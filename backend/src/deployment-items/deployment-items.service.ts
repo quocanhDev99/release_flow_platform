@@ -1,11 +1,68 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+
+export class TicketDto {
+  id?: number;
+  ticketId?: string;
+  summary?: string;
+  changeType?: string;
+  qcStatus?: string;
+  pendingIssues?: string;
+}
+
+export class CreateDeploymentItemDto {
+  releaseVersion?: string;
+  releaseStreamId?: number;
+  sourceBranch?: string;
+  status?: string;
+  isMergedOnDevel?: boolean;
+  repositoryId?: number;
+  userId?: number;
+  branchBuilds?: string[];
+  tickets?: TicketDto[];
+}
+
+export class UpdateDeploymentItemDto {
+  releaseVersion?: string;
+  releaseStreamId?: number;
+  sourceBranch?: string;
+  status?: string;
+  isMergedOnDevel?: boolean;
+  repositoryId?: number;
+  userId?: number;
+  branchBuilds?: string[];
+  tickets?: TicketDto[];
+}
+
+export class BulkCreateItemDto {
+  repoName?: string;
+  username?: string;
+  releaseVersion?: string;
+  sourceBranch?: string;
+  isMergedOnDevel?: boolean | string;
+  branchBuilds?: string[];
+  ticketId!: string;
+  summary?: string;
+  changeType?: string;
+  qcStatus?: string;
+  pendingIssues?: string;
+  status?: string;
+}
 
 @Injectable()
 export class DeploymentItemsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
-  private async resolveReleaseStreamId(releaseVersion?: string, releaseStreamId?: number): Promise<number | null> {
+  private async resolveReleaseStreamId(
+    releaseVersion?: string,
+    releaseStreamId?: number,
+  ): Promise<number | null> {
     if (releaseVersion) {
       const cleanVer = releaseVersion.replace(/x$/, '');
       let release = await this.prisma.releaseStream.findFirst({
@@ -14,13 +71,13 @@ export class DeploymentItemsService {
             { version: { endsWith: `/${cleanVer}`, mode: 'insensitive' } },
             { version: { contains: `/${cleanVer}.`, mode: 'insensitive' } },
             { version: { contains: `/${cleanVer}x`, mode: 'insensitive' } },
-            { version: { equals: cleanVer, mode: 'insensitive' } }
-          ]
-        }
+            { version: { equals: cleanVer, mode: 'insensitive' } },
+          ],
+        },
       });
       if (!release) {
         release = await this.prisma.releaseStream.create({
-          data: { version: `sow/${cleanVer}.x` }
+          data: { version: `sow/${cleanVer}.x` },
         });
       }
       return release.id;
@@ -45,7 +102,7 @@ export class DeploymentItemsService {
     const skip = (page - 1) * pageSize;
     const take = pageSize;
 
-    const where: any = {};
+    const where: Prisma.DeploymentItemWhereInput = {};
     if (params?.repoName) {
       where.repository = { name: params.repoName };
     }
@@ -59,15 +116,19 @@ export class DeploymentItemsService {
           { version: { endsWith: `/${cleanVer}`, mode: 'insensitive' } },
           { version: { contains: `/${cleanVer}.`, mode: 'insensitive' } },
           { version: { contains: `/${cleanVer}x`, mode: 'insensitive' } },
-          { version: { equals: cleanVer, mode: 'insensitive' } }
-        ]
+          { version: { equals: cleanVer, mode: 'insensitive' } },
+        ],
       };
     }
     if (params?.search) {
       const search = params.search;
       where.OR = [
         { sourceBranch: { contains: search, mode: 'insensitive' } },
-        { tickets: { some: { ticketId: { contains: search, mode: 'insensitive' } } } },
+        {
+          tickets: {
+            some: { ticketId: { contains: search, mode: 'insensitive' } },
+          },
+        },
       ];
     }
     if (params?.qcStatus) {
@@ -87,7 +148,7 @@ export class DeploymentItemsService {
 
     // Build dynamic orderBy
     const dir: 'asc' | 'desc' = params?.sortOrder ?? 'desc';
-    let orderBy: any;
+    let orderBy: Prisma.DeploymentItemOrderByWithRelationInput;
     switch (params?.sortBy) {
       case 'updatedAt':
         orderBy = { updatedAt: dir };
@@ -146,23 +207,37 @@ export class DeploymentItemsService {
     });
   }
 
-  async create(data: any) {
-    const releaseStreamId = await this.resolveReleaseStreamId(data.releaseVersion, data.releaseStreamId);
+  async create(data: CreateDeploymentItemDto) {
+    const releaseStreamId = await this.resolveReleaseStreamId(
+      data.releaseVersion,
+      data.releaseStreamId,
+    );
     const newItem = await this.prisma.deploymentItem.create({
       data: {
-        sourceBranch: data.sourceBranch,
+        sourceBranch: data.sourceBranch || 'main',
         status: data.status || 'merged',
         isMergedOnDevel: data.isMergedOnDevel || false,
         repositoryId: Number(data.repositoryId),
         userId: Number(data.userId),
         releaseStreamId,
         tickets: {
-          create: data.tickets || [],
+          create: data.tickets
+            ? data.tickets.map((t) => ({
+                ticketId: t.ticketId || '',
+                summary: t.summary || '',
+                changeType: t.changeType || 'Feature',
+                qcStatus: t.qcStatus || '—',
+                pendingIssues: t.pendingIssues || '',
+              }))
+            : [],
         },
       },
     });
 
-    let branchBuilds = data.branchBuilds && Array.isArray(data.branchBuilds) ? [...data.branchBuilds] : [];
+    const branchBuilds =
+      data.branchBuilds && Array.isArray(data.branchBuilds)
+        ? [...data.branchBuilds]
+        : [];
     if (data.isMergedOnDevel && !branchBuilds.includes('devel')) {
       branchBuilds.push('devel');
     }
@@ -179,7 +254,7 @@ export class DeploymentItemsService {
             status: 'SUCCESS',
             deploymentItemId: newItem.id,
             environmentId: env.id,
-          }
+          },
         });
       }
     }
@@ -187,8 +262,11 @@ export class DeploymentItemsService {
     return this.findOne(newItem.id);
   }
 
-  async update(id: number, data: any) {
-    const releaseStreamId = await this.resolveReleaseStreamId(data.releaseVersion, data.releaseStreamId);
+  async update(id: number, data: UpdateDeploymentItemDto) {
+    const releaseStreamId = await this.resolveReleaseStreamId(
+      data.releaseVersion,
+      data.releaseStreamId,
+    );
     await this.prisma.deploymentItem.update({
       where: { id },
       data: {
@@ -197,6 +275,7 @@ export class DeploymentItemsService {
         releaseStreamId,
         status: data.status,
         userId: data.userId ? Number(data.userId) : undefined,
+        repositoryId: data.repositoryId ? Number(data.repositoryId) : undefined,
       },
     });
 
@@ -206,6 +285,8 @@ export class DeploymentItemsService {
           await this.prisma.ticket.update({
             where: { id: Number(t.id) },
             data: {
+              ticketId: t.ticketId,
+              summary: t.summary,
               changeType: t.changeType,
               qcStatus: t.qcStatus,
               pendingIssues: t.pendingIssues,
@@ -222,13 +303,13 @@ export class DeploymentItemsService {
           branchBuilds.push('devel');
         }
       } else if (data.isMergedOnDevel === false) {
-        branchBuilds = branchBuilds.filter(b => b !== 'devel');
+        branchBuilds = branchBuilds.filter((b) => b !== 'devel');
       }
 
       await this.prisma.build.deleteMany({
         where: {
           deploymentItemId: id,
-        }
+        },
       });
 
       for (const envName of branchBuilds) {
@@ -242,7 +323,7 @@ export class DeploymentItemsService {
             status: 'SUCCESS',
             deploymentItemId: id,
             environmentId: env.id,
-          }
+          },
         });
       }
     }
@@ -255,7 +336,11 @@ export class DeploymentItemsService {
       const env = await this.prisma.environment.upsert({
         where: { name: 'devel' },
         update: {},
-        create: { name: 'devel', description: 'Môi trường tích hợp mã nguồn chung (Development server)' },
+        create: {
+          name: 'devel',
+          description:
+            'Môi trường tích hợp mã nguồn chung (Development server)',
+        },
       });
       const existingBuild = await this.prisma.build.findFirst({
         where: {
@@ -303,7 +388,7 @@ export class DeploymentItemsService {
     });
   }
 
-  async bulkCreate(items: any[]) {
+  async bulkCreate(items: BulkCreateItemDto[]) {
     const results = [];
     const processedKeys = new Set<string>();
 
@@ -350,7 +435,9 @@ export class DeploymentItemsService {
       // Check for duplicates within this batch to prevent self-duplication
       const batchKey = `${item.ticketId.trim().toLowerCase()}_${repository.id}_${releaseStreamId || 0}`;
       if (processedKeys.has(batchKey)) {
-        console.log(`[IMPORT] Skipping duplicate ticket ${item.ticketId} in same upload batch`);
+        console.log(
+          `[IMPORT] Skipping duplicate ticket ${item.ticketId} in same upload batch`,
+        );
         continue;
       }
       processedKeys.add(batchKey);
@@ -360,7 +447,10 @@ export class DeploymentItemsService {
         item.isMergedOnDevel === 'true' ||
         String(item.isMergedOnDevel).toLowerCase() === 'yes';
 
-      let branchBuilds = item.branchBuilds && Array.isArray(item.branchBuilds) ? [...item.branchBuilds] : [];
+      const branchBuilds =
+        item.branchBuilds && Array.isArray(item.branchBuilds)
+          ? [...item.branchBuilds]
+          : [];
       if (isMergedOnDevel && !branchBuilds.includes('devel')) {
         branchBuilds.push('devel');
       }
@@ -375,26 +465,29 @@ export class DeploymentItemsService {
           },
         },
         include: {
-          deploymentItem: true
-        }
+          deploymentItem: true,
+        },
       });
 
       let dbItem: any;
 
       if (existingInDb) {
-        console.log(`[IMPORT] Updating existing deployment item for ticket ${item.ticketId}...`);
+        console.log(
+          `[IMPORT] Updating existing deployment item for ticket ${item.ticketId}...`,
+        );
         dbItem = await this.prisma.deploymentItem.update({
           where: { id: existingInDb.deploymentItemId },
           data: {
-            sourceBranch: item.sourceBranch || existingInDb.deploymentItem.sourceBranch,
+            sourceBranch:
+              item.sourceBranch || existingInDb.deploymentItem.sourceBranch,
             status: item.status || existingInDb.deploymentItem.status,
             isMergedOnDevel,
-          }
+          },
         });
 
         // Clear old builds to replace with the newly parsed ones from CSV
         await this.prisma.build.deleteMany({
-          where: { deploymentItemId: dbItem.id }
+          where: { deploymentItemId: dbItem.id },
         });
       } else {
         dbItem = await this.prisma.deploymentItem.create({
@@ -432,7 +525,7 @@ export class DeploymentItemsService {
               status: 'SUCCESS',
               deploymentItemId: dbItem.id,
               environmentId: env.id,
-            }
+            },
           });
         }
       }
