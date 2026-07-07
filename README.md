@@ -65,6 +65,10 @@ Nằm tại thư mục `frontend/`, được phát triển bằng **Angular 20**
         *   Đường liên kết phân cấp dạng cây chuyển từ nét đứt sang nét liền xanh dương thanh lịch.
         *   Tiêu đề bảng sử dụng font chữ mỏng trung bình (`weight: 600`) cho cảm giác thoáng đãng và chuyên nghiệp hơn.
     *   **Dynamic Sorting (Sắp xếp Động):** Người dùng có thể nhấn nút Sort xoay vòng trực quan trên Action Bar để đổi thứ tự sắp xếp theo `Ngày tạo` hoặc `Phiên bản Release` từ xa qua API.
+    *   **Xuất Báo cáo Excel (Export to Excel):** Tích hợp nút Export xuất danh sách bản ghi hiện tại dựa theo bộ lọc/tìm kiếm ra tệp tin `.xlsx`, tự động căn chỉnh kích thước cột tối ưu cho việc báo cáo.
+    *   **Thao tác Hàng loạt (Bulk Actions):** Khi tick chọn nhiều dòng, một thanh công cụ (Action Strip) sẽ xuất hiện cho phép:
+        *   **Xóa hàng loạt (Bulk Delete):** Xóa đồng thời nhiều bản ghi kèm xác nhận an toàn qua Popup.
+        *   **Cập nhật hàng loạt (Bulk Update):** Thay đổi nhanh Fix Version hoặc Trạng thái QC (QC Readiness) của tất cả các dòng được chọn cùng lúc.
     *   **Custom Modals, Tooltips & Toasts:** Tích hợp `matTooltip` thông minh (ví dụ: hiển thị chi tiết toàn bộ chuỗi Branch Build dài khi rê chuột). Thay thế hoàn toàn các hàm `alert()` và `confirm()` gốc của trình duyệt bằng `ToastComponent` động góc phải màn hình và hộp thoại xác nhận chuyên nghiệp `ConfirmDialogComponent`.
     *   **Hộp lọc thả xuống thông minh:** Phân loại Fix Version theo dạng nhóm cây gọn gàng thông qua component `<mat-optgroup>`.
     *   **Sidebar Panels:** Ngăn trượt từ bên phải màn hình (slide-over panel) hỗ trợ hai chế độ nhập liệu/chỉnh sửa thông tin nhánh, ticket, gán người sửa và quản lý danh sách phiên bản/môi trường.
@@ -99,6 +103,7 @@ Nằm tại thư mục `backend/`, được phát triển bằng **NestJS** kế
     *   **Logic Nghiệp vụ API (DeploymentItemsService):**
         *   **Dynamic Filters:** Hỗ trợ tìm kiếm không dấu/chữ hoa chữ thường, lọc chéo theo Repository, Fix Version, Trạng thái nhánh (`merged`, `pending`, `closed`), Trạng thái kiểm thử QC và **Branch Build**.
         *   **Server-side Sorting & Pagination:** Đảm bảo tải trang nhanh với lượng dữ liệu lớn nhờ cơ chế tính toán tổng trang và sắp xếp trực tiếp trên cơ sở dữ liệu (Database Engine).
+        *   **Xử lý Giao dịch Hàng loạt (Transactional Bulk Operations):** Hỗ trợ xóa hàng loạt (`bulk-delete`) và cập nhật hàng loạt (`bulk-update`) tối ưu trong cùng một database transaction đảm bảo tính nhất quán của dữ liệu.
         *   **Excel/CSV Bulk Parser (Có tính năng học thông minh & UPSERT):** Cho phép upload tệp bảng tính Excel, tự động phân tích tiêu đề cột, ánh xạ dữ liệu và thực hiện cơ chế cập nhật tự động (**UPSERT Repo/User/Ticket**). Nếu ticket đã tồn tại, nó sẽ tự động cập nhật bản ghi cũ thay vì bỏ qua, giúp bạn dễ dàng re-import để ghi đè Branch Build. Tự động nhận diện Fix Version từ tên nhánh nếu cột phiên bản bị bỏ trống. Đặc biệt, bộ phân tích giữ nguyên định dạng chữ hoa/chữ thường (original casing) cho các môi trường Build tuỳ chỉnh để tự động lưu chúng vào CSDL.
     *   **Tự động Migrate trên Cloud (Auto DB Migration):** Tích hợp lệnh `npx prisma migrate deploy` trực tiếp vào quá trình biên dịch (`build` script) trên Render để đồng bộ cấu trúc DB tức thì khi triển khai code mới.
 

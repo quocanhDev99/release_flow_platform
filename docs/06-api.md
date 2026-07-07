@@ -14,12 +14,15 @@
 ---
 
 ## Deployment Item (Quản lý các dòng dữ liệu Ticket)
-* **GET `/deployment-items`**: Lấy danh sách toàn bộ các Ticket kèm thông tin chi tiết (lọc theo Repo, Fix Version, trạng thái QC, v.v.).
-* **POST `/deployment-items`**: Tạo một bản ghi Ticket mới (thường tự động kích hoạt bởi Git Webhook khi có sự kiện merge branch).
-* **GET `/deployment-items/{id}`**: Xem chi tiết một Ticket.
-* **PUT `/deployment-items/{id}`**: Cập nhật thông tin bất kỳ trường nào của Ticket (ví dụ: sửa đổi nhánh build, trạng thái QC, ghi chú pending).
-* **PATCH `/deployment-items/{id}/merge-devel`**: Cập nhật nhanh trạng thái checkbox "Merge on Devel".
-* **PATCH `/deployment-items/{id}/qc`**: Cập nhật nhanh trạng thái "Ready For QC".
+*   **GET `/deployment-items`**: Lấy danh sách toàn bộ các Ticket kèm thông tin chi tiết (lọc theo Repo, Fix Version, trạng thái QC, v.v.).
+*   **POST `/deployment-items`**: Tạo một bản ghi Ticket mới (thường tự động kích hoạt bởi Git Webhook khi có sự kiện merge branch).
+*   **GET `/deployment-items/{id}`**: Xem chi tiết một Ticket.
+*   **PUT `/deployment-items/{id}`**: Cập nhật thông tin bất kỳ trường nào của Ticket (ví dụ: sửa đổi nhánh build, trạng thái QC, ghi chú pending).
+*   **DELETE `/deployment-items/{id}`**: Xóa một bản ghi Ticket.
+*   **POST `/deployment-items/bulk-delete`**: Xóa đồng thời nhiều bản ghi Ticket được chọn (Payload: `{ ids: number[] }`).
+*   **POST `/deployment-items/bulk-update`**: Cập nhật đồng loạt các bản ghi Ticket được chọn (Payload: `{ ids: number[], releaseStreamId?: number | null, qcStatus?: string }`).
+*   **PATCH `/deployment-items/{id}/merge-devel`**: Cập nhật nhanh trạng thái checkbox "Merge on Devel".
+*   **PATCH `/deployment-items/{id}/qc`**: Cập nhật nhanh trạng thái "Ready For QC".
 
 ---
 
