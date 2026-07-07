@@ -106,22 +106,19 @@
   </div>
 
   <!-- ─── Stats strip + group toggle ─────────────────────────────────── -->
-  <div class="stats-strip">
-    <!-- Bulk Actions (Left Aligned) -->
+  <!-- <div class="stats-strip">
     <div class="bulk-actions" *ngIf="selection.hasValue()">
       <div class="bulk-actions__selection">
         <span class="bulk-actions__count">{{ selection.selected.length }}</span>
         <span class="bulk-actions__label">selected</span>
       </div>
       
-      <!-- Bulk Delete -->
       <button mat-raised-button color="warn" class="bulk-actions__delete-btn" (click)="deleteSelectedItems()">
         <mat-icon>delete_outline</mat-icon> Delete
       </button>
 
       <div class="bulk-actions__divider"></div>
 
-      <!-- Bulk QC Status -->
       <mat-form-field appearance="outline" class="toolbar__filter">
         <mat-label>Bulk QC Status</mat-label>
         <mat-select (selectionChange)="bulkUpdateQCStatus($event.value)">
@@ -129,7 +126,6 @@
         </mat-select>
       </mat-form-field>
 
-      <!-- Bulk Fix Version -->
       <mat-form-field appearance="outline" class="toolbar__filter">
         <mat-label>Bulk Fix Version</mat-label>
         <mat-select (selectionChange)="bulkUpdateFixVersion($event.value)">
@@ -143,7 +139,6 @@
     </div>
     <div *ngIf="!selection.hasValue()"></div>
 
-    <!-- Controls (Right Aligned) -->
     <div style="display:flex; gap:8px;">
       <button mat-stroked-button (click)="toggleSort()">
         <mat-icon>{{ currentSort.icon }}</mat-icon>
@@ -154,7 +149,7 @@
         {{ isGrouped() ? 'Ungroup' : 'Group by Release' }}
       </button>
     </div>
-  </div>
+  </div> -->
 
   <!-- ─── Data Grid ────────────────────────────────────────────────────── -->
   <div class="data-grid">
@@ -262,7 +257,7 @@
     <div class="data-grid__table-wrapper">
       <table mat-table [dataSource]="items" class="data-grid__table">
         <!-- Checkbox Column -->
-        <ng-container matColumnDef="select">
+        <!-- <ng-container matColumnDef="select">
           <th mat-header-cell *matHeaderCellDef class="col--center" style="width: 48px;">
             <mat-checkbox (change)="$event ? masterToggle(items) : null"
                           [checked]="isAllSelected(items)"
@@ -275,7 +270,7 @@
                           [checked]="selection.isSelected(item.id)">
             </mat-checkbox>
           </td>
-        </ng-container>
+        </ng-container> -->
 
         <!-- Repo Column -->
         <ng-container matColumnDef="repo">

@@ -392,7 +392,6 @@ export class DashboardComponent implements OnInit {
 
   // Table configuration
   displayedColumns: string[] = [
-    'select',
     'repo',
     'ticket',
     'fixVersion',
