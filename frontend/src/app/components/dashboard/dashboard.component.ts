@@ -22,6 +22,7 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
 import { ToastComponent } from '../toast/toast.component';
 import { DeploymentItem, ReleaseStream, Ticket, Repository, User } from '../../models/release.model';
 import * as XLSX from 'xlsx';
+import { SelectionModel } from '@angular/cdk/collections';
 
 @Component({
   selector: 'app-dashboard',
@@ -324,6 +325,7 @@ export class DashboardComponent implements OnInit {
       const depth = Math.max(0, parts.length - 2);
       const indentArray = Array(depth).fill(0);
       return {
+        id: rel.id,
         version: rel.version,
         displayName: key,
         depth,
@@ -365,12 +367,11 @@ export class DashboardComponent implements OnInit {
   isCreateMode = false;
   isConfigMode = false;
   newReleaseVersionName = '';
-  newReleaseVersion = '';
   newRepoName = '';
   newRepoGitUrl = '';
   newRepoId: number | null = null;
   newUserId: number | null = null;
-  newReleaseStreamId: number | null = null;
+  newReleaseStreamId: number | undefined = undefined;
   newSourceBranch = '';
   newTicketId = '';
   newSummary = '';
@@ -386,8 +387,12 @@ export class DashboardComponent implements OnInit {
   activeBranchBuilds: string[] = [];
   branchBuildOptions = ['dev', 'dev2', 'devel', 'STG', 'UAT', 'Production'];
 
+  // Selection state
+  selection = new SelectionModel<number>(true, []);
+
   // Table configuration
   displayedColumns: string[] = [
+    'select',
     'repo',
     'ticket',
     'fixVersion',
@@ -498,6 +503,7 @@ export class DashboardComponent implements OnInit {
         this.deploymentItems.set(res.data);
         this.totalItems.set(res.total);
         this.filteredItems.set(res.data);
+        this.selection.clear();
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -600,13 +606,63 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  isAllSelected(items: DeploymentItem[]): boolean {
+    if (!items || items.length === 0) return false;
+    return items.every(item => this.selection.isSelected(item.id));
+  }
+
+  someSelected(items: DeploymentItem[]): boolean {
+    if (!items || items.length === 0) return false;
+    return items.some(item => this.selection.isSelected(item.id));
+  }
+
+  masterToggle(items: DeploymentItem[]): void {
+    if (this.isAllSelected(items)) {
+      items.forEach(item => this.selection.deselect(item.id));
+    } else {
+      items.forEach(item => this.selection.select(item.id));
+    }
+  }
+
+  deleteSelectedItems(): void {
+    const selectedIds = this.selection.selected;
+    if (selectedIds.length === 0) return;
+
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '440px',
+      data: {
+        title: 'Delete Selected Records',
+        message: `This will permanently remove the ${selectedIds.length} selected deployment record(s) and all associated tickets. This action cannot be undone.`,
+        confirmLabel: 'Delete All',
+        cancelLabel: 'Cancel',
+        type: 'danger'
+      }
+    });
+
+    ref.afterClosed().subscribe((confirmed: boolean) => {
+      if (!confirmed) return;
+      this.isLoading.set(true);
+      this.releaseService.bulkDeleteDeploymentItems(selectedIds).subscribe({
+        next: () => {
+          this.toast.success(`Successfully deleted ${selectedIds.length} record(s).`);
+          this.loadData();
+        },
+        error: (err) => {
+          console.error('Failed to delete records', err);
+          this.toast.error('Failed to delete the records. Please try again.');
+          this.isLoading.set(false);
+        }
+      });
+    });
+  }
+
   // open panel to edit ticket detail (Pending Issues, builds)
   openEditPanel(item: DeploymentItem, ticket: Ticket) {
     console.log("🚀 ~ DashboardComponent ~ openEditPanel ~ item:", item)
     this.isCreateMode = false;
     this.activeItem = {
       ...item,
-      releaseVersion: item.releaseStream ? this.cleanVersion(item.releaseStream.version) : ''
+      releaseStreamId: item.releaseStreamId
     };
     this.activeTicket = { ...ticket };
     this.activeBranchBuilds = item.builds
@@ -621,7 +677,7 @@ export class DashboardComponent implements OnInit {
     this.newRepoId = this.repositories().length > 0 ? this.repositories()[0].id : null;
     // Auto-fill userId from logged-in account
     this.newUserId = this.currentUser()?.id ?? null;
-    this.newReleaseVersion = '';
+    this.newReleaseStreamId = undefined;
     this.newSourceBranch = '';
     this.newTicketId = '';
     this.newSummary = '';
@@ -680,7 +736,7 @@ export class DashboardComponent implements OnInit {
     // Find the original release version in the DB list that matches this clean key
     const match = this.releases().find(r => this.cleanVersion(r.version) === versionKey);
     if (match) {
-      this.newReleaseVersion = match.version;
+      this.newReleaseStreamId = match.id;
     }
   }
 
@@ -796,7 +852,7 @@ export class DashboardComponent implements OnInit {
       const payload = {
         repositoryId: this.newRepoId,
         userId: userId,
-        releaseVersion: this.newReleaseVersion,
+        releaseStreamId: this.newReleaseStreamId,
         sourceBranch: this.newSourceBranch,
         isMergedOnDevel: this.newIsMergedOnDevel,
         status: this.newStatus,
@@ -849,8 +905,7 @@ export class DashboardComponent implements OnInit {
         userId: userId,
         sourceBranch: this.activeItem.sourceBranch,
         isMergedOnDevel: this.activeItem.isMergedOnDevel,
-        releaseVersion: (this.activeItem as any).releaseVersion || null,
-        releaseStreamId: (this.activeItem as any).releaseVersion ? undefined : null,
+        releaseStreamId: this.activeItem.releaseStreamId,
         status: this.activeItem.status,
         branchBuilds,
         tickets: [
@@ -1060,6 +1115,90 @@ export class DashboardComponent implements OnInit {
     if (!version) return '—';
     const match = version.match(/\d+(\.\d+)*/);
     return match ? match[0] : version;
+  }
+
+  exportToExcel() {
+    const items = this.filteredItems();
+    if (items.length === 0) {
+      this.toast.warn('No records available to export.');
+      return;
+    }
+
+    const rows = items.map(item => {
+      const tickets = item.tickets || [];
+      return {
+        'Repository': item.repository?.name || '—',
+        'Ticket ID': tickets.map(t => t.ticketId).join(', ') || '—',
+        'Summary': tickets.map(t => t.summary).join(', ') || '—',
+        'Fix Version': this.cleanVersion(item.releaseStream?.version) || '—',
+        'Development Branch': item.sourceBranch || '—',
+        'Branch Status': (item.status || '—').toUpperCase(),
+        'Branch Builds': this.getBuildsString(item) || '—',
+        'Merged to Devel': item.isMergedOnDevel ? 'Yes' : 'No',
+        'Type': tickets.map(t => t.changeType).join(', ') || '—',
+        'QC Status': tickets.map(t => t.qcStatus).join(', ') || '—',
+        'Pending Issues': tickets.map(t => t.pendingIssues).join(', ') || '—',
+        'Developer': item.user?.username || '—',
+        'Created Date': this.formatDate(item.createdAt),
+        'Last Updated': this.formatDate(item.updatedAt)
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Deployment Records');
+
+    const maxLens = Object.keys(rows[0]).map(key => {
+      return Math.max(
+        key.length,
+        ...rows.map(row => String((row as any)[key] || '').length)
+      );
+    });
+    worksheet['!cols'] = maxLens.map(len => ({ wch: len + 3 }));
+
+    XLSX.writeFile(workbook, `Release_Flow_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+    this.toast.success('Excel report exported successfully.');
+  }
+
+  bulkUpdateQCStatus(qcStatus: string) {
+    const selectedIds = this.selection.selected;
+    if (selectedIds.length === 0 || !qcStatus) return;
+
+    this.isLoading.set(true);
+    const payload = { ids: selectedIds, qcStatus };
+    this.releaseService.bulkUpdateDeploymentItems(payload).subscribe({
+      next: () => {
+        this.toast.success(`Successfully updated QC Status to "${qcStatus}" for ${selectedIds.length} record(s).`);
+        this.loadData();
+      },
+      error: (err) => {
+        console.error('Failed to bulk update QC status', err);
+        this.toast.error('Failed to update the records. Please try again.');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  bulkUpdateFixVersion(releaseStreamId: any) {
+    const selectedIds = this.selection.selected;
+    if (selectedIds.length === 0) return;
+
+    this.isLoading.set(true);
+    const payload = {
+      ids: selectedIds,
+      releaseStreamId: releaseStreamId === undefined ? null : releaseStreamId
+    };
+    this.releaseService.bulkUpdateDeploymentItems(payload).subscribe({
+      next: () => {
+        this.toast.success(`Successfully updated Fix Version for ${selectedIds.length} record(s).`);
+        this.loadData();
+      },
+      error: (err) => {
+        console.error('Failed to bulk update Fix Version', err);
+        this.toast.error('Failed to update the records. Please try again.');
+        this.isLoading.set(false);
+      }
+    });
   }
 }
 

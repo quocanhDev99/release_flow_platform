@@ -549,4 +549,56 @@ export class DeploymentItemsService {
       });
     });
   }
+
+  async bulkDelete(ids: number[]) {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.ticket.deleteMany({
+        where: { deploymentItemId: { in: ids } },
+      });
+      await tx.build.deleteMany({
+        where: { deploymentItemId: { in: ids } },
+      });
+      return tx.deploymentItem.deleteMany({
+        where: { id: { in: ids } },
+      });
+    });
+  }
+
+  async bulkUpdate(data: {
+    ids: number[];
+    releaseStreamId?: number;
+    qcStatus?: string;
+    isMergedOnDevel?: boolean;
+    status?: string;
+  }) {
+    return this.prisma.$transaction(async (tx) => {
+      const updateData: any = {};
+      if (data.releaseStreamId !== undefined) {
+        updateData.releaseStreamId =
+          data.releaseStreamId === null || data.releaseStreamId === undefined
+            ? null
+            : Number(data.releaseStreamId);
+      }
+      if (data.isMergedOnDevel !== undefined) {
+        updateData.isMergedOnDevel = data.isMergedOnDevel;
+      }
+      if (data.status !== undefined) {
+        updateData.status = data.status;
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await tx.deploymentItem.updateMany({
+          where: { id: { in: data.ids.map(Number) } },
+          data: updateData,
+        });
+      }
+
+      if (data.qcStatus !== undefined) {
+        await tx.ticket.updateMany({
+          where: { deploymentItemId: { in: data.ids.map(Number) } },
+          data: { qcStatus: data.qcStatus },
+        });
+      }
+    });
+  }
 }

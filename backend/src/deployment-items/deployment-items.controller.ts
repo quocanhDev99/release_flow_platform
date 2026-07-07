@@ -86,4 +86,14 @@ export class DeploymentItemsController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.deploymentItemsService.remove(id);
   }
+
+  @Post('bulk-delete')
+  bulkDelete(@Body('ids') ids: number[]) {
+    return this.deploymentItemsService.bulkDelete(ids);
+  }
+
+  @Post('bulk-update')
+  bulkUpdate(@Body() data: any) {
+    return this.deploymentItemsService.bulkUpdate(data);
+  }
 }

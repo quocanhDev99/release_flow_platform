@@ -47,6 +47,14 @@ export class ReleaseService {
     return this.http.delete<void>(`${`${this.apiUrl}/deployment-items`}/${id}`);
   }
 
+  bulkDeleteDeploymentItems(ids: number[]): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/deployment-items/bulk-delete`, { ids });
+  }
+
+  bulkUpdateDeploymentItems(payload: any): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/deployment-items/bulk-update`, payload);
+  }
+
   patchQCStatus(ticketId: number, qcStatus: string): Observable<Ticket> {
     return this.http.patch<Ticket>(`${this.apiUrl}/tickets/${ticketId}/qc`, { qcStatus });
   }
