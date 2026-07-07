@@ -43,6 +43,7 @@ $radius-md:    10px;
 $radius-lg:    14px;
 $radius-pill:  9999px;
 
+$shadow-sm:    0 1px 2px rgba(0,0,0,.05);
 $shadow-card:  0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,0,.06);
 $shadow-panel: -4px 0 32px rgba(0,0,0,.12);
 
@@ -166,18 +167,94 @@ $transition-base: all 0.2s ease;
 // ═══════════════════════════════════════════════════════════════════════════
 .toolbar {
   display: grid;
-  grid-template-columns: 2fr repeat(4, 1fr);
+  grid-template-columns: 2fr repeat(5, 1fr);
   gap: 12px;
   align-items: center;
   margin-bottom: 20px;
-  padding: 16px;
-  background: $color-bg-surface;
-  border: 1px solid $color-border;
+  padding: 12px 16px;
+  background: var(--color-bg-surface, $color-bg-surface);
+  border: 1px solid var(--color-border, $color-border);
   border-radius: $radius-lg;
   box-shadow: $shadow-card;
 
   &__search { /* takes its grid column naturally */ }
   &__filter  { /* takes its grid column naturally */ }
+}
+
+// ─── Stats Strip & Bulk Actions ──────────────────────────────────────────
+.stats-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--color-bg-surface, $color-bg-surface);
+  padding: 6px 12px;
+  border-radius: $radius-md;
+  border: 1px solid var(--color-border, $color-border);
+  box-shadow: $shadow-sm;
+
+  &__selection {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    padding-right: 4px;
+  }
+
+  &__count {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--color-brand, $color-brand);
+  }
+
+  &__label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-muted, $color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &__delete-btn {
+    height: 36px !important;
+    padding: 0 12px !important;
+    font-weight: 600 !important;
+  }
+
+  &__divider {
+    width: 1px;
+    height: 24px;
+    background: var(--color-border, $color-border);
+    margin: 0 4px;
+  }
+
+  &__filter {
+    width: 150px;
+    
+    ::ng-deep {
+      .mat-mdc-text-field-wrapper {
+        height: 36px !important;
+        padding: 0 10px !important;
+      }
+      .mat-mdc-form-field-flex {
+        height: 100%;
+        align-items: center;
+      }
+      .mat-mdc-form-field-infix {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        min-height: unset !important;
+        display: flex;
+        align-items: center;
+      }
+    }
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -998,20 +1075,20 @@ $transition-base: all 0.2s ease;
   }
 
   &__label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.6px;
-    color: $color-text-muted;
-    background: rgba(0, 0, 0, 0.05);
-    padding: 2px 6px;
-    border-radius: $radius-sm;
+    color: var(--color-text-muted, $color-text-muted);
+    background: var(--color-border, rgba(0, 0, 0, 0.05));
+    padding: 3px 8px;
+    border-radius: 12px;
   }
 
   &__name {
-    font-family: $font-mono;
+    font-size: 14px;
     font-weight: 700;
-    margin-left: 4px;
+    margin-left: 6px;
   }
 
   &__add-sub {

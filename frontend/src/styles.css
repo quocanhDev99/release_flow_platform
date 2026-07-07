@@ -4,3 +4,11 @@ body {
   margin: 0;
   background-color: #f8fafc;
 }
+
+/* Global Button Customization: Modern Pill-shape for professional look */
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-flat-button,
+.mat-mdc-outlined-button {
+  border-radius: 24px !important;
+}

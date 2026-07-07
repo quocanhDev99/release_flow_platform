@@ -30,23 +30,23 @@
       <div class="navbar__divider"></div>
 
       <input #fileInput type="file" (change)="onExcelUpload($event)" accept=".xlsx,.xls,.csv" style="display:none">
-      <button mat-stroked-button (click)="fileInput.click()">
+      <button mat-stroked-button (click)="fileInput.click()" class="btn-secondary" matTooltip="Import Excel/CSV Data">
         <mat-icon>upload_file</mat-icon> Import
       </button>
 
-      <button mat-stroked-button (click)="exportToExcel()">
+      <button mat-stroked-button (click)="exportToExcel()" class="btn-secondary" matTooltip="Export to Excel">
         <mat-icon>download</mat-icon> Export
       </button>
 
-      <button mat-stroked-button (click)="openConfigPanel()">
+      <button mat-stroked-button (click)="openConfigPanel()" class="btn-secondary btn-releases" matTooltip="Manage Releases & Repositories">
         <mat-icon>tune</mat-icon> Releases
       </button>
 
-      <button mat-stroked-button (click)="loadData()">
-        <mat-icon>refresh</mat-icon> Refresh
+      <button mat-icon-button (click)="loadData()" class="btn-refresh-icon" matTooltip="Refresh Data">
+        <mat-icon>refresh</mat-icon>
       </button>
 
-      <button mat-flat-button color="primary" (click)="openCreatePanel()">
+      <button mat-raised-button color="primary" (click)="openCreatePanel()" class="btn-new-record" matTooltip="Create New Deployment Record">
         <mat-icon>add</mat-icon> New Record
       </button>
     </div>
@@ -106,20 +106,23 @@
   </div>
 
   <!-- ─── Stats strip + group toggle ─────────────────────────────────── -->
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:8px;">
+  <div class="stats-strip">
     <!-- Bulk Actions (Left Aligned) -->
-    <div style="display:flex; align-items:center; gap:12px;" *ngIf="selection.hasValue()">
-      <span style="font-weight:600; font-size:13px; color:#f44336; margin-right:4px;">Selected: {{ selection.selected.length }}</span>
+    <div class="bulk-actions" *ngIf="selection.hasValue()">
+      <div class="bulk-actions__selection">
+        <span class="bulk-actions__count">{{ selection.selected.length }}</span>
+        <span class="bulk-actions__label">selected</span>
+      </div>
       
       <!-- Bulk Delete -->
-      <button mat-flat-button color="warn" (click)="deleteSelectedItems()">
-        <mat-icon>delete_sweep</mat-icon> Delete
+      <button mat-raised-button color="warn" class="bulk-actions__delete-btn" (click)="deleteSelectedItems()">
+        <mat-icon>delete_outline</mat-icon> Delete
       </button>
 
-      <div style="width:1px; height:24px; background:rgba(0,0,0,0.1); margin:0 4px;"></div>
+      <div class="bulk-actions__divider"></div>
 
       <!-- Bulk QC Status -->
-      <mat-form-field appearance="outline" style="width: 140px; margin-bottom: -1.25em;">
+      <mat-form-field appearance="outline" class="toolbar__filter">
         <mat-label>Bulk QC Status</mat-label>
         <mat-select (selectionChange)="bulkUpdateQCStatus($event.value)">
           <mat-option *ngFor="let s of qcStatuses" [value]="s">{{ s }}</mat-option>
@@ -127,7 +130,7 @@
       </mat-form-field>
 
       <!-- Bulk Fix Version -->
-      <mat-form-field appearance="outline" style="width: 160px; margin-bottom: -1.25em;">
+      <mat-form-field appearance="outline" class="toolbar__filter">
         <mat-label>Bulk Fix Version</mat-label>
         <mat-select (selectionChange)="bulkUpdateFixVersion($event.value)">
           <mat-option [value]="undefined">None</mat-option>
@@ -693,7 +696,7 @@
 
     <div class="sidebar__footer">
       <button mat-stroked-button (click)="closeEditPanel()" [disabled]="isSaving()">Cancel</button>
-      <button *ngIf="!isConfigMode" mat-flat-button color="primary" (click)="saveTicketDetails()" [disabled]="isSaving()">
+      <button *ngIf="!isConfigMode" mat-raised-button color="primary" (click)="saveTicketDetails()" [disabled]="isSaving()">
         <span *ngIf="!isSaving()">Save Changes</span>
         <span *ngIf="isSaving()">Saving...</span>
       </button>
