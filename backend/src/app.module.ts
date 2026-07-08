@@ -10,6 +10,9 @@ import { UsersController } from './users/users.controller';
 import { NotificationsModule } from './notifications/notifications.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { EnvironmentsModule } from './environments/environments.module';
+import { ReleasePackagesModule } from './release-packages/release-packages.module';
+import { DeploymentWindowsModule } from './deployment-windows/deployment-windows.module';
+import { DeploymentBookingsModule } from './deployment-bookings/deployment-bookings.module';
 
 @Module({
   imports: [
@@ -20,6 +23,9 @@ import { EnvironmentsModule } from './environments/environments.module';
     NotificationsModule,
     WebhooksModule,
     EnvironmentsModule,
+    ReleasePackagesModule,
+    DeploymentWindowsModule,
+    DeploymentBookingsModule,
   ],
   controllers: [AppController, RepositoriesController, UsersController],
   providers: [AppService],

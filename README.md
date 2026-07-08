@@ -10,17 +10,17 @@
 
 | Tài liệu | Nội dung chi tiết |
 | :--- | :--- |
-| 📄 [docs/01-overview.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/01-overview.md) | **Tổng quan dự án:** Phân tích vấn đề của Excel, tầm nhìn phát triển và mục tiêu MVP V1. |
-| 📄 [docs/02-business-flow.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/02-business-flow.md) | **Quy trình nghiệp vụ:** Sơ đồ Mermaid luồng Release thông thường, luồng Hotfix khẩn cấp và xử lý lỗi Miss Deployment. |
-| 📄 [docs/03-domain-model.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/03-domain-model.md) | **Thiết kế Domain:** Phân tích chi tiết mô hình chuẩn hóa (Normalization) để mở rộng hệ thống mà không cần tái cấu trúc DB. |
-| 📄 [docs/04-architecture.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/04-architecture.md) | **Kiến trúc hệ thống:** Mô tả cấu trúc các thành phần hệ thống và các tầng dữ liệu. |
-| 📄 [docs/05-database.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/05-database.md) | **Cơ sở dữ liệu & ERD:** Thiết kế thực thể liên kết chi tiết giữa các bảng trong Database. |
-| 📄 [docs/06-api.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/06-api.md) | **REST API:** Đặc tả kỹ thuật của các Endpoint giữa Client và NestJS Server. |
-| 📄 [docs/07-deployment.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/07-deployment.md) | **Quy trình Triển khai:** Hướng dẫn đóng gói Docker và đẩy lên máy chủ. |
-| 📄 [docs/08-roadmap.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/08-roadmap.md) | **Lộ trình phát triển:** Kế hoạch chi tiết từ V1 (MVP) đến V4 (Báo cáo & Tự động hóa thông minh). |
-| 📄 [docs/09-architectural-review.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/09-architectural-review.md) | **Đánh giá kiến trúc:** Các đề xuất cải tiến mã nguồn, hiệu năng và tính năng của hệ thống. |
-| 📄 [docs/10-cicd-webhook-setup.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/10-cicd-webhook-setup.md) | **Cấu hình Webhooks & Chatbot (V2):** Hướng dẫn kết nối webhook trên GitHub/Bitbucket và Slack/Teams. |
-| 📄 [README_DEV.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/README_DEV.md) | **Local Dev Guide:** Hướng dẫn chạy Docker Database cục bộ, Migrate DB Prisma và Start Server/Client. |
+| 📄 [docs/01-overview.md](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/docs/01-overview.md) | **Tổng quan dự án:** Phân tích vấn đề của Excel, tầm nhìn phát triển và mục tiêu MVP V1. |
+| 📄 [docs/02-business-flow.md](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/docs/02-business-flow.md) | **Quy trình nghiệp vụ:** Sơ đồ Mermaid luồng Release thông thường, luồng Hotfix khẩn cấp và xử lý lỗi Miss Deployment. |
+| 📄 [docs/03-domain-model.md](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/docs/03-domain-model.md) | **Thiết kế Domain:** Phân tích chi tiết mô hình chuẩn hóa (Normalization) để mở rộng hệ thống mà không cần tái cấu trúc DB. |
+| 📄 [docs/04-architecture.md](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/docs/04-architecture.md) | **Kiến trúc hệ thống:** Mô tả cấu trúc các thành phần hệ thống và các tầng dữ liệu. |
+| 📄 [docs/05-database.md](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/docs/05-database.md) | **Cơ sở dữ liệu & ERD:** Thiết kế thực thể liên kết chi tiết giữa các bảng trong Database. |
+| 📄 [docs/06-api.md](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/docs/06-api.md) | **REST API:** Đặc tả kỹ thuật của các Endpoint giữa Client và NestJS Server. |
+| 📄 [docs/07-deployment.md](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/docs/07-deployment.md) | **Quy trình Triển khai:** Hướng dẫn đóng gói Docker và đẩy lên máy chủ. |
+| 📄 [docs/08-roadmap.md](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/docs/08-roadmap.md) | **Lộ trình phát triển:** Kế hoạch chi tiết từ V1 (MVP) đến V4 (Báo cáo & Tự động hóa thông minh). |
+| 📄 [docs/09-architectural-review.md](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/docs/09-architectural-review.md) | **Đánh giá kiến trúc:** Các đề xuất cải tiến mã nguồn, hiệu năng và tính năng của hệ thống. |
+| 📄 [docs/10-cicd-webhook-setup.md](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/docs/10-cicd-webhook-setup.md) | **Cấu hình Webhooks & Chatbot (V2):** Hướng dẫn kết nối webhook trên GitHub/Bitbucket và Slack/Teams. |
+| 📄 [README_DEV.md](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/README_DEV.md) | **Local Dev Guide:** Hướng dẫn chạy Docker Database cục bộ, Migrate DB Prisma và Start Server/Client. |
 
 ---
 
@@ -72,10 +72,15 @@ Nằm tại thư mục `frontend/`, được phát triển bằng **Angular 20**
     *   **Custom Modals, Tooltips & Toasts:** Tích hợp `matTooltip` thông minh (ví dụ: hiển thị chi tiết toàn bộ chuỗi Branch Build dài khi rê chuột). Thay thế hoàn toàn các hàm `alert()` và `confirm()` gốc của trình duyệt bằng `ToastComponent` động góc phải màn hình và hộp thoại xác nhận chuyên nghiệp `ConfirmDialogComponent`.
     *   **Hộp lọc thả xuống thông minh:** Phân loại Fix Version theo dạng nhóm cây gọn gàng thông qua component `<mat-optgroup>`.
     *   **Sidebar Panels:** Ngăn trượt từ bên phải màn hình (slide-over panel) hỗ trợ hai chế độ nhập liệu/chỉnh sửa thông tin nhánh, ticket, gán người sửa và quản lý danh sách phiên bản/môi trường.
-*   **Hệ thống Styling (CSS/SCSS):**
-    *   Viết lại toàn bộ bằng **SCSS** với các Token thiết kế trung tâm (`$color-brand`, `$radius-lg`, `$shadow-card`, v.v.).
-    *   Tuân thủ nghiêm ngặt chuẩn đặt tên lớp **BEM** (`block__element--modifier`) để tăng khả năng tái sử dụng CSS và tránh xung đột cấu trúc.
-    *   Đã fix triệt để các cảnh báo lỗi cấu trúc của phiên bản Dart Sass 3.0.0 mới.
+    *   **Lập lịch Lịch biểu (Scheduler Month Calendar & AI OCR Scanner) (Version 2.5):**
+        *   **Interactive Month Calendar Grid**: Bảng lưới lịch tháng thông minh hiển thị chấm tròn đại diện cho các môi trường có lịch deploy (Sun - Sat).
+        *   **Build Environment & Time Tracking**: Hiển thị và cập nhật chính xác *Build Environment*, *Build Time* (mặc định 10:00 AM) và *Fix Version Build* cho mỗi sự kiện deploy.
+        *   **AI OCR Schedule Scanner**: Tự động nhận diện cấu trúc lịch từ ảnh chụp và đồng bộ trực tiếp vào database một cách mượt mà.
+        *   **Today's Alerts**: Banner cảnh báo các đợt deploy diễn ra trong ngày hôm nay.
+    *   **Hệ thống Styling (CSS/SCSS):**
+        *   Viết lại toàn bộ bằng **SCSS** với các Token thiết kế trung tâm (`$color-brand`, `$radius-lg`, `$shadow-card`, v.v.).
+        *   Tuân thủ nghiêm ngặt chuẩn đặt tên lớp **BEM** (`block__element--modifier`) để tăng khả năng tái sử dụng CSS và tránh xung đột cấu trúc.
+        *   Đã fix triệt để các cảnh báo lỗi cấu trúc của phiên bản Dart Sass 3.0.0 mới.
 
 ---
 
@@ -100,7 +105,8 @@ Nằm tại thư mục `backend/`, được phát triển bằng **NestJS** kế
         *   `ReleaseStream` (1) ↔ `DeploymentItem` (N): Quản lý dòng phát hành.
         *   `DeploymentItem` (1) ↔ `Ticket` (N): Cho phép gộp nhiều mã Ticket (`MAG-xxxxx`) vào trong cùng một sự kiện Merge duy nhất.
         *   `DeploymentItem` (1) ↔ `Build` (N) ↔ `Environment` (1): Theo dõi lịch sử trạng thái build trên từng máy chủ (dev, devel, STG, UAT, Production).
-    *   **Logic Nghiệp vụ API (DeploymentItemsService):**
+        *   `DeploymentWindow` (1) ↔ `DeploymentBooking` (Many-to-Many) ↔ `ReleasePackage` (1): Theo dõi và quản lý lịch biểu deploy đa môi trường chính xác.
+    *   **Logic Nghiệp vụ API (DeploymentItemsService & WindowsService):**
         *   **Dynamic Filters:** Hỗ trợ tìm kiếm không dấu/chữ hoa chữ thường, lọc chéo theo Repository, Fix Version, Trạng thái nhánh (`merged`, `pending`, `closed`), Trạng thái kiểm thử QC và **Branch Build**.
         *   **Server-side Sorting & Pagination:** Đảm bảo tải trang nhanh với lượng dữ liệu lớn nhờ cơ chế tính toán tổng trang và sắp xếp trực tiếp trên cơ sở dữ liệu (Database Engine).
         *   **Xử lý Giao dịch Hàng loạt (Transactional Bulk Operations):** Hỗ trợ xóa hàng loạt (`bulk-delete`) và cập nhật hàng loạt (`bulk-update`) tối ưu trong cùng một database transaction đảm bảo tính nhất quán của dữ liệu.
@@ -118,10 +124,10 @@ Hãy đảm bảo máy tính của bạn đã đáp ứng các yêu cầu hệ t
 ---
 
 ### 🔋 Bước 1: Khởi chạy Database & Cache (Docker)
-Hệ thống sử dụng cơ sở dữ liệu PostgreSQL để lưu trữ và Redis làm bộ nhớ đệm cache/queue. Cấu hình Docker Compose nằm tại tệp [docker-compose.yml](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docker-compose.yml).
+Hệ thống sử dụng cơ sở dữ liệu PostgreSQL để lưu trữ và Redis làm bộ nhớ đệm cache/queue. Cấu hình Docker Compose nằm tại tệp [docker-compose.yml](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/docker-compose.yml).
 
 1. Bật ứng dụng **Docker Desktop** trên máy tính của bạn.
-2. Từ thư mục gốc của dự án (`d:/PROGRAMMING/PROJECT/release_flow_platform/`), chạy lệnh sau để khởi động các container ở chế độ nền (detached mode):
+2. Từ thư mục gốc của dự án (`/Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/`), chạy lệnh sau để khởi động các container ở chế độ nền (detached mode):
    ```bash
    docker compose up -d
    ```
@@ -132,18 +138,18 @@ Hệ thống sử dụng cơ sở dữ liệu PostgreSQL để lưu trữ và Re
 ---
 
 ### ⚙️ Bước 2: Cấu hình & Khởi chạy Backend (NestJS Server)
-Thư mục dự án Backend nằm tại [backend/](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/backend).
+Thư mục dự án Backend nằm tại [backend/](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/backend).
 
 1. Mở cửa sổ terminal mới và di chuyển vào thư mục backend:
    ```bash
    cd backend
    ```
-2. Kiểm tra tệp biến môi trường [backend/.env](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/backend/.env) (được cấu hình mặc định để kết nối đến PostgreSQL cục bộ thông qua Docker ở Bước 1).
+2. Kiểm tra tệp biến môi trường [backend/.env](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/backend/.env) (được cấu hình mặc định để kết nối đến PostgreSQL cục bộ thông qua Docker ở Bước 1).
 3. Cài đặt các gói thư viện phụ thuộc:
    ```bash
    npm install
    ```
-4. Thực hiện ánh xạ cấu trúc bảng (Migration) và tự động chạy dữ liệu mẫu (Seed Data) dựa trên file [schema.prisma](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/backend/prisma/schema.prisma) và [seed.ts](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/backend/prisma/seed.ts):
+4. Thực hiện ánh xạ cấu trúc bảng (Migration) và tự động chạy dữ liệu mẫu (Seed Data) dựa trên file [schema.prisma](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/backend/prisma/schema.prisma) và [seed.ts](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/backend/prisma/seed.ts):
    ```bash
    npx prisma migrate dev --name init
    ```
@@ -160,7 +166,7 @@ Thư mục dự án Backend nằm tại [backend/](file:///d:/PROGRAMMING/PROJEC
 ---
 
 ### 💻 Bước 3: Cài đặt & Khởi chạy Frontend (Angular Client)
-Thư mục dự án Frontend nằm tại [frontend/](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/frontend).
+Thư mục dự án Frontend nằm tại [frontend/](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/frontend).
 
 1. Mở một terminal mới khác và di chuyển vào thư mục frontend:
    ```bash
@@ -171,13 +177,13 @@ Thư mục dự án Frontend nằm tại [frontend/](file:///d:/PROGRAMMING/PROJ
    npm install
    ```
 3. Cấu hình Endpoint kết nối tới API:
-   *   Mặc định hệ thống đã cấu hình liên kết đến Backend thông qua thuộc tính `apiUrl` trong file [release.service.ts](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/frontend/src/app/services/release.service.ts) là `http://localhost:3000/api`.
+   *   Mặc định hệ thống đã cấu hình liên kết đến Backend thông qua thuộc tính `apiUrl` trong file [release.service.ts](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/frontend/src/app/services/release.service.ts) là `http://localhost:3000/api`.
 4. Khởi chạy máy chủ phát triển cục bộ của Angular:
    ```bash
    npm run start
    ```
    *(Hoặc sử dụng lệnh: `npx ng serve`)*
-5. Mở trình duyệt và truy cập: `http://localhost:4200` để trải nghiệm giao diện quản lý của Release Flow Platform.
+5. Mở trình duyệt và truy cập: `http://localhost:4230` để trải nghiệm giao diện quản lý của Release Flow Platform.
 
 ---
 
@@ -185,7 +191,8 @@ Thư mục dự án Frontend nằm tại [frontend/](file:///d:/PROGRAMMING/PROJ
 
 Dự án có định hướng phát triển lâu dài phục vụ tự động hóa luồng phát hành doanh nghiệp:
 *   **V2: CI/CD Webhooks & Automation (Đã Hoàn Thành):** Tự động kết xuất bản ghi từ GitHub/Bitbucket PR, lọc trùng lặp, cập nhật profile/avatar và bắn thông báo qua Slack/Teams.
+*   **V2.5: Interactive Calendar & AI OCR Scanner (Đã Hoàn Thành):** Quản lý lịch biểu trực quan dưới dạng Lịch tháng, AI tự động quét laser trích xuất lịch deploy từ ảnh chụp, thông báo ngày triển khai và tối giản hóa quy trình nghiệp vụ.
 *   **V3: QA/QC Verification Hub (Kế hoạch):** Cổng xác thực QA/QC độc lập, liên kết Jira cảnh báo blocker bug, đính kèm Test Report.
 *   **V4: Analytics & Changelog Generator (Kế hoạch):** Tự động sinh tài liệu báo cáo Changelog (PDF/Markdown) và đo lường tần suất phát hành.
 
-👉 Xem lộ trình chi tiết tại: [docs/08-roadmap.md](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/docs/08-roadmap.md)
+👉 Xem lộ trình chi tiết tại: [docs/08-roadmap.md](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/docs/08-roadmap.md)

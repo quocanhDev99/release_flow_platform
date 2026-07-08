@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
@@ -28,7 +31,10 @@ export class NotificationsService {
     }
   }
 
-  async sendTeamsNotification(title: string, message: string): Promise<boolean> {
+  async sendTeamsNotification(
+    title: string,
+    message: string,
+  ): Promise<boolean> {
     const webhookUrl = process.env.TEAMS_WEBHOOK_URL;
     if (!webhookUrl) {
       this.logger.warn('TEAMS_WEBHOOK_URL is not configured.');
@@ -85,6 +91,9 @@ export class NotificationsService {
     const teamsMessage = `**Repository:** ${data.repoName}  \n**Ticket:** [${data.ticketId}](${data.url || '#'}) - ${data.summary}  \n**Change Type:** ${data.changeType}  \n**Release Version:** ${data.releaseVersion}  \n**Branch:** \`${data.sourceBranch}\`  \n**Developer:** @${data.developer}`;
 
     await this.sendSlackNotification(slackMessage);
-    await this.sendTeamsNotification(`New Deployment - ${data.repoName} (${data.ticketId})`, teamsMessage);
+    await this.sendTeamsNotification(
+      `New Deployment - ${data.repoName} (${data.ticketId})`,
+      teamsMessage,
+    );
   }
 }

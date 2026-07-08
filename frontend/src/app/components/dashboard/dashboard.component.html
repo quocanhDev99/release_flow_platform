@@ -38,6 +38,10 @@
         <mat-icon>download</mat-icon> Export
       </button>
 
+      <button mat-stroked-button [routerLink]="['/scheduler']" class="btn-secondary" matTooltip="View Deployment Calendar">
+        <mat-icon>schedule</mat-icon> Scheduler
+      </button>
+
       <button mat-stroked-button (click)="openConfigPanel()" class="btn-secondary btn-releases" matTooltip="Manage Releases & Repositories">
         <mat-icon>tune</mat-icon> Releases
       </button>

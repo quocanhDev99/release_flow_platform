@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { DeploymentItem, ReleaseStream, Ticket, Repository, User } from '../models/release.model';
+import { DeploymentItem, ReleaseStream, Ticket, Repository, User, ReleasePackage, DeploymentWindow, DeploymentBooking, DeploymentPolicy } from '../models/release.model';
 
 @Injectable({
   providedIn: 'root'
@@ -110,5 +110,103 @@ export class ReleaseService {
 
   deleteEnvironment(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/environments/${id}`);
+  }
+
+  // Release Packages
+  getReleasePackages(): Observable<ReleasePackage[]> {
+    return this.http.get<ReleasePackage[]>(`${this.apiUrl}/release-packages`);
+  }
+
+  getReleasePackageById(id: number): Observable<ReleasePackage> {
+    return this.http.get<ReleasePackage>(`${this.apiUrl}/release-packages/${id}`);
+  }
+
+  createReleasePackage(data: { version: string; buildArtifactHash?: string; status?: string }): Observable<ReleasePackage> {
+    return this.http.post<ReleasePackage>(`${this.apiUrl}/release-packages`, data);
+  }
+
+  updateReleasePackage(id: number, data: { version?: string; buildArtifactHash?: string; status?: string }): Observable<ReleasePackage> {
+    return this.http.put<ReleasePackage>(`${this.apiUrl}/release-packages/${id}`, data);
+  }
+
+  deleteReleasePackage(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/release-packages/${id}`);
+  }
+
+  // Deployment Windows
+  getDeploymentWindows(): Observable<DeploymentWindow[]> {
+    return this.http.get<DeploymentWindow[]>(`${this.apiUrl}/deployment-windows`);
+  }
+
+  getDeploymentWindowById(id: number): Observable<DeploymentWindow> {
+    return this.http.get<DeploymentWindow>(`${this.apiUrl}/deployment-windows/${id}`);
+  }
+
+  createDeploymentWindow(data: {
+    startTime: string;
+    endTime: string;
+    freezeTime: string;
+    capacity?: number;
+    status?: string;
+    policyId?: number;
+    environmentId: number;
+  }): Observable<DeploymentWindow> {
+    return this.http.post<DeploymentWindow>(`${this.apiUrl}/deployment-windows`, data);
+  }
+
+  updateDeploymentWindow(id: number, data: {
+    startTime?: string;
+    endTime?: string;
+    freezeTime?: string;
+    capacity?: number;
+    status?: string;
+    policyId?: number;
+    environmentId?: number;
+  }): Observable<DeploymentWindow> {
+    return this.http.put<DeploymentWindow>(`${this.apiUrl}/deployment-windows/${id}`, data);
+  }
+
+  deleteDeploymentWindow(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/deployment-windows/${id}`);
+  }
+
+  // Deployment Policies
+  getDeploymentPolicies(): Observable<DeploymentPolicy[]> {
+    return this.http.get<DeploymentPolicy[]>(`${this.apiUrl}/deployment-windows/policies/all`);
+  }
+
+  createDeploymentPolicy(data: {
+    name: string;
+    cronSchedule: string;
+    targetEnvironment: string;
+    capacityLimit?: number;
+    freezeWindow?: number;
+  }): Observable<DeploymentPolicy> {
+    return this.http.post<DeploymentPolicy>(`${this.apiUrl}/deployment-windows/policies`, data);
+  }
+
+  deleteDeploymentPolicy(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/deployment-windows/policies/${id}`);
+  }
+
+  // Deployment Bookings
+  getDeploymentBookings(): Observable<DeploymentBooking[]> {
+    return this.http.get<DeploymentBooking[]>(`${this.apiUrl}/deployment-bookings`);
+  }
+
+  createDeploymentBooking(data: {
+    releasePackageId: number;
+    deploymentWindowId: number;
+    status?: string;
+  }): Observable<DeploymentBooking> {
+    return this.http.post<DeploymentBooking>(`${this.apiUrl}/deployment-bookings`, data);
+  }
+
+  updateDeploymentBookingStatus(id: number, status: string): Observable<DeploymentBooking> {
+    return this.http.put<DeploymentBooking>(`${this.apiUrl}/deployment-bookings/${id}`, { status });
+  }
+
+  deleteDeploymentBooking(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/deployment-bookings/${id}`);
   }
 }

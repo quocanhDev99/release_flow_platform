@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
@@ -31,6 +31,7 @@ import { SelectionModel } from '@angular/cdk/collections';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    RouterModule,
     MatTableModule,
     MatCheckboxModule,
     MatSelectModule,

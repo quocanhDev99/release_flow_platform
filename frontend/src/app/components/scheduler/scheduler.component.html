@@ -1,0 +1,269 @@
+<div class="scheduler">
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar__brand" [routerLink]="['/']" style="cursor: pointer;">
+      <mat-icon class="navbar__logo-icon">rocket_launch</mat-icon>
+      <h1 class="navbar__title">Release Flow Platform</h1>
+      <span class="navbar__badge">V2.5</span>
+    </div>
+
+    <div class="navbar__menu">
+      <button mat-button class="navbar__nav-item" [routerLink]="['/']">
+        <mat-icon class="navbar__nav-icon">dashboard</mat-icon>
+        Dashboard
+      </button>
+      <button mat-button class="navbar__nav-item navbar__nav-item--active" [routerLink]="['/scheduler']">
+        <mat-icon class="navbar__nav-icon">schedule</mat-icon>
+        Scheduler
+      </button>
+    </div>
+
+    <div class="navbar__actions">
+      <button mat-icon-button (click)="toggleTheme()" matTooltip="Toggle Theme">
+        <mat-icon>{{ theme() === 'light' ? 'dark_mode' : 'light_mode' }}</mat-icon>
+      </button>
+
+      <div class="navbar__user" *ngIf="currentUser()">
+        <div class="navbar__avatar">
+          <mat-icon>account_circle</mat-icon>
+        </div>
+        <div class="navbar__user-info">
+          <span class="navbar__username">{{ currentUser().username }}</span>
+          <span class="navbar__role">Release Manager</span>
+        </div>
+      </div>
+
+      <button mat-icon-button (click)="logout()" matTooltip="Sign Out" class="navbar__logout">
+        <mat-icon>logout</mat-icon>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Notification Banner (Today's Deployment Alerts) -->
+  <div class="scheduler__alerts" *ngIf="upcomingAlerts().length > 0">
+    <div class="alert-banner">
+      <mat-icon class="alert-banner__icon">campaign</mat-icon>
+      <div class="alert-banner__text">
+        <strong>Today's Alerts:</strong> There are <strong>{{ upcomingAlerts().length }}</strong> deployments scheduled for today!
+      </div>
+      <div class="alert-banner__badges">
+        <span class="alert-badge" *ngFor="let alert of upcomingAlerts()">
+          [{{ alert.environment.name }}] {{ getFixVersion(alert) }} at {{ formatTime(alert.startTime) }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div class="scheduler__loading" *ngIf="loading()">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading data...</p>
+  </div>
+
+  <!-- Main Split Layout -->
+  <div class="scheduler__grid" *ngIf="!loading()">
+    
+    <!-- Left Column (70%): Calendar and AI Scanner -->
+    <div class="scheduler__main-panel">
+      
+      <!-- Interactive Month Calendar -->
+      <div class="calendar-container">
+        <div class="calendar-header">
+          <div class="calendar-header__nav">
+            <button mat-icon-button (click)="prevMonth()"><mat-icon>chevron_left</mat-icon></button>
+            <h2 class="calendar-header__title">{{ formatMonthYear(currentMonth()) | titlecase }}</h2>
+            <button mat-icon-button (click)="nextMonth()"><mat-icon>chevron_right</mat-icon></button>
+          </div>
+          <button mat-raised-button color="primary" class="btn btn--primary" (click)="openCreateWindowModal()">
+            <mat-icon>add</mat-icon> Create Schedule
+          </button>
+        </div>
+
+        <!-- Weekday Labels -->
+        <div class="calendar-weekdays">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+
+        <!-- Calendar Days Grid -->
+        <div class="calendar-grid">
+          <div class="calendar-day" 
+               *ngFor="let day of calendarDays()" 
+               [class.calendar-day--today]="isToday(day)"
+               [class.calendar-day--selected]="selectedDay() && isSameDay(day, selectedDay()!)"
+               [class.calendar-day--other-month]="day.getMonth() !== currentMonth().getMonth()"
+               [class.calendar-day--has-event]="hasWindowOnDay(day)"
+               (click)="selectDay(day)">
+            
+            <span class="day-number">{{ day.getDate() }}</span>
+            
+            <!-- Small Dots representing window environments on this day -->
+            <div class="day-events" *ngIf="hasWindowOnDay(day)">
+              <span class="event-dot" 
+                    *ngFor="let envName of getWindowsColorsForDay(day)" 
+                    [ngClass]="'event-dot--' + envName"
+                    [matTooltip]="envName">
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Image OCR Import Card -->
+      <div class="image-import-card">
+        <div class="image-import-card__header">
+          <div class="title-group">
+            <mat-icon class="icon-ai">psychology</mat-icon>
+            <h3>Upload Deployment Schedule (AI Schedule Scanner)</h3>
+          </div>
+          <span class="badge-ai">AI Beta</span>
+        </div>
+
+        <div class="image-import-card__body">
+          <p class="description">Upload your Excel spreadsheet screenshot or deployment email. The AI engine will automatically parse and map the schedules.</p>
+          
+          <div class="upload-zone" [class.upload-zone--active]="selectedImageName()">
+            <mat-icon class="upload-zone__icon">add_photo_alternate</mat-icon>
+            <span class="upload-zone__text" *ngIf="!selectedImageName()">Drag & drop schedule image or click to browse</span>
+            <span class="upload-zone__filename" *ngIf="selectedImageName()">File: {{ selectedImageName() }}</span>
+            <input type="file" class="upload-zone__input" (change)="onImageSelected($event)" accept="image/*" />
+          </div>
+
+          <!-- OCR Processing Progress -->
+          <div class="ocr-progress" *ngIf="isScanning() || ocrLogs().length > 0">
+            <div class="ocr-progress__header">
+              <mat-spinner diameter="20" *ngIf="isScanning()"></mat-spinner>
+              <span class="ocr-progress__status">{{ isScanning() ? 'AI is processing the image...' : 'Analysis Complete!' }}</span>
+            </div>
+            <div class="ocr-logs">
+              <div class="ocr-log-line" *ngFor="let log of ocrLogs()">
+                <mat-icon class="log-icon">check_circle</mat-icon>
+                <span>{{ log }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- OCR Proposed Results -->
+          <div class="ocr-results" *ngIf="ocrResult()">
+            <h4><mat-icon>playlist_add_check</mat-icon> Extracted Schedules from Image:</h4>
+            <div class="ocr-result-list">
+              <div class="ocr-row" *ngFor="let item of ocrResult()">
+                <div class="ocr-row__left">
+                  <span class="badge-env" [class]="item.environmentName">{{ item.environmentName }}</span>
+                  <span class="ocr-row__time">
+                    <strong>Time:</strong> {{ formatDate(item.startTime) }} {{ formatTime(item.startTime) }}
+                  </span>
+                  <span class="ocr-row__version">
+                    <strong>Version:</strong> {{ item.version }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="ocr-actions">
+              <button mat-raised-button color="primary" class="btn btn--primary" (click)="importOCRResult()">
+                <mat-icon>save</mat-icon> Sync to Scheduler
+              </button>
+              <button mat-button class="btn btn--secondary" (click)="clearOCR()">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column (30%): Day Details ONLY -->
+    <div class="scheduler__side-panel">
+      
+      <!-- Selected Day Details Panel -->
+      <div class="day-details-card">
+        <div class="day-details-card__header">
+          <h3>
+            <mat-icon>event_available</mat-icon>
+            Schedule for {{ selectedDay() ? formatDate(selectedDay()!) : '' }}
+          </h3>
+        </div>
+        <div class="day-details-card__body">
+          <div class="day-empty" *ngIf="filteredWindows().length === 0">
+            <mat-icon>history_toggle_off</mat-icon>
+            <p>No deployment schedules for this day.</p>
+            <button mat-stroked-button color="primary" (click)="openCreateWindowModal()">
+              <mat-icon>add</mat-icon> Create Schedule
+            </button>
+          </div>
+
+          <div class="day-windows-list" *ngIf="filteredWindows().length > 0">
+            <div class="side-window-card" 
+                 *ngFor="let win of filteredWindows()" 
+                 [ngClass]="'side-window-card--' + win.status"
+                 (click)="openEditWindowModal(win)"
+                 style="cursor: pointer;"
+                 matTooltip="Click to edit schedule">
+              <div class="side-window-card__top">
+                <span class="env-badge" [ngClass]="'env-badge--' + win.environment.name">{{ win.environment.name }}</span>
+              </div>
+              <div class="side-window-card__time">
+                <div>
+                  <mat-icon>schedule</mat-icon> 
+                  <strong>Build Time:</strong> {{ formatTime(win.startTime) }}
+                </div>
+                <div class="version-info">
+                  <mat-icon>bookmark</mat-icon> 
+                  <strong>Fix Version Build:</strong> {{ getFixVersion(win) }}
+                </div>
+              </div>
+
+              <div class="side-window-card__actions">
+                <span></span>
+                <div class="ops">
+                  <button mat-icon-button color="warn" (click)="deleteWindow(win.id); $event.stopPropagation()" matTooltip="Delete schedule">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Glassmorphic Overlay Modals -->
+
+  <!-- 1. Create Window Modal -->
+  <div class="modal-overlay" *ngIf="showWindowModal()">
+    <div class="modal-card">
+      <div class="modal-card__header">
+        <h3>{{ selectedWindow() ? 'Update Deployment Schedule' : 'Create Deployment Schedule' }}</h3>
+        <button mat-icon-button (click)="closeWindowModal()"><mat-icon>close</mat-icon></button>
+      </div>
+      <form [formGroup]="windowForm" (ngSubmit)="saveWindow()">
+        <div class="modal-card__body">
+          <mat-form-field appearance="outline">
+            <mat-label>Build Environment</mat-label>
+            <mat-select formControlName="environmentId">
+              <mat-option *ngFor="let env of environments()" [value]="env.id">{{ env.name }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Build Time</mat-label>
+            <input matInput type="datetime-local" formControlName="startTime" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Fix Version Build</mat-label>
+            <input matInput formControlName="fixVersion" placeholder="e.g., release/1.12.1 or STG" />
+          </mat-form-field>
+        </div>
+        <div class="modal-card__footer">
+          <button mat-button type="button" (click)="closeWindowModal()">Cancel</button>
+          <button mat-raised-button color="primary" type="submit" [disabled]="windowForm.invalid">Save Schedule</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Alerts Toaster -->
+  <app-toast></app-toast>
+</div>

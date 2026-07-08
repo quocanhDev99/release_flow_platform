@@ -6,7 +6,7 @@ export class ReleasesService {
   constructor(private prisma: PrismaService) {}
 
   async findAll() {
-    const releases = await this.prisma.releaseStream.findMany();
+    const releases = await this.prisma.releasePackage.findMany();
 
     // Map unique versions and keep the first ID found
     const versionMap = new Map<string, number>();
@@ -50,19 +50,19 @@ export class ReleasesService {
   }
 
   async create(version: string) {
-    return this.prisma.releaseStream.create({
+    return this.prisma.releasePackage.create({
       data: { version },
     });
   }
 
   async remove(id: number) {
     return this.prisma.$transaction(async (tx) => {
-      // Manually set releaseStreamId to null on associated deployment items to prevent FK errors
+      // Manually set releasePackageId to null on associated deployment items to prevent FK errors
       await tx.deploymentItem.updateMany({
-        where: { releaseStreamId: id },
-        data: { releaseStreamId: null },
+        where: { releasePackageId: id },
+        data: { releasePackageId: null },
       });
-      return tx.releaseStream.delete({
+      return tx.releasePackage.delete({
         where: { id },
       });
     });

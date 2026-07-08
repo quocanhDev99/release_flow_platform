@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('repositories')
@@ -17,7 +25,9 @@ export class RepositoriesController {
     return this.prisma.repository.create({
       data: {
         name: body.name,
-        gitUrl: body.gitUrl || `https://github.com/quocanhDev99/release_flow_platform_${body.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}.git`,
+        gitUrl:
+          body.gitUrl ||
+          `https://github.com/quocanhDev99/release_flow_platform_${body.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}.git`,
       },
     });
   }
@@ -29,12 +39,27 @@ export class RepositoriesController {
         where: { repositoryId: id },
         select: { id: true },
       });
-      const itemIds = items.map(item => item.id);
+      const itemIds = items.map((item) => item.id);
 
       if (itemIds.length > 0) {
-        await tx.ticket.deleteMany({
-          where: { deploymentItemId: { in: itemIds } },
+        const tickets = await tx.ticket.findMany({
+          where: { deploymentItems: { some: { id: { in: itemIds } } } },
+          include: { deploymentItems: true },
         });
+        const ticketIdsToDelete = [];
+        for (const ticket of tickets) {
+          const linkedInBatch = ticket.deploymentItems.filter((di) =>
+            itemIds.includes(di.id),
+          ).length;
+          if (ticket.deploymentItems.length <= linkedInBatch) {
+            ticketIdsToDelete.push(ticket.id);
+          }
+        }
+        if (ticketIdsToDelete.length > 0) {
+          await tx.ticket.deleteMany({
+            where: { id: { in: ticketIdsToDelete } },
+          });
+        }
         await tx.build.deleteMany({
           where: { deploymentItemId: { in: itemIds } },
         });

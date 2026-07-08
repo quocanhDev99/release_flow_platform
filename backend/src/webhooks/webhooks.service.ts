@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { DeploymentItemsService } from '../deployment-items/deployment-items.service';
@@ -20,7 +23,7 @@ export class WebhooksService {
 
   private resolveReleaseVersion(baseBranch: string): string {
     const cleanBranch = baseBranch.trim().toLowerCase();
-    
+
     // release/1.12 -> sow/1.12.x
     const releaseMatch = cleanBranch.match(/release\/(\d+)\.(\d+)/);
     if (releaseMatch) {
@@ -47,7 +50,9 @@ export class WebhooksService {
 
     const { action, pull_request, repository } = payload;
     if (action !== 'closed' || !pull_request?.merged) {
-      this.logger.log(`Skipping GitHub PR action: ${action} (merged: ${pull_request?.merged})`);
+      this.logger.log(
+        `Skipping GitHub PR action: ${action} (merged: ${pull_request?.merged})`,
+      );
       return { skipped: true, reason: `PR was not merged` };
     }
 
@@ -82,7 +87,8 @@ export class WebhooksService {
     const prLink = pullrequest?.links?.html?.href || '';
     const sourceBranch = pullrequest?.source?.branch?.name || 'main';
     const baseBranch = pullrequest?.destination?.branch?.name || 'main';
-    const author = pullrequest?.author?.username || actor?.username || 'bitbucket_user';
+    const author =
+      pullrequest?.author?.username || actor?.username || 'bitbucket_user';
 
     return this.processMergedPR({
       repoName,
@@ -104,12 +110,23 @@ export class WebhooksService {
     author: string;
     source: string;
   }) {
-    const { repoName, prTitle, prLink, sourceBranch, baseBranch, author, source } = data;
+    const {
+      repoName,
+      prTitle,
+      prLink,
+      sourceBranch,
+      baseBranch,
+      author,
+      source,
+    } = data;
 
     // 1. Extract Ticket ID
-    const ticketId = this.extractTicketId(prTitle) || this.extractTicketId(sourceBranch);
+    const ticketId =
+      this.extractTicketId(prTitle) || this.extractTicketId(sourceBranch);
     if (!ticketId) {
-      this.logger.warn(`Could not extract Ticket ID from PR Title: "${prTitle}" or Source Branch: "${sourceBranch}"`);
+      this.logger.warn(
+        `Could not extract Ticket ID from PR Title: "${prTitle}" or Source Branch: "${sourceBranch}"`,
+      );
       return { skipped: true, reason: 'No ticket ID (MAG-xxxxx) found' };
     }
 
@@ -152,18 +169,25 @@ export class WebhooksService {
     const existingTicket = await this.prisma.ticket.findFirst({
       where: {
         ticketId,
-        deploymentItem: {
-          repositoryId: dbRepo.id,
-          releaseStream: {
-            version: { contains: cleanVer, mode: 'insensitive' }
-          }
+        deploymentItems: {
+          some: {
+            repositoryId: dbRepo.id,
+            releasePackage: {
+              version: { contains: cleanVer, mode: 'insensitive' },
+            },
+          },
         },
       },
     });
 
     if (existingTicket) {
-      this.logger.log(`Skipping duplicate deployment for ticket ${ticketId} in repo ${repoName} for release ${releaseVersion}`);
-      return { skipped: true, reason: 'Duplicate deployment record already exists' };
+      this.logger.log(
+        `Skipping duplicate deployment for ticket ${ticketId} in repo ${repoName} for release ${releaseVersion}`,
+      );
+      return {
+        skipped: true,
+        reason: 'Duplicate deployment record already exists',
+      };
     }
 
     // 7. Create Deployment Item & Ticket via DeploymentItemsService
@@ -178,7 +202,11 @@ export class WebhooksService {
         {
           ticketId,
           summary: prTitle,
-          changeType: prTitle.toLowerCase().includes('fix') || prTitle.toLowerCase().includes('bug') ? 'Fix bug' : 'Feature',
+          changeType:
+            prTitle.toLowerCase().includes('fix') ||
+            prTitle.toLowerCase().includes('bug')
+              ? 'Fix bug'
+              : 'Feature',
           qcStatus: 'Waiting',
         },
       ],
@@ -189,14 +217,20 @@ export class WebhooksService {
       repoName: dbRepo.name,
       ticketId,
       summary: prTitle,
-      changeType: prTitle.toLowerCase().includes('fix') || prTitle.toLowerCase().includes('bug') ? 'Fix bug' : 'Feature',
+      changeType:
+        prTitle.toLowerCase().includes('fix') ||
+        prTitle.toLowerCase().includes('bug')
+          ? 'Fix bug'
+          : 'Feature',
       releaseVersion,
       sourceBranch,
       developer: author,
       url: prLink,
     });
 
-    this.logger.log(`Successfully created deployment for ticket ${ticketId} via ${source} Webhook.`);
+    this.logger.log(
+      `Successfully created deployment for ticket ${ticketId} via ${source} Webhook.`,
+    );
     return { success: true, deploymentItemId: createdItem?.id || null };
   }
 }

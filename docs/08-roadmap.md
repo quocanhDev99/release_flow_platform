@@ -1,81 +1,70 @@
-# Lộ trình Phát triển (Product Roadmap)
+# Product Roadmap
 
-Tài liệu này mô tả chi tiết lộ trình phát triển của hệ thống **Release Flow Platform** từ phiên bản đầu tiên (**MVP v1**) cho đến các mục tiêu lớn tiếp theo (**V2, V3, V4**).
+This document outlines the development lifecycle of the **Release Flow Platform** from its inception (**MVP v1**) to current milestones (**v2.5**), and upcoming goals (**v3, v4**).
 
 ---
 
-## 🗺️ Tổng quan Lộ trình (Roadmap Overview)
+## 🗺️ Roadmap Timeline
 
 ```mermaid
 timeline
     title Release Flow Platform Roadmap
-    MVP (Version 1) : Nền tảng Core & UI/UX : Tree Accordion View : Xác thực Người dùng : Quên & Đặt lại mật khẩu
-    Version 2 : Tích hợp CI/CD & Tự động hóa : GitHub/Bitbucket Webhooks : Tự động tạo bản ghi : Chatbot Alerts (Slack/Teams)
-    Version 3 : Cổng Xác thực Chất lượng : Phân quyền QA/QC/Dev : Đính kèm Test Reports : Jira Blocker Checks
-    Version 4 : Báo cáo & Phân tích : Tự động xuất Changelog : Release Velocity Graphs : Thống kê lỗi/build
+    MVP (Version 1) : Core Architecture : Tree Accordion View : User Authentication : Theme Swapping
+    Version 2 : CI/CD Automation : GitHub/Bitbucket Webhooks : ChatOps Alerts (Slack/Teams) : User Profile Settings
+    Version 2.5 : Interactive Calendar : Month Calendar Grid : AI OCR Schedule Scanner : 10:00 AM Default Build Time
+    Version 3 : Quality Assurance Gate : Role-based Access (RBAC) : Test Report Attachments : Jira Blocker Checkers
+    Version 4 : Analytics Dashboard : Automated Changelog Exporter : Velocity & Lead Time Charts : Build Success Rate
 ```
 
 ---
 
-## 🔹 MVP v1: Nền tảng Vững chắc & Trải nghiệm Người dùng (Đã Hoàn Thành)
-*Trọng tâm: Chuẩn hóa dữ liệu phát hành, nâng cấp UI/UX chuẩn doanh nghiệp và bảo mật hóa tài khoản.*
+## 🔹 MVP v1: Core Architecture & UI/UX (Completed)
+*Focus: Establish a stable data mapping, design a highly responsive spreadsheet-like interface, and secure user data.*
 
-*   **Hiển thị Phân cấp dạng Cây:** Tổ chức các accordion theo 3 cấp độ (Release Group -> Sub-release -> Deployment Items) kết hợp nét kẻ liên kết trực quan.
-*   **Giao diện bảng phẳng Excel-like:** Người dùng nhập liệu nhanh chóng và bộ lọc đa chiều chéo (lọc theo Fix Version dạng cây, Repository, Trạng thái build và Trạng thái QC).
-*   **Tương tác thông minh:** Nút `+` quick-create điền sẵn thông tin ngữ cảnh, cascade deletion (xóa liên tầng an toàn) bảo vệ tính toàn vẹn của dữ liệu trong một Transaction duy nhất.
-*   **Hệ thống Auth bảo mật:** Hỗ trợ đăng ký, đăng nhập (mật khẩu băm bcrypt), quên mật khẩu và đặt lại mật khẩu an toàn qua email (simulated trong logs ở môi trường local).
-
----
-
-## 🔹 Version 2: Tích hợp CI/CD & Tự động hóa (Đã Hoàn Thành)
-*Trọng tâm: Loại bỏ hoàn toàn các thao tác nhập liệu thủ công bằng cách kết nối trực tiếp với các nền tảng quản lý mã nguồn.*
-
-### 1. GitHub/Bitbucket Webhook Integration (Hoàn thành)
-*   **Xử lý tự động ở Backend:**
-    *   Tự động trích xuất thông tin PR (Mã Ticket `MAG-\d+` từ tên PR/Commit, tên nhánh nguồn, tên lập trình viên thực hiện).
-    *   Tự động phát hiện phiên bản đích (**Fix Version**) dựa trên tên nhánh đích (nhánh `release/1.12` -> `sow/1.12.x`, `main`/`master` -> `sow/main`, `dev`/`develop` -> `sow/dev`).
-    *   Tự động tạo bản ghi Deployment ở trạng thái `IN PROGRESS` và tự động lọc trùng dữ liệu (lọc trùng lặp an toàn).
-
-### 2. Tự động thông báo qua Chatbot (ChatOps) (Hoàn thành)
-*   Tích hợp dịch vụ webhook của **Slack** và **Microsoft Teams**.
-*   Ngay khi có bản ghi mới được sinh tự động hoặc thay đổi trạng thái phát hành, chatbot sẽ tự động gửi thông báo trực quan vào kênh làm việc.
-
-### 3. Cập nhật Thông tin & Avatar Cá nhân (Hoàn thành)
-*   Cho phép người dùng tùy chọn cập nhật tên, địa chỉ email, mật khẩu trực tiếp tại trang `/profile`.
-*   Tích hợp tính năng tải lên hình ảnh đại diện (avatar upload) dạng base64, lưu trữ và đồng bộ hóa tự động qua `localStorage` cho từng tài khoản.
-
-### 4. Bộ lọc Môi trường & Branch Build (Hoàn thành)
-*   Bổ sung thanh lọc thả xuống thông minh ở Dashboard cho phép lọc chéo theo **Branch Build** (`dev`, `dev2`, `devel`) được lưu giữ trong cơ sở dữ liệu.
-*   Tích hợp cơ chế tự động migrate cơ sở dữ liệu production trên Render (`npx prisma migrate deploy` trong build step).
+*   **Tree-Indented Hierarchy**: Visualized multi-level releases (`ReleaseGroup` -> `Sub-release` -> `DeploymentItem`) with elegant connector lines.
+*   **Excel-like Flat Data Grid**: Fast data rendering using Angular Material tables with server-side pagination, sorting, and cross-field filters.
+*   **Contextual Record Creation**: Quick-create button (`+` icon) that inherits parent context and pre-fills target release values automatically.
+*   **User Authentication**: JWT/Session based registration and login with bcrypt password hashing.
 
 ---
 
-## 🔹 Version 3: Cổng Xác thực Chất lượng (QA/QC Verification Hub)
-*Trọng tâm: Cung cấp quy trình kiểm soát chất lượng nghiêm ngặt trước khi đóng gói lên Production.*
+## 🔹 Version 2: CI/CD Webhooks & ChatOps (Completed)
+*Focus: Eliminate manual data entry by connecting directly with source control managers and team messengers.*
 
-### 1. Phân quyền Người dùng (Role-based Access Control - RBAC)
-*   **Developer:** Có quyền tạo bản ghi, chỉnh sửa thông tin code branch, build log, đánh dấu `Merge on Devel`.
-*   **QA/QC:** Có quyền cập nhật cột `QC Status` (`Testing`, `Passed`, `Failed`), đính kèm link tài liệu kiểm thử hoặc báo cáo tự động (Test Automation Report).
-*   **Release Manager (Quản lý phát hành):** Chỉ có vai trò này mới được phép chuyển trạng thái tổng của cả một nhóm phát hành (Release Group) sang `COMPLETED` để kích hoạt Deploy lên Production.
-
-### 2. Tích hợp Jira/GitHub/Bitbucket Issues Checkers
-*   Hệ thống tự động đồng bộ chéo với **Jira API**, **GitHub API**, hoặc **Bitbucket API** để kiểm tra trạng thái của các Ticket tương ứng.
-*   *Luật phát hành:* Nếu trong danh sách Deployment Items của phiên bản sắp phát hành có chứa bất kỳ Ticket nào đang có trạng thái lỗi nghiêm trọng (Blocker/Critical Bug) đang mở, hệ thống sẽ cảnh báo đỏ và ngăn không cho chuyển trạng thái phát hành Production.
+*   **Repository Webhooks**: Automated endpoints (`POST /api/webhooks/github` and `/bitbucket`) that parse pull request payloads to extract ticket IDs (`MAG-\d+`), source branches, and commit authors.
+*   **Target Release Matching**: Algorithmic mapping of branches to releases based on naming conventions (e.g., target `release/1.12` maps to `sow/1.12.x`).
+*   **ChatOps alerts**: Realtime webhook notifications sent to **Slack** and **Microsoft Teams** on deployment creation/state changes.
+*   **Profile Settings**: Let users update usernames, emails, passwords, and upload Base64 avatars directly from the frontend client.
 
 ---
 
-## 🔹 Version 4: Báo cáo & Phân tích Thông minh (Analytics Phase)
-*Trọng tâm: Đo lường hiệu suất phát hành và tự động hóa khâu làm báo cáo cho đối tác/khách hàng.*
+## 🔹 Version 2.5: Interactive Calendar & AI OCR Scanner (Completed)
+*Focus: Simplify scheduling operations and automate bulk calendar planning via machine learning simulation.*
 
-### 1. Tự động tạo Tài liệu Phát hành (Changelog Generator)
-*   Cung cấp tính năng xuất tài liệu **Release Notes / Changelog** tự động chỉ với 1 click.
-*   Hệ thống tổng hợp tất cả các bản ghi trong phiên bản phát hành, tự động gom nhóm theo loại thay đổi:
-    *   🚀 **Tính năng mới (Features)**
-    *   🐞 **Sửa lỗi (Bug Fixes)**
-    *   ⚡ **Cải tiến hiệu năng (Refactors & Performance)**
-*   Hỗ trợ xuất ra định dạng **Markdown** (.md) hoặc **PDF** với header mang logo thương hiệu để gửi trực tiếp cho khách hàng.
+*   **Month Calendar Grid**: CSS Grid calendar replacing flat lists. Days display indicator dots corresponding to active environments (Devel, UAT, STG, Production).
+*   **AI OCR Schedule Scanner**: Drag-and-drop zone that scans spreadsheets/email screenshots, runs a mock OCR extraction workflow, and maps schedules (Build Environment, Build Time, and target Fix Version).
+*   **Automatic Cleanup on Sync**: Deletes pre-existing schedules for the target month before syncing new OCR inputs to prevent duplicate entries and outdated times.
+*   **10:00 AM Default Time**: Automatically formats build times to 10:00 AM across form creators and OCR simulations.
+*   **Simplified Inputs**: Shifted UI focus from complex policies to simple fields: Build Environment, Build Time, and Fix Version.
 
-### 2. Biểu đồ đo lường Hiệu suất (Executive Dashboard)
-*   **Release Velocity:** Biểu đồ đường thể hiện tần suất phát hành theo tuần/tháng.
-*   **Build Success Rate:** Biểu đồ tròn hiển thị tỷ lệ build thành công/thất bại trên các môi trường.
-*   **Lead Time for Changes:** Thống kê thời gian trung bình từ lúc Developer cập nhật nhánh code cho tới lúc QA nghiệm thu thành công.
+---
+
+## 🔹 Version 3: Quality Assurance Gate (Planned)
+*Focus: Enforce strict quality assurance policies before deploying code packages to higher environments.*
+
+*   **Role-Based Access Control (RBAC)**:
+    *   *Developers*: Create items, edit branch/build URLs, mark features as merged.
+    *   *QA/QCs*: Approve/Reject ticket readiness, input QC Status, upload test automation reports.
+    *   *Release Managers*: Full authorization to execute windows and deploy releases to Production.
+*   **Jira Blocker Validation**: Automatically query Jira/GitHub issues. Prevent execution of a deployment window if any linked tickets have open blocker/critical bugs.
+
+---
+
+## 🔹 Version 4: Analytics Dashboard (Planned)
+*Focus: Provide executive visibility into development efficiency and build stability.*
+
+*   **Automated Changelog Exporter**: 1-click exporter that parses all merged tickets in a release package, groups them into *Features*, *Fixes*, and *Improvements*, and downloads them as a Markdown/PDF document.
+*   **Release Metrics (Executive Dashboard)**:
+    *   *Release Velocity*: Trailing releases deployed per week/month.
+    *   *Build Success Rate*: Success/Failure ratio on STG/Production environments.
+    *   *Lead Time for Changes*: Average duration from commit merge to QA approval.

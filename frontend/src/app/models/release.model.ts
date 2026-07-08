@@ -65,3 +65,54 @@ export interface DeploymentItem {
   tickets: Ticket[];
   builds: Build[];
 }
+
+export interface ReleasePackage {
+  id: number;
+  version: string;
+  buildArtifactHash?: string;
+  status: 'draft' | 'active' | 'completed' | 'archived';
+  createdAt: string;
+  updatedAt: string;
+  deploymentItems?: DeploymentItem[];
+  bookings?: DeploymentBooking[];
+}
+
+export interface DeploymentPolicy {
+  id: number;
+  name: string;
+  cronSchedule: string;
+  targetEnvironment: string;
+  capacityLimit: number;
+  freezeWindow: number;
+  createdAt: string;
+  updatedAt: string;
+  windows?: DeploymentWindow[];
+}
+
+export interface DeploymentWindow {
+  id: number;
+  startTime: string;
+  endTime: string;
+  freezeTime: string;
+  capacity: number;
+  status: 'open' | 'frozen' | 'executing' | 'completed' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
+  policyId?: number;
+  policy?: DeploymentPolicy;
+  environmentId: number;
+  environment: Environment;
+  bookings?: DeploymentBooking[];
+}
+
+export interface DeploymentBooking {
+  id: number;
+  bookedAt: string;
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
+  releasePackageId: number;
+  releasePackage?: ReleasePackage;
+  deploymentWindowId: number;
+  deploymentWindow?: DeploymentWindow;
+}

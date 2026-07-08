@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
 import { Injectable } from '@nestjs/common';
@@ -18,7 +17,8 @@ export class TicketDto {
 
 export class CreateDeploymentItemDto {
   releaseVersion?: string;
-  releaseStreamId?: number;
+  releaseStreamId?: number; // kept for compatibility
+  releasePackageId?: number;
   sourceBranch?: string;
   status?: string;
   isMergedOnDevel?: boolean;
@@ -30,7 +30,8 @@ export class CreateDeploymentItemDto {
 
 export class UpdateDeploymentItemDto {
   releaseVersion?: string;
-  releaseStreamId?: number;
+  releaseStreamId?: number; // kept for compatibility
+  releasePackageId?: number;
   sourceBranch?: string;
   status?: string;
   isMergedOnDevel?: boolean;
@@ -59,13 +60,13 @@ export class BulkCreateItemDto {
 export class DeploymentItemsService {
   constructor(private prisma: PrismaService) {}
 
-  private async resolveReleaseStreamId(
+  private async resolveReleasePackageId(
     releaseVersion?: string,
-    releaseStreamId?: number,
+    releasePackageId?: number,
   ): Promise<number | null> {
     if (releaseVersion) {
       const cleanVer = releaseVersion.replace(/x$/, '');
-      let release = await this.prisma.releaseStream.findFirst({
+      let release = await this.prisma.releasePackage.findFirst({
         where: {
           OR: [
             { version: { endsWith: `/${cleanVer}`, mode: 'insensitive' } },
@@ -76,13 +77,13 @@ export class DeploymentItemsService {
         },
       });
       if (!release) {
-        release = await this.prisma.releaseStream.create({
+        release = await this.prisma.releasePackage.create({
           data: { version: `sow/${cleanVer}.x` },
         });
       }
       return release.id;
     }
-    return releaseStreamId ? Number(releaseStreamId) : null;
+    return releasePackageId ? Number(releasePackageId) : null;
   }
 
   async findAll(params?: {
@@ -111,7 +112,7 @@ export class DeploymentItemsService {
     }
     if (params?.releaseVersion) {
       const cleanVer = params.releaseVersion.replace(/x$/, '');
-      where.releaseStream = {
+      where.releasePackage = {
         OR: [
           { version: { endsWith: `/${cleanVer}`, mode: 'insensitive' } },
           { version: { contains: `/${cleanVer}.`, mode: 'insensitive' } },
@@ -154,8 +155,7 @@ export class DeploymentItemsService {
         orderBy = { updatedAt: dir };
         break;
       case 'releaseVersion':
-        // Sort by release stream version string; nulls go last
-        orderBy = { releaseStream: { version: dir } };
+        orderBy = { releasePackage: { version: dir } };
         break;
       case 'createdAt':
       default:
@@ -171,7 +171,7 @@ export class DeploymentItemsService {
       include: {
         repository: true,
         user: true,
-        releaseStream: true,
+        releasePackage: true,
         tickets: true,
         builds: {
           include: {
@@ -182,8 +182,17 @@ export class DeploymentItemsService {
       orderBy,
     });
 
+    // Remap releasePackage to releaseStream on output for backward compatibility with frontend
+    const mappedData = data.map((item) => {
+      const { releasePackage, ...rest } = item;
+      return {
+        ...rest,
+        releaseStream: releasePackage, // Frontend expects releaseStream field
+      };
+    });
+
     return {
-      data,
+      data: mappedData,
       total,
       page,
       pageSize,
@@ -191,12 +200,12 @@ export class DeploymentItemsService {
   }
 
   async findOne(id: number) {
-    return this.prisma.deploymentItem.findUnique({
+    const item = await this.prisma.deploymentItem.findUnique({
       where: { id },
       include: {
         repository: true,
         user: true,
-        releaseStream: true,
+        releasePackage: true,
         tickets: true,
         builds: {
           include: {
@@ -205,12 +214,20 @@ export class DeploymentItemsService {
         },
       },
     });
+    if (!item) return null;
+
+    const { releasePackage, ...rest } = item;
+    return {
+      ...rest,
+      releaseStream: releasePackage,
+    };
   }
 
   async create(data: CreateDeploymentItemDto) {
-    const releaseStreamId = await this.resolveReleaseStreamId(
+    const targetPackageId = data.releasePackageId || data.releaseStreamId;
+    const releasePackageId = await this.resolveReleasePackageId(
       data.releaseVersion,
-      data.releaseStreamId,
+      targetPackageId,
     );
     const newItem = await this.prisma.deploymentItem.create({
       data: {
@@ -219,7 +236,7 @@ export class DeploymentItemsService {
         isMergedOnDevel: data.isMergedOnDevel || false,
         repositoryId: Number(data.repositoryId),
         userId: Number(data.userId),
-        releaseStreamId,
+        releasePackageId,
         tickets: {
           create: data.tickets
             ? data.tickets.map((t) => ({
@@ -263,16 +280,17 @@ export class DeploymentItemsService {
   }
 
   async update(id: number, data: UpdateDeploymentItemDto) {
-    const releaseStreamId = await this.resolveReleaseStreamId(
+    const targetPackageId = data.releasePackageId || data.releaseStreamId;
+    const releasePackageId = await this.resolveReleasePackageId(
       data.releaseVersion,
-      data.releaseStreamId,
+      targetPackageId,
     );
     await this.prisma.deploymentItem.update({
       where: { id },
       data: {
         sourceBranch: data.sourceBranch,
         isMergedOnDevel: data.isMergedOnDevel,
-        releaseStreamId,
+        releasePackageId,
         status: data.status,
         userId: data.userId ? Number(data.userId) : undefined,
         repositoryId: data.repositoryId ? Number(data.repositoryId) : undefined,
@@ -371,13 +389,13 @@ export class DeploymentItemsService {
       }
     }
 
-    return this.prisma.deploymentItem.update({
+    const updated = await this.prisma.deploymentItem.update({
       where: { id },
       data: { isMergedOnDevel },
       include: {
         repository: true,
         user: true,
-        releaseStream: true,
+        releasePackage: true,
         tickets: true,
         builds: {
           include: {
@@ -386,6 +404,12 @@ export class DeploymentItemsService {
         },
       },
     });
+
+    const { releasePackage, ...rest } = updated;
+    return {
+      ...rest,
+      releaseStream: releasePackage,
+    };
   }
 
   async bulkCreate(items: BulkCreateItemDto[]) {
@@ -395,7 +419,6 @@ export class DeploymentItemsService {
     for (const item of items) {
       if (!item.ticketId) continue;
 
-      // 1. Get or create Repository
       const repoName = item.repoName || 'Core';
       const repository = await this.prisma.repository.upsert({
         where: { name: repoName },
@@ -403,7 +426,6 @@ export class DeploymentItemsService {
         create: { name: repoName },
       });
 
-      // 2. Get or create User
       const username = item.username || 'system';
       const user = await this.prisma.user.upsert({
         where: { username },
@@ -411,7 +433,6 @@ export class DeploymentItemsService {
         create: { username, email: `${username}@example.com` },
       });
 
-      // 3. Get or create ReleaseStream (if provided, or auto-detect from branch name)
       let releaseVersion = item.releaseVersion;
       if (!releaseVersion && item.sourceBranch) {
         const match = item.sourceBranch.match(/(\d+)\.(\d+)/);
@@ -422,18 +443,17 @@ export class DeploymentItemsService {
         }
       }
 
-      let releaseStreamId: number | null = null;
+      let releasePackageId: number | null = null;
       if (releaseVersion) {
-        const release = await this.prisma.releaseStream.upsert({
+        const release = await this.prisma.releasePackage.upsert({
           where: { version: releaseVersion },
           update: {},
           create: { version: releaseVersion },
         });
-        releaseStreamId = release.id;
+        releasePackageId = release.id;
       }
 
-      // Check for duplicates within this batch to prevent self-duplication
-      const batchKey = `${item.ticketId.trim().toLowerCase()}_${repository.id}_${releaseStreamId || 0}`;
+      const batchKey = `${item.ticketId.trim().toLowerCase()}_${repository.id}_${releasePackageId || 0}`;
       if (processedKeys.has(batchKey)) {
         console.log(
           `[IMPORT] Skipping duplicate ticket ${item.ticketId} in same upload batch`,
@@ -455,37 +475,38 @@ export class DeploymentItemsService {
         branchBuilds.push('devel');
       }
 
-      // Check for duplicates against existing DB records
+      // Check duplicates in many-to-many relationship
       const existingInDb = await this.prisma.ticket.findFirst({
         where: {
           ticketId: item.ticketId.trim(),
-          deploymentItem: {
-            repositoryId: repository.id,
-            releaseStreamId: releaseStreamId,
+          deploymentItems: {
+            some: {
+              repositoryId: repository.id,
+              releasePackageId: releasePackageId,
+            },
           },
         },
         include: {
-          deploymentItem: true,
+          deploymentItems: true,
         },
       });
 
       let dbItem: any;
 
-      if (existingInDb) {
+      if (existingInDb && existingInDb.deploymentItems.length > 0) {
         console.log(
           `[IMPORT] Updating existing deployment item for ticket ${item.ticketId}...`,
         );
+        const firstLinkedItem = existingInDb.deploymentItems[0];
         dbItem = await this.prisma.deploymentItem.update({
-          where: { id: existingInDb.deploymentItemId },
+          where: { id: firstLinkedItem.id },
           data: {
-            sourceBranch:
-              item.sourceBranch || existingInDb.deploymentItem.sourceBranch,
-            status: item.status || existingInDb.deploymentItem.status,
+            sourceBranch: item.sourceBranch || firstLinkedItem.sourceBranch,
+            status: item.status || firstLinkedItem.status,
             isMergedOnDevel,
           },
         });
 
-        // Clear old builds to replace with the newly parsed ones from CSV
         await this.prisma.build.deleteMany({
           where: { deploymentItemId: dbItem.id },
         });
@@ -497,7 +518,7 @@ export class DeploymentItemsService {
             isMergedOnDevel,
             repositoryId: repository.id,
             userId: user.id,
-            releaseStreamId,
+            releasePackageId,
             tickets: {
               create: [
                 {
@@ -537,10 +558,17 @@ export class DeploymentItemsService {
 
   async remove(id: number) {
     return this.prisma.$transaction(async (tx) => {
-      // Manually delete related child records first to bypass any DB-level constraint locks
-      await tx.ticket.deleteMany({
-        where: { deploymentItemId: id },
+      const item = await tx.deploymentItem.findUnique({
+        where: { id },
+        include: { tickets: { include: { deploymentItems: true } } },
       });
+      if (item) {
+        for (const ticket of item.tickets) {
+          if (ticket.deploymentItems.length <= 1) {
+            await tx.ticket.delete({ where: { id: ticket.id } });
+          }
+        }
+      }
       await tx.build.deleteMany({
         where: { deploymentItemId: id },
       });
@@ -552,9 +580,26 @@ export class DeploymentItemsService {
 
   async bulkDelete(ids: number[]) {
     return this.prisma.$transaction(async (tx) => {
-      await tx.ticket.deleteMany({
-        where: { deploymentItemId: { in: ids } },
+      const items = await tx.deploymentItem.findMany({
+        where: { id: { in: ids } },
+        include: { tickets: { include: { deploymentItems: true } } },
       });
+      const ticketIdsToDelete = [];
+      for (const item of items) {
+        for (const ticket of item.tickets) {
+          const linkedItemsInBatch = ticket.deploymentItems.filter((di) =>
+            ids.includes(di.id),
+          ).length;
+          if (ticket.deploymentItems.length <= linkedItemsInBatch) {
+            ticketIdsToDelete.push(ticket.id);
+          }
+        }
+      }
+      if (ticketIdsToDelete.length > 0) {
+        await tx.ticket.deleteMany({
+          where: { id: { in: ticketIdsToDelete } },
+        });
+      }
       await tx.build.deleteMany({
         where: { deploymentItemId: { in: ids } },
       });
@@ -566,18 +611,23 @@ export class DeploymentItemsService {
 
   async bulkUpdate(data: {
     ids: number[];
-    releaseStreamId?: number;
+    releaseStreamId?: number; // kept for compatibility
+    releasePackageId?: number;
     qcStatus?: string;
     isMergedOnDevel?: boolean;
     status?: string;
   }) {
     return this.prisma.$transaction(async (tx) => {
       const updateData: any = {};
-      if (data.releaseStreamId !== undefined) {
-        updateData.releaseStreamId =
-          data.releaseStreamId === null || data.releaseStreamId === undefined
+      const targetPackageId =
+        data.releasePackageId !== undefined
+          ? data.releasePackageId
+          : data.releaseStreamId;
+      if (targetPackageId !== undefined) {
+        updateData.releasePackageId =
+          targetPackageId === null || targetPackageId === undefined
             ? null
-            : Number(data.releaseStreamId);
+            : Number(targetPackageId);
       }
       if (data.isMergedOnDevel !== undefined) {
         updateData.isMergedOnDevel = data.isMergedOnDevel;
@@ -595,7 +645,9 @@ export class DeploymentItemsService {
 
       if (data.qcStatus !== undefined) {
         await tx.ticket.updateMany({
-          where: { deploymentItemId: { in: data.ids.map(Number) } },
+          where: {
+            deploymentItems: { some: { id: { in: data.ids.map(Number) } } },
+          },
           data: { qcStatus: data.qcStatus },
         });
       }

@@ -22,9 +22,9 @@ export class EnvironmentsService {
   async remove(id: number) {
     // Delete any builds associated with this environment first to avoid foreign key constraints
     await this.prisma.build.deleteMany({
-      where: { environmentId: id }
+      where: { environmentId: id },
     });
-    
+
     return this.prisma.environment.delete({
       where: { id },
     });

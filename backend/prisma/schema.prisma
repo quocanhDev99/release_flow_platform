@@ -36,31 +36,33 @@ model User {
   @@map("users")
 }
 
-model ReleaseStream {
-  id              Int              @id @default(autoincrement())
-  version         String           @unique
-  status          String           @default("active") // active, completed, archived
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  deploymentItems DeploymentItem[]
+model ReleasePackage {
+  id                Int                 @id @default(autoincrement())
+  version           String              @unique
+  buildArtifactHash String?             // Docker registry digest or commit SHA
+  status            String              @default("draft") // draft, active, completed, archived
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  deploymentItems   DeploymentItem[]
+  bookings          DeploymentBooking[]
 
-  @@map("release_streams")
+  @@map("release_packages")
 }
 
 model DeploymentItem {
-  id                Int           @id @default(autoincrement())
+  id                Int             @id @default(autoincrement())
   sourceBranch      String
-  status            String        @default("merged") // merged, pending, closed
-  isMergedOnDevel   Boolean       @default(false)
-  mergedAt          DateTime      @default(now())
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  repository        Repository    @relation(fields: [repositoryId], references: [id])
+  status            String          @default("merged") // merged, pending, closed
+  isMergedOnDevel   Boolean         @default(false)
+  mergedAt          DateTime        @default(now())
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  repository        Repository      @relation(fields: [repositoryId], references: [id])
   repositoryId      Int
-  user              User          @relation(fields: [userId], references: [id])
+  user              User            @relation(fields: [userId], references: [id])
   userId            Int
-  releaseStream     ReleaseStream? @relation(fields: [releaseStreamId], references: [id])
-  releaseStreamId   Int?
+  releasePackage    ReleasePackage? @relation(fields: [releasePackageId], references: [id])
+  releasePackageId  Int?
   tickets           Ticket[]
   builds            Build[]
 
@@ -68,27 +70,27 @@ model DeploymentItem {
 }
 
 model Ticket {
-  id                Int            @id @default(autoincrement())
-  ticketId          String         // e.g., MAG-20479
-  summary           String?
-  changeType        String         // Feature, Fix bug, Enhance
-  qcStatus          String         @default("—") // —, Waiting, Ready, Passed, Failed
-  pendingIssues     String?
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-  deploymentItem    DeploymentItem @relation(fields: [deploymentItemId], references: [id], onDelete: Cascade)
-  deploymentItemId  Int
+  id              Int              @id @default(autoincrement())
+  ticketId        String           // e.g., MAG-20479
+  summary         String?
+  changeType      String           // Feature, Fix bug, Enhance
+  qcStatus        String           @default("—") // —, Waiting, Ready, Passed, Failed
+  pendingIssues   String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deploymentItems DeploymentItem[]
 
   @@map("tickets")
 }
 
 model Environment {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique // dev, devel, STG, UAT, Production
+  id          Int                @id @default(autoincrement())
+  name        String             @unique // dev, devel, STG, UAT, Production
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
   builds      Build[]
+  windows     DeploymentWindow[]
 
   @@map("environments")
 }
@@ -107,4 +109,50 @@ model Build {
   environmentId     Int
 
   @@map("builds")
+}
+
+model DeploymentPolicy {
+  id                Int                @id @default(autoincrement())
+  name              String             @unique
+  cronSchedule      String             // e.g. "0 0 * * 1" for every Monday
+  targetEnvironment String             // e.g. "UAT", "Production"
+  capacityLimit     Int                @default(20)
+  freezeWindow      Int                @default(24) // freeze duration in hours
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  windows           DeploymentWindow[]
+
+  @@map("deployment_policies")
+}
+
+model DeploymentWindow {
+  id                Int                 @id @default(autoincrement())
+  startTime         DateTime
+  endTime           DateTime
+  freezeTime        DateTime
+  capacity          Int                 @default(20)
+  status            String              @default("open") // open, frozen, executing, completed, cancelled
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  policy            DeploymentPolicy?   @relation(fields: [policyId], references: [id])
+  policyId          Int?
+  environment       Environment         @relation(fields: [environmentId], references: [id])
+  environmentId     Int
+  bookings          DeploymentBooking[]
+
+  @@map("deployment_windows")
+}
+
+model DeploymentBooking {
+  id                 Int              @id @default(autoincrement())
+  bookedAt           DateTime         @default(now())
+  status             String           @default("pending") // pending, approved, rejected, cancelled
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  releasePackage     ReleasePackage   @relation(fields: [releasePackageId], references: [id], onDelete: Cascade)
+  releasePackageId   Int
+  deploymentWindow   DeploymentWindow @relation(fields: [deploymentWindowId], references: [id], onDelete: Cascade)
+  deploymentWindowId Int
+
+  @@map("deployment_bookings")
 }
