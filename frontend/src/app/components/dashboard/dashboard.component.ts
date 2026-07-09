@@ -665,7 +665,7 @@ export class DashboardComponent implements OnInit {
     this.isCreateMode = false;
     this.activeItem = {
       ...item,
-      releaseStreamId: item.releaseStreamId
+      releaseStreamId: item.releaseStreamId || item.releaseStream?.id
     };
     this.activeRepoIds = item.repositories ? item.repositories.map(r => r.id) : [];
     this.activeTicket = ticket ? { ...ticket } : {
