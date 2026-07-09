@@ -451,7 +451,7 @@
   </ng-template>
 
   <!-- ─── Paginator ───────────────────────────────────────────────────── -->
-  <mat-paginator
+  <mat-paginator *ngIf="!isGrouped()"
     [length]="totalItems()"
     [pageSize]="pageSize()"
     [pageIndex]="pageIndex()"

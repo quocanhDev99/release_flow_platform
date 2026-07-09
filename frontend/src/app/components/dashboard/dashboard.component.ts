@@ -73,6 +73,8 @@ export class DashboardComponent implements OnInit {
 
   toggleGrouping() {
     this.isGrouped.update(val => !val);
+    this.pageIndex.set(0);
+    this.loadData();
   }
 
   /** Returns the raw numeric version key from a deployment item (e.g. "1.12.1"). */
@@ -473,8 +475,8 @@ export class DashboardComponent implements OnInit {
 
   loadData() {
     const params: any = {
-      page: this.pageIndex() + 1,
-      pageSize: this.pageSize()
+      page: this.isGrouped() ? 1 : this.pageIndex() + 1,
+      pageSize: this.isGrouped() ? 1000 : this.pageSize()
     };
     if (this.searchText.trim()) {
       params.search = this.searchText.trim();
