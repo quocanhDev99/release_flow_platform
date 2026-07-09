@@ -110,8 +110,8 @@
   </div>
 
   <!-- ─── Stats strip + group toggle ─────────────────────────────────── -->
-  <!-- <div class="stats-strip">
-    <div class="bulk-actions" *ngIf="selection.hasValue()">
+  <div class="stats-strip">
+    <!-- <div class="bulk-actions" *ngIf="selection.hasValue()">
       <div class="bulk-actions__selection">
         <span class="bulk-actions__count">{{ selection.selected.length }}</span>
         <span class="bulk-actions__label">selected</span>
@@ -141,7 +141,7 @@
         </mat-select>
       </mat-form-field>
     </div>
-    <div *ngIf="!selection.hasValue()"></div>
+    <div *ngIf="!selection.hasValue()"></div> -->
 
     <div style="display:flex; gap:8px;">
       <button mat-stroked-button (click)="toggleSort()">
@@ -153,7 +153,7 @@
         {{ isGrouped() ? 'Ungroup' : 'Group by Release' }}
       </button>
     </div>
-  </div> -->
+  </div>
 
   <!-- ─── Data Grid ────────────────────────────────────────────────────── -->
   <div class="data-grid">
