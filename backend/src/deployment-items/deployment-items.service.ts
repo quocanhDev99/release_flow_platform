@@ -676,4 +676,98 @@ export class DeploymentItemsService {
       }
     });
   }
+
+  async repairDb() {
+    const items = await this.prisma.deploymentItem.findMany({
+      include: {
+        tickets: true,
+        releasePackage: true,
+      },
+    });
+
+    const logs: string[] = [];
+    logs.push(`Starting DB Repair: Found ${items.length} deployment items.`);
+
+    for (const item of items) {
+      const branch = item.sourceBranch || '';
+      const ticketMatch = branch.match(/MAG-\d+/i);
+      const ticketId = ticketMatch ? ticketMatch[0].toUpperCase() : null;
+
+      const versionMatch = branch.match(/\d+(\.\d+)+/);
+      const version = versionMatch ? versionMatch[0] : null;
+
+      logs.push(
+        `Item ID ${item.id} (${branch}): Ticket=${ticketId}, Version=${version}`,
+      );
+
+      if (ticketId && item.tickets.length === 0) {
+        let ticket = await this.prisma.ticket.findFirst({
+          where: { ticketId },
+        });
+        if (!ticket) {
+          let changeType = 'Feature';
+          if (
+            branch.toLowerCase().includes('fix') ||
+            branch.toLowerCase().includes('bug')
+          ) {
+            changeType = 'Fix bug';
+          } else if (
+            branch.toLowerCase().includes('enhance') ||
+            branch.toLowerCase().includes('optimize')
+          ) {
+            changeType = 'Enhance';
+          }
+
+          ticket = await this.prisma.ticket.create({
+            data: {
+              ticketId,
+              summary: `Recovered Ticket for ${branch}`,
+              changeType: changeType as any,
+              qcStatus: 'Passed' as any,
+            },
+          });
+        }
+
+        await this.prisma.deploymentItem.update({
+          where: { id: item.id },
+          data: {
+            tickets: {
+              connect: [{ id: ticket.id }],
+            },
+          },
+        });
+        logs.push(`  -> Linked Ticket ${ticketId}`);
+      }
+
+      if (version && !item.releasePackageId) {
+        let pkg = await this.prisma.releasePackage.findUnique({
+          where: { version: `sow/${version}.x` },
+        });
+        if (!pkg) {
+          pkg = await this.prisma.releasePackage.findUnique({
+            where: { version },
+          });
+        }
+        if (!pkg) {
+          pkg = await this.prisma.releasePackage.create({
+            data: {
+              version: `sow/${version}.x`,
+              status: 'active',
+            },
+          });
+        }
+
+        await this.prisma.deploymentItem.update({
+          where: { id: item.id },
+          data: {
+            releasePackageId: pkg.id,
+          },
+        });
+        logs.push(`  -> Linked Release Package ${pkg.version}`);
+      }
+    }
+
+    logs.push('DB Repair completed successfully!');
+    return { success: true, logs };
+  }
 }

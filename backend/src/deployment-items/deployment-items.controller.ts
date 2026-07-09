@@ -23,6 +23,11 @@ export class DeploymentItemsController {
     private readonly deploymentItemsService: DeploymentItemsService,
   ) {}
 
+  @Get('admin/repair-db')
+  repairDb() {
+    return this.deploymentItemsService.repairDb();
+  }
+
   @Get()
   findAll(
     @Query('page') page?: string,
