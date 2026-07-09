@@ -57,8 +57,7 @@ model DeploymentItem {
   mergedAt          DateTime        @default(now())
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
-  repository        Repository      @relation(fields: [repositoryId], references: [id])
-  repositoryId      Int
+  repositories      Repository[]
   user              User            @relation(fields: [userId], references: [id])
   userId            Int
   releasePackage    ReleasePackage? @relation(fields: [releasePackageId], references: [id])

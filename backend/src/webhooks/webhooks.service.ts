@@ -171,7 +171,7 @@ export class WebhooksService {
         ticketId,
         deploymentItems: {
           some: {
-            repositoryId: dbRepo.id,
+            repositories: { some: { id: dbRepo.id } },
             releasePackage: {
               version: { contains: cleanVer, mode: 'insensitive' },
             },
@@ -195,7 +195,7 @@ export class WebhooksService {
       sourceBranch,
       status: 'merged',
       isMergedOnDevel: true, // Auto-mark as merged on development since PR is merged
-      repositoryId: dbRepo.id,
+      repositoryIds: [dbRepo.id],
       userId: dbUser.id,
       releaseVersion,
       tickets: [

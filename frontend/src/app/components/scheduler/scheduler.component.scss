@@ -57,7 +57,7 @@ $transition-base: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .scheduler {
-  padding: 24px;
+  padding: 0 24px 24px;
   max-width: 1800px;
   margin: 0 auto;
 
@@ -105,12 +105,29 @@ $transition-base: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 24px;
+  padding: 12px 24px;
   margin-bottom: 24px;
-  background: $color-bg-surface;
-  border: 1px solid $color-border;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-card;
+
+  margin-left: -24px;
+  margin-right: -24px;
+  margin-top: 0;
+
+  background: rgba(var(--color-bg-surface-raw, 255 255 255), 0.85);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid $color-border;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  transition: box-shadow 0.2s ease, background 0.2s ease;
 
   &__brand {
     display: flex;

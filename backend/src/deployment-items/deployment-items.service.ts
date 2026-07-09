@@ -23,6 +23,7 @@ export class CreateDeploymentItemDto {
   status?: string;
   isMergedOnDevel?: boolean;
   repositoryId?: number;
+  repositoryIds?: number[];
   userId?: number;
   branchBuilds?: string[];
   tickets?: TicketDto[];
@@ -36,6 +37,7 @@ export class UpdateDeploymentItemDto {
   status?: string;
   isMergedOnDevel?: boolean;
   repositoryId?: number;
+  repositoryIds?: number[];
   userId?: number;
   branchBuilds?: string[];
   tickets?: TicketDto[];
@@ -105,7 +107,7 @@ export class DeploymentItemsService {
 
     const where: Prisma.DeploymentItemWhereInput = {};
     if (params?.repoName) {
-      where.repository = { name: params.repoName };
+      where.repositories = { some: { name: params.repoName } };
     }
     if (params?.status) {
       where.status = params.status;
@@ -169,7 +171,7 @@ export class DeploymentItemsService {
       skip,
       take,
       include: {
-        repository: true,
+        repositories: true,
         user: true,
         releasePackage: true,
         tickets: true,
@@ -203,7 +205,7 @@ export class DeploymentItemsService {
     const item = await this.prisma.deploymentItem.findUnique({
       where: { id },
       include: {
-        repository: true,
+        repositories: true,
         user: true,
         releasePackage: true,
         tickets: true,
@@ -234,7 +236,13 @@ export class DeploymentItemsService {
         sourceBranch: data.sourceBranch || 'main',
         status: data.status || 'merged',
         isMergedOnDevel: data.isMergedOnDevel || false,
-        repositoryId: Number(data.repositoryId),
+        repositories: {
+          connect: data.repositoryIds
+            ? data.repositoryIds.map((id) => ({ id }))
+            : data.repositoryId
+              ? [{ id: Number(data.repositoryId) }]
+              : [],
+        },
         userId: Number(data.userId),
         releasePackageId,
         tickets: {
@@ -293,7 +301,13 @@ export class DeploymentItemsService {
         releasePackageId,
         status: data.status,
         userId: data.userId ? Number(data.userId) : undefined,
-        repositoryId: data.repositoryId ? Number(data.repositoryId) : undefined,
+        repositories: {
+          set: data.repositoryIds
+            ? data.repositoryIds.map((id) => ({ id }))
+            : data.repositoryId
+              ? [{ id: Number(data.repositoryId) }]
+              : undefined,
+        },
       },
     });
 
@@ -416,7 +430,7 @@ export class DeploymentItemsService {
       where: { id },
       data: { isMergedOnDevel },
       include: {
-        repository: true,
+        repositories: true,
         user: true,
         releasePackage: true,
         tickets: true,
@@ -504,7 +518,7 @@ export class DeploymentItemsService {
           ticketId: item.ticketId.trim(),
           deploymentItems: {
             some: {
-              repositoryId: repository.id,
+              repositories: { some: { id: repository.id } },
               releasePackageId: releasePackageId,
             },
           },
@@ -539,7 +553,7 @@ export class DeploymentItemsService {
             sourceBranch: item.sourceBranch || 'main',
             status: item.status || 'merged',
             isMergedOnDevel,
-            repositoryId: repository.id,
+            repositories: { connect: [{ id: repository.id }] },
             userId: user.id,
             releasePackageId,
             tickets: {

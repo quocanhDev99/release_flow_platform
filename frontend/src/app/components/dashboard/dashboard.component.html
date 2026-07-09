@@ -280,9 +280,13 @@
         <ng-container matColumnDef="repo">
           <th mat-header-cell *matHeaderCellDef>Repo</th>
           <td mat-cell *matCellDef="let item">
-            <span class="row-badge" [ngClass]="getRepoBadgeClass(item.repository.name)">
-              {{ item.repository.name }}
-            </span>
+            <ng-container *ngIf="item.repositories && item.repositories.length > 0; else noRepos">
+              <span *ngFor="let repo of item.repositories; let last = last">
+                <span class="row-badge" [ngClass]="getRepoBadgeClass(repo.name)">{{ repo.name }}</span>
+                <span *ngIf="!last" style="margin-right: 4px; opacity: 0.7;"></span>
+              </span>
+            </ng-container>
+            <ng-template #noRepos>—</ng-template>
           </td>
         </ng-container>
 
@@ -484,7 +488,7 @@
 
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>Repository *</mat-label>
-        <mat-select [(ngModel)]="newRepoId">
+        <mat-select [(ngModel)]="newRepoIds" multiple>
           <mat-option *ngFor="let repo of repositories()" [value]="repo.id">{{ repo.name }}</mat-option>
         </mat-select>
       </mat-form-field>
@@ -569,7 +573,7 @@
 
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>Repository *</mat-label>
-        <mat-select [(ngModel)]="activeItem.repositoryId">
+        <mat-select [(ngModel)]="activeRepoIds" multiple>
           <mat-option *ngFor="let repo of repositories()" [value]="repo.id">{{ repo.name }}</mat-option>
         </mat-select>
       </mat-form-field>

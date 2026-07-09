@@ -4,37 +4,43 @@ body {
   margin: 0;
   background-color: var(--color-bg-page);
   color: var(--color-text-body);
-  --color-bg-page:      #f1f5f9;
-  --color-bg-surface:   #ffffff;
-  --color-bg-subtle:    #f8fafc;
-  --color-bg-subtle-hover:#f1f5f9;
-  --color-border:       #e2e8f0;
-  --color-border-strong:#cbd5e1;
+  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
 
-  --color-text-primary: #0f172a;
-  --color-text-body:    #334155;
-  --color-text-muted:   #64748b;
-  --color-text-faint:   #94a3b8;
+  --color-bg-page:         #f0f2f5;
+  --color-bg-surface:      #ffffff;
+  --color-bg-subtle:       #f8f9fb;
+  --color-bg-subtle-hover: #f0f2f5;
+  --color-border:          #e4e7ec;
+  --color-border-strong:   #c9cdd6;
 
-  --color-brand:        #3b82f6;
+  --color-text-primary: #111827;
+  --color-text-body:    #374151;
+  --color-text-muted:   #6b7280;
+  --color-text-faint:   #9ca3af;
+
+  --color-brand:        #2563eb;
   --color-brand-dark:   #1d4ed8;
   --color-brand-light:  #eff6ff;
 
-  --color-success:      #16a34a;
-  --color-success-bg:   #f0fdf4;
+  --color-success:       #16a34a;
+  --color-success-bg:    #f0fdf4;
   --color-success-border:#bbf7d0;
 
-  --color-warn:         #d97706;
-  --color-warn-bg:      #fffbeb;
-  --color-warn-border:  #fde68a;
+  --color-warn:          #d97706;
+  --color-warn-bg:       #fffbeb;
+  --color-warn-border:   #fde68a;
 
-  --color-danger:       #dc2626;
-  --color-danger-bg:    #fff5f5;
-  --color-danger-border:#fecaca;
+  --color-danger:        #dc2626;
+  --color-danger-bg:     #fff1f2;
+  --color-danger-border: #fecdd3;
 
   --color-purple:       #7c3aed;
-  --color-purple-bg:    #f5f3ff;
-  --color-loading-bg:   rgba(255, 255, 255, 0.7);
+  --color-purple-bg:    #faf5ff;
+  --color-loading-bg:   rgba(255, 255, 255, 0.78);
+
+  /* Raw RGB for backdrop-filter */
+  --color-bg-surface-raw: 255 255 255;
+  --color-bg-page-raw:    240 242 245;
 }
 
 body.dark-theme {
@@ -59,6 +65,9 @@ body.dark-theme {
   --color-danger-border:#b91c1c;
   --color-purple-bg:    #4c1d95;
   --color-loading-bg:   rgba(15, 23, 42, 0.7);
+  /* Raw RGB values for rgba() with CSS vars (needed for backdrop-filter) */
+  --color-bg-surface-raw: 30 41 59;
+  --color-bg-page-raw:    15 23 42;
 }
 
 /* Global Button Customization: Modern Pill-shape for professional look */

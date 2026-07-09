@@ -10,7 +10,7 @@ export class ReleasePackagesService {
       include: {
         deploymentItems: {
           include: {
-            repository: true,
+            repositories: true,
             user: true,
             tickets: true,
           },
@@ -35,7 +35,7 @@ export class ReleasePackagesService {
       include: {
         deploymentItems: {
           include: {
-            repository: true,
+            repositories: true,
             user: true,
             tickets: true,
           },

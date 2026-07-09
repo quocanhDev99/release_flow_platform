@@ -55,8 +55,7 @@ export interface DeploymentItem {
   mergedAt: string;
   createdAt: string;
   updatedAt: string;
-  repository: Repository;
-  repositoryId: number;
+  repositories: Repository[];
   user: User;
   userId: number;
   releaseStream?: ReleaseStream;

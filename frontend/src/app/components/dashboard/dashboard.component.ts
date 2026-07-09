@@ -23,6 +23,7 @@ import { ToastComponent } from '../toast/toast.component';
 import { DeploymentItem, ReleaseStream, Ticket, Repository, User } from '../../models/release.model';
 import * as XLSX from 'xlsx';
 import { SelectionModel } from '@angular/cdk/collections';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -372,7 +373,8 @@ export class DashboardComponent implements OnInit {
   newReleaseVersionName = '';
   newRepoName = '';
   newRepoGitUrl = '';
-  newRepoId: number | null = null;
+  newRepoIds: number[] = [];
+  activeRepoIds: number[] = [];
   newUserId: number | null = null;
   newReleaseStreamId: number | undefined = undefined;
   newSourceBranch = '';
@@ -665,6 +667,7 @@ export class DashboardComponent implements OnInit {
       ...item,
       releaseStreamId: item.releaseStreamId
     };
+    this.activeRepoIds = item.repositories ? item.repositories.map(r => r.id) : [];
     this.activeTicket = ticket ? { ...ticket } : {
       id: undefined,
       ticketId: '',
@@ -682,7 +685,7 @@ export class DashboardComponent implements OnInit {
 
   openCreatePanel() {
     this.isCreateMode = true;
-    this.newRepoId = this.repositories().length > 0 ? this.repositories()[0].id : null;
+    this.newRepoIds = this.repositories().length > 0 ? [this.repositories()[0].id] : [];
     // Auto-fill userId from logged-in account
     this.newUserId = this.currentUser()?.id ?? null;
     this.newReleaseStreamId = undefined;
@@ -843,7 +846,7 @@ export class DashboardComponent implements OnInit {
     if (this.isCreateMode) {
       // Validate: use selected user ID, or fallback to logged-in user ID
       const userId = this.newUserId || this.currentUser()?.id;
-      if (!this.newRepoId || !userId || !this.newTicketId.trim() || !this.newSourceBranch.trim()) {
+      if (this.newRepoIds.length === 0 || !userId || !this.newTicketId.trim() || !this.newSourceBranch.trim()) {
         this.toast.warn('Please fill in all required fields: Repository, Developer, Ticket ID, and Branch.');
         return;
       }
@@ -858,7 +861,7 @@ export class DashboardComponent implements OnInit {
       }
 
       const payload = {
-        repositoryId: this.newRepoId,
+        repositoryIds: this.newRepoIds,
         userId: userId,
         releaseStreamId: this.newReleaseStreamId,
         sourceBranch: this.newSourceBranch,
@@ -894,7 +897,7 @@ export class DashboardComponent implements OnInit {
       if (!this.activeItem || !this.activeTicket) return;
 
       const userId = this.activeItem.userId || this.currentUser()?.id;
-      if (!this.activeItem.repositoryId || !userId || !this.activeTicket.ticketId.trim() || !this.activeItem.sourceBranch.trim()) {
+      if (this.activeRepoIds.length === 0 || !userId || !this.activeTicket.ticketId.trim() || !this.activeItem.sourceBranch.trim()) {
         this.toast.warn('Please fill in all required fields: Repository, Developer, Ticket ID, and Branch.');
         return;
       }
@@ -909,7 +912,7 @@ export class DashboardComponent implements OnInit {
       }
 
       const payload = {
-        repositoryId: this.activeItem.repositoryId,
+        repositoryIds: this.activeRepoIds,
         userId: userId,
         sourceBranch: this.activeItem.sourceBranch,
         isMergedOnDevel: this.activeItem.isMergedOnDevel,
@@ -1135,7 +1138,7 @@ export class DashboardComponent implements OnInit {
     const rows = items.map(item => {
       const tickets = item.tickets || [];
       return {
-        'Repository': item.repository?.name || '—',
+        'Repository': item.repositories ? item.repositories.map(r => r.name).join(', ') : '—',
         'Ticket ID': tickets.map(t => t.ticketId).join(', ') || '—',
         'Summary': tickets.map(t => t.summary).join(', ') || '—',
         'Fix Version': this.cleanVersion(item.releaseStream?.version) || '—',

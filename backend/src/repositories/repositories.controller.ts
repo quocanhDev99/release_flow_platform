@@ -36,7 +36,7 @@ export class RepositoriesController {
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.prisma.$transaction(async (tx) => {
       const items = await tx.deploymentItem.findMany({
-        where: { repositoryId: id },
+        where: { repositories: { some: { id } } },
         select: { id: true },
       });
       const itemIds = items.map((item) => item.id);

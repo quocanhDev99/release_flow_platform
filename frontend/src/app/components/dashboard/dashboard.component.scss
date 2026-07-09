@@ -5,14 +5,14 @@
 
 // ─── Design Tokens ─────────────────────────────────────────────────────────
 $font-primary: 'Outfit', 'Inter', sans-serif;
-$font-mono:    'Fira Code', 'Courier New', monospace;
+$font-mono:    'Fira Code', 'JetBrains Mono', 'Courier New', monospace;
 
-$color-bg-page:      var(--color-bg-page);
-$color-bg-surface:   var(--color-bg-surface);
-$color-bg-subtle:    var(--color-bg-subtle);
+$color-bg-page:        var(--color-bg-page);
+$color-bg-surface:     var(--color-bg-surface);
+$color-bg-subtle:      var(--color-bg-subtle);
 $color-bg-subtle-hover:var(--color-bg-subtle-hover);
-$color-border:       var(--color-border);
-$color-border-strong:var(--color-border-strong);
+$color-border:         var(--color-border);
+$color-border-strong:  var(--color-border-strong);
 
 $color-text-primary: var(--color-text-primary);
 $color-text-body:    var(--color-text-body);
@@ -23,30 +23,34 @@ $color-brand:        var(--color-brand);
 $color-brand-dark:   var(--color-brand-dark);
 $color-brand-light:  var(--color-brand-light);
 
-$color-success:      var(--color-success);
-$color-success-bg:   var(--color-success-bg);
+$color-success:       var(--color-success);
+$color-success-bg:    var(--color-success-bg);
 $color-success-border:var(--color-success-border);
 
-$color-warn:         var(--color-warn);
-$color-warn-bg:      var(--color-warn-bg);
-$color-warn-border:  var(--color-warn-border);
+$color-warn:          var(--color-warn);
+$color-warn-bg:       var(--color-warn-bg);
+$color-warn-border:   var(--color-warn-border);
 
-$color-danger:       var(--color-danger);
-$color-danger-bg:    var(--color-danger-bg);
-$color-danger-border:var(--color-danger-border);
+$color-danger:        var(--color-danger);
+$color-danger-bg:     var(--color-danger-bg);
+$color-danger-border: var(--color-danger-border);
 
-$color-purple:       var(--color-purple);
-$color-purple-bg:    var(--color-purple-bg);
+$color-purple:    var(--color-purple);
+$color-purple-bg: var(--color-purple-bg);
 
-$radius-sm:    6px;
-$radius-md:    10px;
-$radius-lg:    14px;
-$radius-pill:  9999px;
+$radius-xs:   4px;
+$radius-sm:   6px;
+$radius-md:   10px;
+$radius-lg:   12px;
+$radius-xl:   16px;
+$radius-pill: 9999px;
 
-$shadow-sm:    0 1px 2px rgba(0,0,0,.05);
-$shadow-card:  0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,0,.06);
-$shadow-panel: -4px 0 32px rgba(0,0,0,.12);
+$shadow-xs:    0 1px 2px rgba(0,0,0,.04);
+$shadow-sm:    0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+$shadow-card:  0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06);
+$shadow-panel: -8px 0 40px rgba(0,0,0,.14);
 
+$transition-fast: all 0.15s ease;
 $transition-base: all 0.2s ease;
 
 // ─── Global Host ───────────────────────────────────────────────────────────
@@ -61,8 +65,8 @@ $transition-base: all 0.2s ease;
 // Block: dashboard
 // ═══════════════════════════════════════════════════════════════════════════
 .dashboard {
-  padding: 20px 24px 32px;
-  max-width: 2000px;
+  padding: 0 24px 32px;
+  max-width: 1920px;
   margin: 0 auto;
 }
 
@@ -71,188 +75,233 @@ $transition-base: all 0.2s ease;
 // ═══════════════════════════════════════════════════════════════════════════
 .navbar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 14px 20px;
-  margin-bottom: 20px;
-  background: $color-bg-surface;
-  border: 1px solid $color-border;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-card;
+  justify-content: space-between;
+  height: 52px;
+  padding: 0 28px;
+  margin-bottom: 16px;
+  margin-left: -24px;
+  margin-right: -24px;
+  margin-top: 0;
+
+  background: rgba(var(--color-bg-surface-raw, 255 255 255), 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid $color-border;
+  box-shadow: 0 1px 0 $color-border, 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  transition: box-shadow 0.2s ease;
 
   &__brand {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-shrink: 0;
   }
 
   &__logo-icon {
-    font-size: 26px;
-    width: 26px;
-    height: 26px;
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
     color: $color-brand;
   }
 
   &__title {
     margin: 0;
-    font-size: 20px;
+    font-size: 15px;
     font-weight: 700;
-    letter-spacing: -0.4px;
+    letter-spacing: -0.3px;
     color: $color-text-primary;
   }
 
   &__version-badge {
-    font-size: 11px;
-    color: $color-text-muted;
+    font-size: 10px;
+    color: $color-text-faint;
     background: $color-bg-subtle;
     border: 1px solid $color-border;
-    padding: 3px 9px;
+    padding: 2px 7px;
     border-radius: $radius-pill;
     font-weight: 600;
+    letter-spacing: 0.3px;
   }
 
   &__actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
+
+    // Ensure all button types sit at the same baseline in the flex row
+    > button, > a {
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
   }
 
   &__theme-btn {
-    color: $color-text-muted;
-    &:hover { color: $color-brand; }
+    color: $color-text-faint;
+    &:hover { color: $color-text-muted; }
   }
 
   &__user-info {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
+    gap: 5px;
+    padding: 4px 10px;
     border-radius: $radius-pill;
-    background: $color-bg-subtle;
+    background: transparent;
     border: 1px solid $color-border;
     color: $color-text-body;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 600;
+    cursor: pointer;
+    transition: $transition-fast;
+
+    &:hover {
+      background: $color-bg-subtle;
+      border-color: $color-border-strong;
+    }
 
     mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-      color: $color-brand;
+      font-size: 15px;
+      width: 15px;
+      height: 15px;
+      color: $color-text-muted;
     }
   }
 
   &__username {
-    max-width: 120px;
+    max-width: 110px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   &__logout-btn {
-    color: $color-text-muted;
+    color: $color-text-faint;
     &:hover { color: $color-danger; }
   }
 
   &__divider {
     width: 1px;
-    height: 24px;
+    height: 18px;
     background: $color-border;
-    margin: 0 4px;
+    margin: 0 6px;
+  }
+}
+
+// Navbar action buttons — compact
+.navbar .btn-secondary {
+  height: 30px !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  padding: 0 11px !important;
+  color: $color-text-body !important;
+  border-color: $color-border !important;
+  border-radius: 7px !important;
+
+  mat-icon {
+    font-size: 15px !important;
+    width: 15px !important;
+    height: 15px !important;
+    margin-right: 4px !important;
+  }
+}
+
+.navbar .btn-refresh-icon {
+  width: 30px !important;
+  height: 30px !important;
+  line-height: 30px !important;
+  flex-shrink: 0;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: $color-text-faint !important;
+  padding: 0 !important;
+  border-radius: 7px !important;
+  &:hover { color: $color-brand !important; background: $color-bg-subtle !important; }
+  mat-icon { font-size: 17px !important; width: 17px !important; height: 17px !important; }
+}
+
+.navbar .btn-new-record {
+  height: 30px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  padding: 0 13px !important;
+  border-radius: 7px !important;
+  letter-spacing: 0 !important;
+
+  mat-icon {
+    font-size: 15px !important;
+    width: 15px !important;
+    height: 15px !important;
+    margin-right: 4px !important;
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Block: toolbar  (filter + search bar)
+// Block: toolbar
 // ═══════════════════════════════════════════════════════════════════════════
 .toolbar {
-  display: grid;
-  grid-template-columns: 2fr repeat(5, 1fr);
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 12px 16px;
-  background: var(--color-bg-surface, $color-bg-surface);
-  border: 1px solid var(--color-border, $color-border);
-  border-radius: $radius-lg;
-  box-shadow: $shadow-card;
-
-  &__search { /* takes its grid column naturally */ }
-  &__filter  { /* takes its grid column naturally */ }
-}
-
-// ─── Stats Strip & Bulk Actions ──────────────────────────────────────────
-.stats-strip {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
   gap: 8px;
-}
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: $color-bg-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-xs;
+  flex-wrap: nowrap;
 
-.bulk-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--color-bg-surface, $color-bg-surface);
-  padding: 6px 12px;
-  border-radius: $radius-md;
-  border: 1px solid var(--color-border, $color-border);
-  box-shadow: $shadow-sm;
-
-  &__selection {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-    padding-right: 4px;
+  // Force compact height on all form fields inside toolbar
+  ::ng-deep .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper { height: 38px !important; }
+    .mat-mdc-form-field-flex { height: 38px !important; align-items: center; }
+    .mat-mdc-form-field-infix {
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+      min-height: unset !important;
+    }
+    .mdc-floating-label { top: 19px !important; }
+    .mdc-floating-label--float-above { top: 28px !important; }
   }
 
-  &__count {
-    font-weight: 700;
-    font-size: 14px;
-    color: var(--color-brand, $color-brand);
-  }
-
-  &__label {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--color-text-muted, $color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  &__delete-btn {
-    height: 36px !important;
-    padding: 0 12px !important;
-    font-weight: 600 !important;
-  }
-
-  &__divider {
-    width: 1px;
-    height: 24px;
-    background: var(--color-border, $color-border);
-    margin: 0 4px;
+  &__search {
+    flex: 2;
+    min-width: 140px;
   }
 
   &__filter {
-    width: 150px;
-    
-    ::ng-deep {
-      .mat-mdc-text-field-wrapper {
-        height: 36px !important;
-        padding: 0 10px !important;
-      }
-      .mat-mdc-form-field-flex {
-        height: 100%;
-        align-items: center;
-      }
-      .mat-mdc-form-field-infix {
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-        min-height: unset !important;
-        display: flex;
-        align-items: center;
-      }
+    flex: 1;
+    min-width: 90px;
+  }
+}
+
+// ─── Stats Strip ─────────────────────────────────────────────────────────
+.stats-strip {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 6px;
+
+  button {
+    height: 30px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    padding: 0 11px !important;
+    border-radius: 7px !important;
+    letter-spacing: 0 !important;
+
+    mat-icon {
+      font-size: 14px !important;
+      width: 14px !important;
+      height: 14px !important;
+      margin-right: 4px !important;
     }
   }
 }
@@ -267,9 +316,9 @@ $transition-base: all 0.2s ease;
   overflow: hidden;
   overflow-x: auto;
   position: relative;
-  box-shadow: $shadow-card;
-  margin-bottom: 12px;
-  min-height: 280px; // Prevent collapse and ensure centered spinner when loading/empty
+  box-shadow: $shadow-sm;
+  margin-bottom: 8px;
+  min-height: 240px;
 
   &__table {
     width: 100%;
@@ -283,7 +332,7 @@ $transition-base: all 0.2s ease;
     align-items: center;
     justify-content: center;
     background: var(--color-loading-bg);
-    backdrop-filter: blur(3px);
+    backdrop-filter: blur(4px);
     z-index: 10;
   }
 
@@ -291,7 +340,7 @@ $transition-base: all 0.2s ease;
     text-align: center;
     padding: 48px 24px !important;
     color: $color-text-faint;
-    font-size: 14px !important;
+    font-size: 13px !important;
   }
 
   &__empty-state {
@@ -303,200 +352,173 @@ $transition-base: all 0.2s ease;
     text-align: center;
 
     mat-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      margin-bottom: 12px;
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+      margin-bottom: 14px;
       color: $color-text-faint;
     }
 
     p {
-      margin: 0;
-      font-size: 15px;
-      font-weight: 700;
+      margin: 0 0 4px;
+      font-size: 14px;
+      font-weight: 600;
       color: $color-text-primary;
     }
 
     span {
-      font-size: 13px;
+      font-size: 12.5px;
       color: $color-text-muted;
-      margin-top: 4px;
     }
   }
 }
 
-// ─── Table Header ──────────────────────────────────────────────────────────
+// ─── Table Header & Rows ──────────────────────────────────────────────────
 .data-grid__table {
   th.mat-mdc-header-cell {
     background-color: $color-bg-subtle !important;
-    color: $color-text-muted !important;
-    font-size: 11.5px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.4px;
+    color: $color-text-faint !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.6px;
     text-transform: uppercase;
-    padding: 12px 14px !important;
-    border-bottom: 2px solid $color-border !important;
+    padding: 9px 12px !important;
+    border-bottom: 1px solid $color-border !important;
     font-family: $font-primary;
     white-space: nowrap;
   }
 
-  tr.mat-mdc-row {
-    background-color: $color-bg-surface !important;
-  }
+  tr.mat-mdc-row { background-color: $color-bg-surface !important; }
 
   td.mat-mdc-cell {
     background-color: $color-bg-surface !important;
-    padding: 11px 14px !important;
+    padding: 9px 12px !important;
     border-bottom: 1px solid $color-border !important;
-    font-size: 13px !important;
+    font-size: 12.5px !important;
     color: $color-text-body !important;
     vertical-align: middle;
   }
 
   tr.mat-mdc-row:hover td.mat-mdc-cell {
     background: $color-bg-subtle-hover !important;
+    transition: background 0.1s ease;
   }
 }
 
-// ─── Centered column helper ─────────────────────────────────────────────────
+// ─── Centered column helper ───────────────────────────────────────────────
 .col--center { text-align: center !important; }
 
-::ng-deep .col--center .mdc-checkbox {
-  margin: 0 auto;
-}
+::ng-deep .col--center .mdc-checkbox { margin: 0 auto; }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Block: row-badge  (repo tag, type chip, status pill)
+// Block: row-badge
 // ═══════════════════════════════════════════════════════════════════════════
 .row-badge {
   display: inline-flex;
   align-items: center;
-  padding: 2.5px 8px;
-  border-radius: $radius-pill;
+  padding: 2px 7px;
+  border-radius: $radius-sm;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.1px;
   border: 1px solid transparent;
+  white-space: nowrap;
 
-  // ── Repo modifiers ──────────────────────────────────────────────────────
-  &--core {
-    background: $color-brand-light;
-    color: $color-brand;
-    border-color: rgba(59, 130, 246, 0.25);
-  }
-  &--ecom {
-    background: $color-success-bg;
-    color: $color-success;
-    border-color: $color-success-border;
-  }
-  &--cms {
-    background: $color-purple-bg;
-    color: $color-purple;
-    border-color: rgba(124, 58, 237, 0.25);
-  }
-  &--emarketing {
-    background: $color-warn-bg;
-    color: $color-warn;
-    border-color: $color-warn-border;
-  }
-  &--promotion {
-    background: $color-danger-bg;
-    color: $color-danger;
-    border-color: $color-danger-border;
-  }
-  &--default-repo {
-    background: $color-bg-subtle;
-    color: $color-text-muted;
-    border-color: $color-border;
-  }
+  // Repo modifiers
+  &--core       { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+  &--ecom       { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+  &--cms        { background: #faf5ff; color: #6d28d9; border-color: #ddd6fe; }
+  &--emarketing { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+  &--promotion  { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
+  &--default-repo { background: $color-bg-subtle; color: $color-text-muted; border-color: $color-border; }
 
-  // ── Change-type modifiers ────────────────────────────────────────────────
-  &--feature {
-    background: $color-brand-light;
-    color: $color-brand;
-    border-color: rgba(59, 130, 246, 0.25);
-  }
-  &--bug {
-    background: $color-danger-bg;
-    color: $color-danger;
-    border-color: $color-danger-border;
-  }
-  &--enhance {
-    background: $color-purple-bg;
-    color: $color-purple;
-    border-color: rgba(124, 58, 237, 0.25);
-  }
+  // Change-type modifiers
+  &--feature { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+  &--bug     { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
+  &--enhance { background: #faf5ff; color: #6d28d9; border-color: #ddd6fe; }
 
-  // ── Branch-status modifiers ──────────────────────────────────────────────
-  &--merged {
-    background: $color-success-bg;
-    color: $color-success;
-    border-color: $color-success-border;
-  }
-  &--pending {
-    background: $color-warn-bg;
-    color: $color-warn;
-    border-color: $color-warn-border;
-  }
-  &--closed {
-    background: $color-bg-subtle;
-    color: $color-text-muted;
-    border-color: $color-border;
-  }
+  // Branch-status modifiers
+  &--merged  { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; font-weight: 700; }
+  &--pending { background: #fefce8; color: #a16207; border-color: #fde68a; }
+  &--closed  { background: $color-bg-subtle; color: $color-text-muted; border-color: $color-border; }
 }
 
-// ─── Ticket ID cell ─────────────────────────────────────────────────────────
+// ─── Ticket ID cell ──────────────────────────────────────────────────────────
 .ticket-id {
   font-weight: 600;
-  font-size: 13px;
-  color: $color-text-primary;
+  font-size: 12px;
+  color: $color-brand;
   font-family: $font-mono;
+  letter-spacing: -0.2px;
 }
 
-// ─── Branch / Build code cells ───────────────────────────────────────────────
+// ─── Branch / Build code chips ────────────────────────────────────────────────
 .code-chip {
   font-family: $font-mono;
   background: $color-bg-subtle;
   border: 1px solid $color-border;
-  padding: 3px 7px;
-  border-radius: $radius-sm;
-  font-size: 12px;
-  color: $color-text-primary;
+  padding: 2px 6px;
+  border-radius: $radius-xs;
+  font-size: 11.5px;
+  color: $color-text-body;
   display: inline-block;
-  max-width: 230px;
+  max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-// ─── Actions cell ────────────────────────────────────────────────────────────
+// ─── Actions cell ─────────────────────────────────────────────────────────────
 .row-actions {
   display: flex;
   gap: 2px;
   justify-content: center;
+
+  button.mat-mdc-icon-button {
+    width: 26px !important;
+    height: 26px !important;
+    line-height: 26px !important;
+    padding: 0 !important;
+    border-radius: $radius-sm !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+
+    .mat-icon { font-size: 15px !important; width: 15px !important; height: 15px !important; }
+
+    &[color="primary"] {
+      color: $color-brand !important; opacity: 0.65;
+      &:hover { opacity: 1; background: rgba(37, 99, 235, 0.08) !important; }
+    }
+    &[color="warn"] {
+      color: $color-danger !important; opacity: 0.6;
+      &:hover { opacity: 1; background: rgba(220, 38, 38, 0.08) !important; }
+    }
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Block: qc-select  (inline QC dropdown)
+// Block: qc-select
 // ═══════════════════════════════════════════════════════════════════════════
 .qc-select {
   border: 1px solid $color-border;
-  border-radius: $radius-sm;
-  padding: 4px 8px;
-  font-size: 12px;
+  border-radius: $radius-xs;
+  padding: 3px 6px;
+  font-size: 11.5px;
   font-weight: 600;
   font-family: $font-primary;
   cursor: pointer;
   outline: none;
-  transition: $transition-base;
+  transition: $transition-fast;
   appearance: auto;
+  min-width: 88px;
 
-  &:focus { border-color: $color-brand; box-shadow: 0 0 0 2px rgba($color-brand, 0.2); }
-
+  &:focus { border-color: $color-brand; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12); }
   &--waiting { background: $color-bg-subtle; color: $color-text-muted; }
-  &--ready   { background: $color-warn-bg;   color: $color-warn;       border-color: $color-warn-border; }
-  &--passed  { background: $color-success-bg;color: $color-success;    border-color: $color-success-border; }
-  &--failed  { background: $color-danger-bg; color: $color-danger;     border-color: $color-danger-border; }
+  &--ready   { background: #fefce8; color: #a16207; border-color: #fde68a; }
+  &--passed  { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+  &--failed  { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
 }
 
 // ─── Pending Issues ──────────────────────────────────────────────────────────
@@ -504,141 +526,26 @@ $transition-base: all 0.2s ease;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 180px;
+  max-width: 175px;
   color: $color-text-muted;
-  font-style: italic;
-  font-size: 12.5px;
+  font-size: 12px;
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Block: release-group-row
-// ═══════════════════════════════════════════════════════════════════════════
-.release-group-row {
-  background: linear-gradient(90deg, rgba($color-brand, 0.06) 0%, rgba($color-brand, 0.02) 60%, $color-bg-subtle 100%) !important;
-
-  &:hover td { background: transparent !important; }
-
-  // Level-aware row backgrounds applied via the <tr> — Angular adds class to <tr>
-  // so we use sibling selector trick via the cell modifier instead (handled in cell block above)
-}
-
-.release-group-cell {
-  padding: 12px 20px 12px 0 !important;
-  border-top: 2px solid $color-border !important;
-  border-bottom: 1px solid rgba($color-brand, 0.15) !important;
-  position: relative;
-
-  // Blue left accent bar (level 1 default)
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: linear-gradient(180deg, $color-brand 0%, #93c5fd 100%);
-    border-radius: 0 $radius-sm $radius-sm 0;
-  }
-
-  &__inner {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding-left: 20px;
-  }
-
-  &__icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-    color: $color-brand;
-    opacity: 0.85;
-  }
-
-  &__label {
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    color: $color-text-muted !important;
-    text-transform: uppercase;
-    letter-spacing: 0.9px;
-  }
-
-  &__name {
-    font-size: 13.5px !important;
-    font-weight: 700 !important;
-    color: $color-brand-dark !important;
-    letter-spacing: -0.2px;
-    font-family: $font-mono;
-  }
-
-  &__count {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 11px;
-    font-weight: 600;
-    color: $color-brand;
-    background: rgba($color-brand, 0.1);
-    border: 1px solid rgba($color-brand, 0.2);
-    padding: 2px 8px;
-    border-radius: $radius-pill;
-    line-height: 1.4;
-  }
-
-  // ── Level 2: Sub-release (1.x.x) — teal accent, indented ────────────────
-  &--level-2 {
-    border-top: 1px solid $color-border !important;
-    border-bottom: 1px solid rgba(#0d9488, 0.12) !important;
-
-    &::before { background: linear-gradient(180deg, #0d9488 0%, #5eead4 100%); }
-
-    .release-group-cell__inner  { padding-left: 36px; }
-    .release-group-cell__icon   { color: #0d9488; font-size: 14px; width: 14px; height: 14px; }
-    .release-group-cell__label  { color: #0f766e !important; }
-    .release-group-cell__name   { font-size: 12.5px !important; color: #0f766e !important; }
-    .release-group-cell__count  {
-      color: #0d9488;
-      background: rgba(#0d9488, 0.08);
-      border-color: rgba(#0d9488, 0.2);
-    }
-  }
-
-  // ── Level 3: Patch (1.x.x.x) — purple accent, more indented ────────────
-  &--level-3 {
-    border-top: 1px solid transparent !important;
-    border-bottom: 1px solid rgba($color-purple, 0.1) !important;
-
-    &::before { background: linear-gradient(180deg, $color-purple 0%, #a78bfa 100%); width: 3px; }
-
-    .release-group-cell__inner  { padding-left: 52px; }
-    .release-group-cell__icon   { color: $color-purple; font-size: 13px; width: 13px; height: 13px; }
-    .release-group-cell__label  { color: $color-purple !important; }
-    .release-group-cell__name   { font-size: 12px !important; color: #6d28d9 !important; }
-    .release-group-cell__count  {
-      color: $color-purple;
-      background: rgba($color-purple, 0.07);
-      border-color: rgba($color-purple, 0.2);
-      font-size: 10.5px;
-    }
-  }
-}
-
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Block: paginator
 // ═══════════════════════════════════════════════════════════════════════════
 .paginator {
-  margin-top: 8px;
+  margin-top: 6px;
   background: $color-bg-surface !important;
   border: 1px solid $color-border;
   border-radius: $radius-lg;
-  box-shadow: $shadow-card;
+  box-shadow: $shadow-xs;
   font-family: $font-primary !important;
   color: $color-text-muted;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Block: sidebar  (slide-over panel)
+// Block: sidebar
 // ═══════════════════════════════════════════════════════════════════════════
 .sidebar {
   position: fixed;
@@ -654,97 +561,96 @@ $transition-base: all 0.2s ease;
   transition: right 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   border-left: 1px solid $color-border;
 
-  &.sidebar--open {
-    right: 0;
-  }
+  &.sidebar--open { right: 0; }
 
-  // ── Header ──────────────────────────────────────────────────────────────
   &__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 18px 24px;
+    padding: 14px 18px;
     border-bottom: 1px solid $color-border;
-    background: $color-bg-subtle;
+    flex-shrink: 0;
+
+    button.mat-mdc-icon-button {
+      width: 28px !important;
+      height: 28px !important;
+      color: $color-text-muted !important;
+    }
   }
 
   &__title {
     margin: 0;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     color: $color-text-primary;
     font-family: $font-primary;
   }
 
-  // ── Loading Bar ────────────────────────────────────────────────────────
   &__loading-bar {
-    height: 3px;
+    height: 2px;
     width: 100%;
     background: linear-gradient(90deg, $color-brand 0%, $color-purple 50%, $color-brand 100%);
     background-size: 200% 100%;
-    animation: loadingBarMove 1.5s infinite linear;
+    animation: loadingBarMove 1.4s infinite linear;
+    flex-shrink: 0;
   }
 
-  // ── Body ────────────────────────────────────────────────────────────────
   &__body {
-    padding: 24px;
+    padding: 18px;
     flex: 1;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 10px;
     transition: opacity 0.2s ease;
 
-    &--saving {
-      opacity: 0.6;
-      pointer-events: none;
-    }
+    &--saving { opacity: 0.5; pointer-events: none; }
   }
 
   &__section-title {
-    margin: 0 0 12px;
-    font-size: 12px;
+    margin: 2px 0 0;
+    font-size: 10.5px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    color: $color-text-muted;
+    color: $color-text-faint;
   }
 
   &__divider {
     border: none;
     border-top: 1px solid $color-border;
-    margin: 20px 0;
+    margin: 2px 0;
   }
 
-  // ── Footer ──────────────────────────────────────────────────────────────
   &__footer {
-    padding: 16px 24px;
+    padding: 12px 18px;
     border-top: 1px solid $color-border;
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
-    background: $color-bg-subtle;
+    gap: 8px;
+    flex-shrink: 0;
+
+    button {
+      height: 32px !important;
+      font-size: 12.5px !important;
+      font-weight: 600 !important;
+      border-radius: 8px !important;
+    }
   }
 }
 
 @keyframes loadingBarMove {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
-// ─── Full-width helper ──────────────────────────────────────────────────────
 .w-full { width: 100%; }
 
-// ─── Sidebar backdrop ────────────────────────────────────────────────────────
 .sidebar-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.25);
-  backdrop-filter: blur(3px);
+  background: rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(2px);
   z-index: 999;
 }
 
@@ -752,15 +658,15 @@ $transition-base: all 0.2s ease;
 .release-chip-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 6px;
+  margin-bottom: 6px;
 }
 
 .release-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px 4px 12px;
+  gap: 5px;
+  padding: 3px 8px 3px 10px;
   border-radius: $radius-pill;
   background: $color-bg-subtle;
   border: 1px solid $color-border;
@@ -768,75 +674,79 @@ $transition-base: all 0.2s ease;
   font-weight: 600;
   color: $color-text-body;
   font-family: $font-mono;
-  transition: all 0.2s ease;
+  transition: $transition-fast;
 
   &__remove {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    width: 16px;
-    height: 16px;
+    font-size: 13px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
-    color: $color-text-muted;
+    color: $color-text-faint;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: $transition-fast;
 
-    &:hover {
-      background: rgba(239, 68, 68, 0.15);
-      color: $color-danger;
-    }
+    &:hover { background: rgba(220, 38, 38, 0.12); color: $color-danger; }
   }
 }
 
-.release-chip-empty {
-  color: $color-text-faint;
-  font-size: 13px;
-}
+.release-chip-empty { color: $color-text-faint; font-size: 12px; font-style: italic; }
 
-// ─── Meta info cells (Date & Time) ──────────────────────────────────────────
+// ─── Meta info cells ────────────────────────────────────────────────────────
 .meta-cell {
-  font-size: 11px !important;
-  color: $color-text-muted;
+  font-size: 10.5px !important;
+  color: $color-text-faint;
   white-space: nowrap;
   font-family: $font-mono;
 }
 
-// ─── User Avatar / Developer Badge ──────────────────────────────────────────
+// ─── User Badge ────────────────────────────────────────────────────────────
 .user-avatar {
   display: inline-flex;
   align-items: center;
-  padding: 3px 8px;
-  border-radius: $radius-sm;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: $radius-xs;
   background-color: $color-bg-subtle;
   border: 1px solid $color-border;
   font-size: 12px;
   font-weight: 500;
   color: $color-text-body;
-  max-width: 140px;
+  max-width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Angular Material global overrides  (scoped to component via ::ng-deep)
+// Angular Material global overrides
 // ═══════════════════════════════════════════════════════════════════════════
 ::ng-deep {
-  // Hide the subscript hint spacer to keep form fields compact
   .mat-mdc-form-field-subscript-wrapper { display: none !important; }
+  .sidebar__body .mat-mdc-form-field {
+    width: 100%;
 
-  // Tighten mat-form-field inside sidebar
-  .sidebar__body .mat-mdc-form-field { width: 100%; }
-
-  // Overrides for Expansion Panels
-  .hierarchical-accordion {
-    .mat-expansion-panel-body {
-      padding: 0 16px 16px !important;
+    // Compact height for sidebar inputs
+    .mat-mdc-text-field-wrapper { height: 44px !important; }
+    .mat-mdc-form-field-flex    { height: 44px !important; align-items: center; }
+    .mat-mdc-form-field-infix {
+      padding-top: 10px !important;
+      padding-bottom: 10px !important;
+      min-height: unset !important;
     }
+    .mdc-floating-label           { top: 22px !important; font-size: 14px; }
+    .mdc-floating-label--float-above { top: 30px !important; font-size: 11px !important; }
+
+    input.mat-mdc-input-element { font-size: 13.5px !important; }
+    .mat-mdc-select-value-text  { font-size: 13.5px !important; }
   }
 
-  // CSS variables definition on body
+  .hierarchical-accordion {
+    .mat-expansion-panel-body { padding: 0 12px 12px !important; }
+  }
+
   body {
     --color-bg-page:      #f1f5f9;
     --color-bg-surface:   #ffffff;
@@ -844,31 +754,25 @@ $transition-base: all 0.2s ease;
     --color-bg-subtle-hover:#f1f5f9;
     --color-border:       #e2e8f0;
     --color-border-strong:#cbd5e1;
-
     --color-text-primary: #0f172a;
     --color-text-body:    #334155;
     --color-text-muted:   #64748b;
     --color-text-faint:   #94a3b8;
-
-    --color-brand:        #3b82f6;
+    --color-brand:        #2563eb;
     --color-brand-dark:   #1d4ed8;
     --color-brand-light:  #eff6ff;
-
     --color-success:      #16a34a;
     --color-success-bg:   #f0fdf4;
     --color-success-border:#bbf7d0;
-
     --color-warn:         #d97706;
     --color-warn-bg:      #fffbeb;
     --color-warn-border:  #fde68a;
-
     --color-danger:       #dc2626;
-    --color-danger-bg:    #fff5f5;
-    --color-danger-border:#fecaca;
-
+    --color-danger-bg:    #fff1f2;
+    --color-danger-border:#fecdd3;
     --color-purple:       #7c3aed;
-    --color-purple-bg:    #f5f3ff;
-    --color-loading-bg:   rgba(255, 255, 255, 0.7);
+    --color-purple-bg:    #faf5ff;
+    --color-loading-bg:   rgba(255, 255, 255, 0.75);
   }
 
   body.dark-theme {
@@ -878,259 +782,174 @@ $transition-base: all 0.2s ease;
     --color-bg-subtle-hover:#334155;
     --color-border:       #334155;
     --color-border-strong:#475569;
-
     --color-text-primary: #f8fafc;
     --color-text-body:    #cbd5e1;
     --color-text-muted:   #94a3b8;
     --color-text-faint:   #64748b;
-
-    --color-brand-light:  #1e293b;
-    --color-success-bg:   #14532d;
+    --color-brand-light:  rgba(37, 99, 235, 0.12);
+    --color-success-bg:   rgba(22, 163, 74, 0.12);
     --color-success-border:#15803d;
-    --color-warn-bg:      #78350f;
+    --color-warn-bg:      rgba(217, 119, 6, 0.12);
     --color-warn-border:  #b45309;
-    --color-danger-bg:    #7f1d1d;
+    --color-danger-bg:    rgba(220, 38, 38, 0.12);
     --color-danger-border:#b91c1c;
-    --color-purple-bg:    #4c1d95;
-    --color-loading-bg:   rgba(15, 23, 42, 0.7);
+    --color-purple-bg:    rgba(124, 58, 237, 0.12);
+    --color-loading-bg:   rgba(15, 23, 42, 0.75);
 
-    // Angular Material Dark Mode overrides
     .mat-mdc-dialog-container .mdc-dialog__surface {
       background-color: var(--color-bg-surface) !important;
       color: var(--color-text-primary) !important;
     }
-
-    .mat-mdc-select-panel {
-      background-color: var(--color-bg-surface) !important;
-    }
-
+    .mat-mdc-select-panel { background-color: var(--color-bg-surface) !important; }
     .mat-mdc-option {
       color: var(--color-text-body) !important;
-      &:hover:not(.mdc-list-item--disabled) {
-        background-color: var(--color-bg-subtle) !important;
-      }
+      &:hover:not(.mdc-list-item--disabled) { background-color: var(--color-bg-subtle) !important; }
     }
-    
     .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
       background-color: var(--color-border) !important;
-      .mdc-list-item__primary-text {
-        color: var(--color-brand) !important;
-      }
+      .mdc-list-item__primary-text { color: var(--color-brand) !important; }
     }
-
-    .mat-mdc-select-value {
-      color: var(--color-text-body) !important;
-    }
-
-    .mat-mdc-form-field-focus-overlay {
-      background-color: transparent !important;
-    }
-
-    input.mat-mdc-input-element,
-    textarea.mat-mdc-input-element {
-      color: var(--color-text-primary) !important;
-    }
-
+    .mat-mdc-select-value { color: var(--color-text-body) !important; }
+    .mat-mdc-form-field-focus-overlay { background-color: transparent !important; }
+    input.mat-mdc-input-element, textarea.mat-mdc-input-element { color: var(--color-text-primary) !important; }
     .mat-mdc-form-field {
       .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__leading,
       .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__notch,
       .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__trailing {
         border-color: var(--color-border) !important;
       }
-
-      .mdc-text-field--outlined:not(.mdc-text-field--disabled):hover .mdc-notched-outline__leading,
-      .mdc-text-field--outlined:not(.mdc-text-field--disabled):hover .mdc-notched-outline__notch,
-      .mdc-text-field--outlined:not(.mdc-text-field--disabled):hover .mdc-notched-outline__trailing {
-        border-color: var(--color-border-strong) !important;
-      }
-
-      // Labels (floating and stacked)
-      .mdc-floating-label,
-      .mat-mdc-form-field-label {
-        color: var(--color-text-muted) !important;
-      }
-
-      // Focused label
-      &.mat-focused .mdc-floating-label {
-        color: var(--color-brand) !important;
-      }
-
-      // Placeholders
-      input::placeholder,
-      textarea::placeholder,
-      .mat-mdc-select-placeholder {
-        color: var(--color-text-faint) !important;
-      }
-
-      // Select arrow icon
-      .mat-mdc-select-arrow {
-        color: var(--color-text-muted) !important;
-      }
+      .mdc-floating-label, .mat-mdc-form-field-label { color: var(--color-text-muted) !important; }
+      &.mat-focused .mdc-floating-label { color: var(--color-brand) !important; }
+      .mat-mdc-select-arrow { color: var(--color-text-muted) !important; }
     }
-
-    .sidebar {
-      background: var(--color-bg-surface) !important;
-      border-left: 1px solid var(--color-border) !important;
-    }
-    
-    .mat-mdc-header-row {
-      background-color: var(--color-bg-subtle) !important;
-    }
-
-    .mat-mdc-paginator {
-      background-color: var(--color-bg-surface) !important;
-      color: var(--color-text-body) !important;
-      border: 1px solid var(--color-border) !important;
-    }
-
-    .mat-mdc-card {
-      background-color: var(--color-bg-surface) !important;
-      color: var(--color-text-primary) !important;
-    }
-
-    // Outlined / Stroked button overrides
-    .mat-mdc-outlined-button:not(.mdc-button--disabled) {
-      color: var(--color-text-body) !important;
-      border-color: var(--color-border) !important;
-      
-      .mat-icon {
-        color: var(--color-text-muted) !important;
-      }
-    }
+    .sidebar { background: var(--color-bg-surface) !important; border-left: 1px solid var(--color-border) !important; }
+    .mat-mdc-header-row { background-color: var(--color-bg-subtle) !important; }
+    .mat-mdc-paginator { background-color: var(--color-bg-surface) !important; color: var(--color-text-body) !important; border: 1px solid var(--color-border) !important; }
+    .mat-mdc-outlined-button:not(.mdc-button--disabled) { color: var(--color-text-body) !important; border-color: var(--color-border) !important; .mat-icon { color: var(--color-text-muted) !important; } }
+    .mat-expansion-panel { background: var(--color-bg-surface) !important; color: var(--color-text-body) !important; }
+    .mat-expansion-panel-header { background: var(--color-bg-subtle) !important; color: var(--color-text-primary) !important; &:hover { background: var(--color-bg-subtle-hover) !important; } }
+    .mat-expansion-indicator::after { border-color: var(--color-text-muted) !important; }
   }
 }
 
-// ─── Hierarchical Accordion & Version Panels ──────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// Hierarchical Accordion & Version Panels
+// ═══════════════════════════════════════════════════════════════════════════
 .hierarchical-accordion {
   display: block;
   box-shadow: none !important;
   background: transparent !important;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 
   .mat-expansion-panel {
     background: $color-bg-surface;
     border: 1px solid $color-border;
     border-radius: $radius-lg !important;
-    margin-bottom: 16px;
-    box-shadow: $shadow-card !important;
+    margin-bottom: 8px;
+    box-shadow: $shadow-sm !important;
     overflow: hidden;
-    transition: $transition-base;
+    transition: border-color 0.15s ease;
 
-    &:hover {
-      border-color: $color-border-strong;
-    }
+    &:hover { border-color: $color-border-strong; }
+    &:last-child { margin-bottom: 0; }
   }
 
-  // Nested accordion levels indentation and styling
   .hierarchical-accordion {
-    margin-top: 16px;
-    padding-left: 20px;
-    border-left: 2px solid rgba($color-brand, 0.15);
+    margin-top: 10px;
+    padding-left: 14px;
+    border-left: 2px solid $color-border;
     margin-bottom: 0;
+
+    .hierarchical-accordion {
+      padding-left: 10px;
+    }
   }
 }
 
 .version-panel {
   &--l1 {
-    border-left: 4px solid $color-brand !important;
+    border-left: 3px solid $color-brand !important;
     .version-panel__icon { color: $color-brand; }
-    .version-panel__name { color: $color-brand; }
+    .version-panel__name { color: $color-brand; font-weight: 700; }
   }
-
   &--l2 {
-    border-left: 4px solid $color-success !important;
-    .version-panel__icon { color: $color-success; }
-    .version-panel__name { color: $color-success; }
+    border-left: 3px solid #0d9488 !important;
+    .version-panel__icon { color: #0d9488; }
+    .version-panel__name { color: #0f766e; font-weight: 600; }
   }
-
   &--l3 {
-    border-left: 4px solid $color-purple !important;
+    border-left: 3px solid $color-purple !important;
     .version-panel__icon { color: $color-purple; }
-    .version-panel__name { color: $color-purple; }
+    .version-panel__name { color: #6d28d9; font-weight: 600; }
   }
 
   mat-expansion-panel-header {
-    height: 52px !important;
-    padding: 0 16px !important;
-    background: $color-bg-subtle;
+    height: 44px !important;
+    padding: 0 14px !important;
+    background: $color-bg-subtle !important;
     border-bottom: 1px solid $color-border;
-
-    &:hover {
-      background: $color-bg-subtle-hover !important;
-    }
+    &:hover { background: $color-bg-subtle-hover !important; }
   }
 
   mat-panel-title {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: 700;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $color-text-primary;
   }
 
-  &__icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-  }
+  &__icon { font-size: 15px; width: 15px; height: 15px; opacity: 0.9; }
 
   &__label {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: var(--color-text-muted, $color-text-muted);
-    background: var(--color-border, rgba(0, 0, 0, 0.05));
-    padding: 3px 8px;
-    border-radius: 12px;
+    letter-spacing: 0.7px;
+    color: $color-text-faint;
+    background: $color-border;
+    padding: 2px 6px;
+    border-radius: 9px;
   }
 
   &__name {
-    font-size: 14px;
-    font-weight: 700;
-    margin-left: 6px;
+    font-size: 12.5px;
+    margin-left: 1px;
+    font-family: $font-mono;
   }
 
   &__add-sub {
-    margin-left: 8px;
-    font-size: 18px !important;
-    width: 18px !important;
-    height: 18px !important;
+    margin-left: 4px;
+    font-size: 15px !important;
+    width: 15px !important;
+    height: 15px !important;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    opacity: 0.65;
+    opacity: 0.35;
     cursor: pointer;
-    transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease;
-    color: inherit;
+    transition: opacity 0.15s ease, transform 0.15s ease;
 
-    &:hover {
-      opacity: 1;
-      color: $color-brand !important;
-      transform: scale(1.2);
-    }
+    &:hover { opacity: 1; color: $color-brand !important; transform: scale(1.15); }
   }
 
-  mat-panel-description {
-    justify-content: flex-end;
-    align-items: center;
-  }
+  mat-panel-description { justify-content: flex-end; align-items: center; }
 
   &__count {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 600;
-    padding: 2px 8px;
+    padding: 2px 7px;
     border-radius: $radius-pill;
     background: $color-border;
-    color: $color-text-body;
+    color: $color-text-muted;
+    font-family: $font-primary;
   }
 
-  &__content {
-    padding: 16px 0 0;
-  }
+  &__content { padding: 10px 0 0; }
 }
 
-// Wrapper for table inside expansion panels to handle overflow
+// Table wrapper inside expansion panels
 .data-grid__table-wrapper {
   overflow-x: auto;
   border-radius: $radius-md;
@@ -1138,78 +957,34 @@ $transition-base: all 0.2s ease;
   background: $color-bg-surface;
 }
 
-// Sidebar user-badge (auto-filled developer from login)
+// Sidebar user-badge
 .sidebar__user-badge {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: $radius-md;
   background: $color-brand-light;
-  border: 1px solid $color-brand;
+  border: 1px solid rgba(37, 99, 235, 0.2);
   color: $color-brand-dark;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 
-  mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-    color: $color-brand;
-  }
-
-  span {
-    flex: 1;
-  }
-
-  small {
-    font-size: 10px;
-    font-weight: 400;
-    color: $color-text-muted;
-  }
+  mat-icon { font-size: 16px; width: 16px; height: 16px; color: $color-brand; }
+  span { flex: 1; }
+  small { font-size: 10px; font-weight: 400; color: $color-text-muted; }
 }
 
-// Colored row action buttons with hover backgrounds (SaaS style)
-.row-actions {
+.btn-releases { font-size: 13px; }
+
+.bulk-actions {
   display: flex;
-  justify-content: center;
-  gap: 4px;
-
-  button.mat-mdc-icon-button {
-    width: 32px !important;
-    height: 32px !important;
-    line-height: 32px !important;
-    padding: 0 !important;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-
-    .mat-icon {
-      font-size: 18px !important;
-      width: 18px !important;
-      height: 18px !important;
-    }
-
-    &[color="primary"] {
-      color: $color-brand !important;
-      opacity: 0.7;
-
-      &:hover {
-        opacity: 1;
-        background: rgba(59, 130, 246, 0.08) !important;
-      }
-    }
-
-    &[color="warn"] {
-      color: $color-danger !important;
-      opacity: 0.7;
-
-      &:hover {
-        opacity: 1;
-        background: rgba(220, 38, 38, 0.08) !important;
-      }
-    }
-  }
+  align-items: center;
+  gap: 10px;
+  background: $color-bg-surface;
+  padding: 5px 12px;
+  border-radius: $radius-md;
+  border: 1px solid $color-border;
+  box-shadow: $shadow-xs;
 }
