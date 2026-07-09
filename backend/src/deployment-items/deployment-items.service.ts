@@ -310,6 +310,29 @@ export class DeploymentItemsService {
               pendingIssues: t.pendingIssues,
             },
           });
+        } else if (t.ticketId && t.ticketId.trim() !== '') {
+          let ticket = await this.prisma.ticket.findFirst({
+            where: { ticketId: t.ticketId.trim() },
+          });
+          if (!ticket) {
+            ticket = await this.prisma.ticket.create({
+              data: {
+                ticketId: t.ticketId.trim(),
+                summary: t.summary || '',
+                changeType: (t.changeType || 'Feature') as any,
+                qcStatus: (t.qcStatus || 'None') as any,
+                pendingIssues: t.pendingIssues || '',
+              },
+            });
+          }
+          await this.prisma.deploymentItem.update({
+            where: { id },
+            data: {
+              tickets: {
+                connect: [{ id: ticket.id }],
+              },
+            },
+          });
         }
       }
     }

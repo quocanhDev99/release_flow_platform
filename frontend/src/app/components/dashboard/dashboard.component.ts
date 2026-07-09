@@ -657,14 +657,20 @@ export class DashboardComponent implements OnInit {
   }
 
   // open panel to edit ticket detail (Pending Issues, builds)
-  openEditPanel(item: DeploymentItem, ticket: Ticket) {
-    console.log("🚀 ~ DashboardComponent ~ openEditPanel ~ item:", item)
+  openEditPanel(item: DeploymentItem, ticket?: Ticket | null) {
     this.isCreateMode = false;
     this.activeItem = {
       ...item,
       releaseStreamId: item.releaseStreamId
     };
-    this.activeTicket = { ...ticket };
+    this.activeTicket = ticket ? { ...ticket } : {
+      id: undefined,
+      ticketId: '',
+      summary: '',
+      changeType: 'Feature',
+      qcStatus: '—',
+      pendingIssues: ''
+    } as any;
     this.activeBranchBuilds = item.builds
       ? item.builds
         .filter(b => b.status === 'SUCCESS' && b.environment && this.branchBuildOptions.includes(b.environment.name))
