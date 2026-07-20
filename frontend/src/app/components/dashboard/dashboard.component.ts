@@ -841,6 +841,26 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  onBranchChange(branchName: string, mode: 'create' | 'edit') {
+    if (!branchName) return;
+    
+    // Regex to match ticket IDs like MAG-18878, SBMV1-405, etc.
+    const ticketRegex = /[a-zA-Z]+[a-zA-Z0-9]*-\d+/g;
+    const matches = branchName.match(ticketRegex);
+    
+    if (matches && matches.length > 0) {
+      // Deduplicate and format to uppercase
+      const uniqueTickets = Array.from(new Set(matches.map(m => m.toUpperCase())));
+      const ticketStr = uniqueTickets.join(', ');
+      
+      if (mode === 'create') {
+        this.newTicketId = ticketStr;
+      } else if (mode === 'edit' && this.activeTicket) {
+        this.activeTicket.ticketId = ticketStr;
+      }
+    }
+  }
+
   // Save details from panel
   saveTicketDetails() {
     if (this.isCreateMode) {
@@ -968,35 +988,64 @@ export class DashboardComponent implements OnInit {
           return;
         }
 
-        const headers = data[0].map(h => String(h).toLowerCase().trim());
-        const getColIndex = (names: string[]) => headers.findIndex(h => names.some(n => h.includes(n)));
+        let headerRowIndex = -1;
+        let headers: string[] = [];
+        let idxTicket = -1;
+        let getColIndex: (names: string[]) => number = () => -1;
 
-        const idxRepo = getColIndex(['repo', 'kho nguồn']);
-        const idxTicket = getColIndex(['ticket', 'mã ticket']);
-        const idxSummary = getColIndex(['summary', 'tóm tắt', 'mô tả']);
+        // Scan the first 20 rows to find the actual header row
+        const maxScan = Math.min(data.length, 20);
+        for (let r = 0; r < maxScan; r++) {
+          if (!data[r] || !Array.isArray(data[r])) continue;
+          
+          const currentHeaders = data[r].map(h => h ? String(h).toLowerCase().trim() : '');
+          const currentGetColIndex = (names: string[]) => currentHeaders.findIndex(h => h && names.some(n => h.includes(n)));
+          
+          const tIdx = currentGetColIndex(['ticket', 'mã ticket', 'key', 'issue', 'mã lỗi', 'task']);
+          if (tIdx !== -1) {
+            headerRowIndex = r;
+            headers = currentHeaders;
+            getColIndex = currentGetColIndex;
+            idxTicket = tIdx;
+            break;
+          }
+        }
+
+        if (headerRowIndex === -1 || idxTicket === -1) {
+          this.toast.error('Column "Ticket ID" or "Ticket" was not found in the uploaded file.');
+          return;
+        }
+
+        const idxRepo = getColIndex(['repo', 'kho nguồn', 'project']);
+        const idxSummary = getColIndex(['summary', 'tóm tắt', 'mô tả', 'title', 'tiêu đề']);
         const idxType = getColIndex(['type', 'phân loại', 'loại']);
         const idxRelease = getColIndex(['release', 'fix version', 'bản release', 'phiên bản']);
         const idxBranch = getColIndex(['branch', 'nhánh', 'nhánh phát triển']);
         const idxMergeDevel = getColIndex(['merge on devel', 'devel', 'merge devel']);
         const idxQC = getColIndex(['ready for qc', 'qc status', 'trạng thái qc', 'qc']);
         const idxPending = getColIndex(['pending issues', 'tồn đọng', 'lỗi']);
-        const idxUser = getColIndex(['user', 'developer', 'người merge', 'tài khoản']);
+        const idxUser = getColIndex(['user', 'developer', 'người merge', 'tài khoản', 'assignee']);
         const idxBranchBuild = getColIndex(['branch build', 'build']);
 
-        if (idxTicket === -1) {
-          this.toast.error('Column "Ticket ID" or "Ticket" was not found in the uploaded file.');
-          return;
-        }
-
+        let currentRepo = 'Core';
         const items: any[] = [];
-        for (let i = 1; i < data.length; i++) {
+        for (let i = headerRowIndex + 1; i < data.length; i++) {
           const row = data[i];
-          if (!row || row.length === 0 || !row[idxTicket]) continue;
+          if (!row || row.length === 0) continue;
 
+          // Update current repository if specified in this row
+          if (idxRepo !== -1 && row[idxRepo]) {
+            const val = String(row[idxRepo]).trim();
+            if (val) {
+              currentRepo = val;
+            }
+          }
+
+          if (!row[idxTicket]) continue;
           const ticketId = String(row[idxTicket]).trim();
           if (!ticketId) continue;
 
-          const repoName = idxRepo !== -1 && row[idxRepo] ? String(row[idxRepo]).trim() : 'Core';
+          const repoName = currentRepo;
           const summary = idxSummary !== -1 && row[idxSummary] ? String(row[idxSummary]).trim() : '';
           const changeType = idxType !== -1 && row[idxType] ? String(row[idxType]).trim() : 'Feature';
           const releaseVersion = idxRelease !== -1 && row[idxRelease] ? String(row[idxRelease]).trim() : '';

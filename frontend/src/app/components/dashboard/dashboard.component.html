@@ -513,7 +513,7 @@
 
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>Development Branch *</mat-label>
-        <input matInput [(ngModel)]="newSourceBranch" placeholder="e.g. feature/auth-fix">
+        <input matInput [(ngModel)]="newSourceBranch" (ngModelChange)="onBranchChange($event, 'create')" placeholder="e.g. feature/auth-fix">
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="w-full">
@@ -598,7 +598,7 @@
 
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>Development Branch *</mat-label>
-        <input matInput [(ngModel)]="activeItem.sourceBranch">
+        <input matInput [(ngModel)]="activeItem.sourceBranch" (ngModelChange)="onBranchChange($event, 'edit')">
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="w-full">
