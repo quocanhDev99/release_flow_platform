@@ -34,7 +34,7 @@ timeline
 *   **Repository Webhooks**: Automated endpoints (`POST /api/webhooks/github` and `/bitbucket`) that parse pull request payloads to extract ticket IDs (`MAG-\d+`), source branches, and commit authors.
 *   **Target Release Matching**: Algorithmic mapping of branches to releases based on naming conventions (e.g., target `release/1.12` maps to `sow/1.12.x`).
 *   **ChatOps alerts**: Realtime webhook notifications sent to **Slack** and **Microsoft Teams** on deployment creation/state changes.
-*   **Profile Settings**: Let users update usernames, emails, passwords, and upload Base64 avatars directly from the frontend client.
+*   **Profile Settings**: Let users update usernames, emails, passwords, avatars, and configure Personal Notification Preferences (Telegram, Slack, Teams, Email) directly from the frontend client.
 
 ---
 

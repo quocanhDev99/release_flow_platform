@@ -23,6 +23,10 @@ erDiagram
         string email
         string password
         string theme
+        string telegramChatId
+        string slackWebhookUrl
+        string teamsWebhookUrl
+        boolean notifyViaEmail
     }
 
     RELEASE_STREAM {
@@ -77,7 +81,7 @@ erDiagram
 * Manages source code repositories (e.g., `Core`, `E-com`).
 
 ### 2. USER
-* Manages user accounts of developers performing code merges. Stores hashed `password` and `theme` preferences.
+* Manages user accounts of developers performing code merges. Stores hashed `password`, `theme` preferences, and Personal Notification configurations (`telegramChatId`, `slackWebhookUrl`, `teamsWebhookUrl`, `notifyViaEmail`).
 
 ### 3. RELEASE_STREAM
 * Manages the list of release versions (Fix version).

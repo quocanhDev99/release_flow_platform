@@ -2,10 +2,24 @@
 
 The Release Flow Platform supports multi-channel alerts (Slack, Teams, Telegram, Email) whenever a Deployment Item or Schedule is created/updated/deleted, or imported via AI OCR.
 
-This document guides you through quickly setting up **Telegram, Email (Gmail SMTP), MS Teams, and Slack** to receive direct notifications. 
+This document guides you through quickly setting up **Telegram, Email (Gmail SMTP), MS Teams, and Slack** for both team-wide broadcasts and personal direct messages.
+
+## 🎯 Notification Scopes: System vs Personal
+
+The platform supports two independent layers of notifications to prevent alert fatigue and ensure the right people get the right messages:
+
+1. **System-wide Notifications (Global / Team Channel)**
+   * **Purpose:** Broadcasts major events (new schedules, OCR imports, deployments) to a shared team channel (e.g., `#deployments` on Slack, or a Telegram Group).
+   * **Configured via:** Click the ⚙️ (**System Settings**) icon in the top right corner.
+   * **Requirement:** Admins *must* configure the `Telegram Bot Token` and `SMTP Host/Credentials` here for the system to be able to send *any* Telegram messages or Emails, even personal ones.
+
+2. **Personal Notifications (Direct Messages)**
+   * **Purpose:** Sends Direct Messages (DMs) to individual developers for updates directly relevant to them (e.g., their ticket status changes).
+   * **Configured via:** Click your User Avatar -> **Profile** -> **Personal Direct Messages** section.
+   * **Usage:** Enter your personal `Telegram Chat ID`, a Webhook URL that points to a private DM with yourself in Slack/Teams, or toggle `Receive Email Notifications`.
 
 > [!TIP]
-> **Direct Web UI Configuration:** Since V2.5, editing the `.env` file is no longer required. Simply log into the system, click the ⚙️ (System Settings) icon in the top right, enter your Webhook URLs/Tokens in the **Alerts & Notifications** tab, and save.
+> **No `.env` required:** Since V2.5, all of the above configurations are done entirely via the Web UI!
 
 ---
 

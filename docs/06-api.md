@@ -46,3 +46,4 @@
 * **POST `/users/register`**: Registers a new developer account.
 * **POST `/users/login`**: Authenticates user credentials and returns the user profile (excluding password).
 * **PATCH `/users/{id}/theme`**: Configures the Light/Dark mode preference for the current user and saves it to the database.
+* **PUT `/users/{id}`**: Updates user profile details, including personal notification preferences (Telegram Chat ID, Slack/Teams Webhook URLs, and Email notifications).
