@@ -29,6 +29,10 @@ model User {
   theme             String           @default("light")
   resetToken        String?
   resetTokenExpires DateTime?
+  telegramChatId    String?
+  slackWebhookUrl   String?
+  teamsWebhookUrl   String?
+  notifyViaEmail    Boolean          @default(false)
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
   deploymentItems   DeploymentItem[]

@@ -11,6 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { ToastComponent } from '../toast/toast.component';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 const AVATAR_STORAGE_KEY = 'rfp_user_avatar';
 
@@ -27,6 +28,7 @@ const AVATAR_STORAGE_KEY = 'rfp_user_avatar';
     MatIconModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
+    MatSlideToggleModule,
     ToastComponent,
   ],
   templateUrl: './profile.component.html',
@@ -43,6 +45,12 @@ export class ProfileComponent implements OnInit {
   email = '';
   password = '';
   confirmPassword = '';
+  
+  telegramChatId = '';
+  slackWebhookUrl = '';
+  teamsWebhookUrl = '';
+  notifyViaEmail = false;
+
   loading = signal(false);
   showPassword = false;
   avatarUrl = signal<string | null>(null);
@@ -66,6 +74,10 @@ export class ProfileComponent implements OnInit {
     }
     this.username = user.username;
     this.email = user.email;
+    this.telegramChatId = user.telegramChatId || '';
+    this.slackWebhookUrl = user.slackWebhookUrl || '';
+    this.teamsWebhookUrl = user.teamsWebhookUrl || '';
+    this.notifyViaEmail = user.notifyViaEmail || false;
 
     // Restore saved avatar from localStorage
     const savedAvatar = localStorage.getItem(`${AVATAR_STORAGE_KEY}_${user.id}`);
@@ -133,6 +145,10 @@ export class ProfileComponent implements OnInit {
     const updateData: any = {
       username: this.username.trim(),
       email: this.email.trim(),
+      telegramChatId: this.telegramChatId.trim(),
+      slackWebhookUrl: this.slackWebhookUrl.trim(),
+      teamsWebhookUrl: this.teamsWebhookUrl.trim(),
+      notifyViaEmail: this.notifyViaEmail,
     };
 
     if (this.password) {

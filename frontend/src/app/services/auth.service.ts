@@ -46,7 +46,15 @@ export class AuthService {
     );
   }
 
-  updateProfile(data: { username?: string; email?: string; password?: string }): Observable<User> {
+  updateProfile(data: { 
+    username?: string; 
+    email?: string; 
+    password?: string;
+    telegramChatId?: string;
+    slackWebhookUrl?: string;
+    teamsWebhookUrl?: string;
+    notifyViaEmail?: boolean;
+  }): Observable<User> {
     const user = this._currentUser;
     if (!user) throw new Error('Not logged in');
     return this.http.put<User>(`${this.apiUrl}/users/${user.id}`, data).pipe(

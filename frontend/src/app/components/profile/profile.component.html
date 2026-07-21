@@ -112,6 +112,53 @@
           </div>
         </div>
 
+        <!-- Divider -->
+        <div class="edit-card__divider"><span>Notifications</span></div>
+
+        <!-- Personal Notifications section -->
+        <div class="edit-card__section">
+          <h3 class="edit-card__section-title edit-card__section-title--info">
+            <mat-icon>notifications_active</mat-icon>
+            Personal Direct Messages
+            <span class="edit-card__badge">Optional</span>
+          </h3>
+          <p class="edit-card__section-subtitle" style="font-size: 13px; color: #666; margin: -10px 0 15px 32px;">
+            Configure your personal webhooks to receive direct messages for your deployments.
+          </p>
+
+          <div class="edit-card__fields">
+            <div class="field-group">
+              <label class="field-label">Teams Webhook URL</label>
+              <mat-form-field appearance="outline" class="field-input w-100">
+                <input id="profile-teams" matInput [(ngModel)]="teamsWebhookUrl" placeholder="https://<tenant>.webhook.office.com/...">
+                <mat-icon matSuffix>groups</mat-icon>
+              </mat-form-field>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Slack Webhook URL</label>
+              <mat-form-field appearance="outline" class="field-input w-100">
+                <input id="profile-slack" matInput [(ngModel)]="slackWebhookUrl" placeholder="https://hooks.slack.com/services/...">
+                <mat-icon matSuffix>chat</mat-icon>
+              </mat-form-field>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Telegram Chat ID</label>
+              <mat-form-field appearance="outline" class="field-input w-100">
+                <input id="profile-telegram" matInput [(ngModel)]="telegramChatId" placeholder="e.g. 123456789">
+                <mat-icon matSuffix>telegram</mat-icon>
+              </mat-form-field>
+            </div>
+
+            <div class="field-group" style="padding-top: 10px;">
+              <mat-slide-toggle [(ngModel)]="notifyViaEmail" color="primary">
+                Receive Email Notifications
+              </mat-slide-toggle>
+            </div>
+          </div>
+        </div>
+
         <!-- Actions -->
         <div class="edit-card__actions">
           <button mat-stroked-button class="btn-cancel" (click)="onBack()">

@@ -33,6 +33,10 @@ export class UsersController {
         username: true,
         email: true,
         theme: true,
+        telegramChatId: true,
+        slackWebhookUrl: true,
+        teamsWebhookUrl: true,
+        notifyViaEmail: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -186,9 +190,26 @@ export class UsersController {
   @Put(':id')
   async updateProfile(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { username?: string; email?: string; password?: string },
+    @Body() body: {
+      username?: string;
+      email?: string;
+      password?: string;
+      telegramChatId?: string;
+      slackWebhookUrl?: string;
+      teamsWebhookUrl?: string;
+      notifyViaEmail?: boolean;
+    },
   ) {
-    const { username, email, password } = body;
+    const {
+      username,
+      email,
+      password,
+      telegramChatId,
+      slackWebhookUrl,
+      teamsWebhookUrl,
+      notifyViaEmail,
+    } = body;
+
     const updateData: any = {};
 
     if (username) {
@@ -215,6 +236,22 @@ export class UsersController {
       updateData.password = await bcrypt.hash(password, 10);
     }
 
+    if (telegramChatId !== undefined) {
+      updateData.telegramChatId = telegramChatId;
+    }
+
+    if (slackWebhookUrl !== undefined) {
+      updateData.slackWebhookUrl = slackWebhookUrl;
+    }
+
+    if (teamsWebhookUrl !== undefined) {
+      updateData.teamsWebhookUrl = teamsWebhookUrl;
+    }
+
+    if (notifyViaEmail !== undefined) {
+      updateData.notifyViaEmail = notifyViaEmail;
+    }
+
     const updatedUser = await this.prisma.user.update({
       where: { id },
       data: updateData,
@@ -223,6 +260,10 @@ export class UsersController {
         username: true,
         email: true,
         theme: true,
+        telegramChatId: true,
+        slackWebhookUrl: true,
+        teamsWebhookUrl: true,
+        notifyViaEmail: true,
         createdAt: true,
         updatedAt: true,
       },

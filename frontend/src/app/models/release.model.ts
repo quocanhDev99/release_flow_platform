@@ -10,6 +10,10 @@ export interface User {
   username: string;
   email: string;
   theme?: string;
+  telegramChatId?: string;
+  slackWebhookUrl?: string;
+  teamsWebhookUrl?: string;
+  notifyViaEmail?: boolean;
 }
 
 export interface ReleaseStream {

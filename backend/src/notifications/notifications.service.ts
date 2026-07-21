@@ -15,9 +15,15 @@ export class NotificationsService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async sendSlackNotification(message: string): Promise<boolean> {
-    const dbWebhookUrl = await this.settingsService.getSetting('SLACK_WEBHOOK_URL');
-    const webhookUrl = dbWebhookUrl || process.env.SLACK_WEBHOOK_URL;
+  async sendSlackNotification(
+    message: string,
+    overrideWebhookUrl?: string,
+  ): Promise<boolean> {
+    let webhookUrl = overrideWebhookUrl;
+    if (!webhookUrl) {
+      const dbWebhookUrl = await this.settingsService.getSetting('SLACK_WEBHOOK_URL');
+      webhookUrl = dbWebhookUrl || process.env.SLACK_WEBHOOK_URL;
+    }
     if (!webhookUrl) {
       this.logger.warn('SLACK_WEBHOOK_URL is not configured.');
       return false;
@@ -43,10 +49,14 @@ export class NotificationsService {
   async sendTeamsNotification(
     title: string,
     message: string,
-    developerUsername?: string
+    developerUsername?: string,
+    overrideWebhookUrl?: string
   ): Promise<boolean> {
-    const dbWebhookUrl = await this.settingsService.getSetting('TEAMS_WEBHOOK_URL');
-    const webhookUrl = dbWebhookUrl || process.env.TEAMS_WEBHOOK_URL;
+    let webhookUrl = overrideWebhookUrl;
+    if (!webhookUrl) {
+      const dbWebhookUrl = await this.settingsService.getSetting('TEAMS_WEBHOOK_URL');
+      webhookUrl = dbWebhookUrl || process.env.TEAMS_WEBHOOK_URL;
+    }
     if (!webhookUrl) {
       this.logger.warn('TEAMS_WEBHOOK_URL is not configured.');
       return false;
@@ -120,12 +130,15 @@ export class NotificationsService {
     }
   }
 
-  async sendTelegramNotification(message: string): Promise<boolean> {
+  async sendTelegramNotification(message: string, overrideChatId?: string): Promise<boolean> {
     const dbBotToken = await this.settingsService.getSetting('TELEGRAM_BOT_TOKEN');
-    const dbChatId = await this.settingsService.getSetting('TELEGRAM_CHAT_ID');
-    
     const botToken = dbBotToken || process.env.TELEGRAM_BOT_TOKEN;
-    const chatId = dbChatId || process.env.TELEGRAM_CHAT_ID;
+
+    let chatId = overrideChatId;
+    if (!chatId) {
+      const dbChatId = await this.settingsService.getSetting('TELEGRAM_CHAT_ID');
+      chatId = dbChatId || process.env.TELEGRAM_CHAT_ID;
+    }
     
     if (!botToken || !chatId) {
       this.logger.warn('TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not configured.');
@@ -154,20 +167,24 @@ export class NotificationsService {
     }
   }
 
-  async sendEmailNotification(subject: string, htmlBody: string): Promise<boolean> {
+  async sendEmailNotification(subject: string, htmlBody: string, overrideToEmail?: string): Promise<boolean> {
     const dbHost = await this.settingsService.getSetting('SMTP_HOST');
     const dbPort = await this.settingsService.getSetting('SMTP_PORT');
     const dbUser = await this.settingsService.getSetting('SMTP_USER');
     const dbPass = await this.settingsService.getSetting('SMTP_PASS');
     const dbFrom = await this.settingsService.getSetting('SMTP_FROM');
-    const dbTo = await this.settingsService.getSetting('SMTP_TO');
 
     const host = dbHost || process.env.SMTP_HOST;
     const port = dbPort ? parseInt(dbPort) : (process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587);
     const user = dbUser || process.env.SMTP_USER;
     const pass = dbPass || process.env.SMTP_PASS;
     const from = dbFrom || process.env.SMTP_FROM || user;
-    const to = dbTo || process.env.SMTP_TO || user; 
+    
+    let to = overrideToEmail;
+    if (!to) {
+      const dbTo = await this.settingsService.getSetting('SMTP_TO');
+      to = dbTo || process.env.SMTP_TO || user; 
+    }
 
     if (!host || !user || !pass) {
       this.logger.warn('SMTP credentials are not fully configured.');
@@ -203,7 +220,7 @@ export class NotificationsService {
     }
   }
 
-  sendDeploymentAlert(data: {
+  async sendDeploymentAlert(data: {
     repoName: string;
     ticketId: string;
     summary: string;
@@ -274,15 +291,30 @@ export class NotificationsService {
       </div>
     `;
 
-    return Promise.all([
+    const promises = [
       this.sendSlackNotification(slackMessage),
       this.sendTeamsNotification(`RFP Alert - ${data.repoName} (${data.ticketId})`, teamsMessage, data.developer),
       this.sendTelegramNotification(telegramMessage),
       this.sendEmailNotification(emailSubject, emailBody)
-    ]).then(() => {}).catch(err => this.logger.error('Error during broadcast notification', err));
+    ];
+
+    if (data.developer) {
+      const user = await this.prisma.user.findUnique({ where: { username: data.developer } });
+      if (user) {
+        const dmSlackMessage = slackMessage.replace('[RFP Alert]', '[DM] [RFP Alert]');
+        const dmTelegramMessage = telegramMessage.replace('[RFP Alert]', '[DM] [RFP Alert]');
+
+        if (user.slackWebhookUrl) promises.push(this.sendSlackNotification(dmSlackMessage, user.slackWebhookUrl));
+        if (user.teamsWebhookUrl) promises.push(this.sendTeamsNotification(`[DM] RFP Alert - ${data.repoName}`, teamsMessage, data.developer, user.teamsWebhookUrl));
+        if (user.telegramChatId) promises.push(this.sendTelegramNotification(dmTelegramMessage, user.telegramChatId));
+        if (user.notifyViaEmail && user.email) promises.push(this.sendEmailNotification(`[DM] ${emailSubject}`, emailBody, user.email));
+      }
+    }
+
+    return Promise.all(promises).then(() => {}).catch(err => this.logger.error('Error during broadcast notification', err));
   }
 
-  sendBulkDeploymentAlert(data: {
+  async sendBulkDeploymentAlert(data: {
     actionType: 'UPDATED' | 'DELETED' | 'IMPORTED';
     count: number;
     developer: string;
@@ -312,15 +344,30 @@ export class NotificationsService {
       </div>
     `;
 
-    return Promise.all([
+    const promises = [
       this.sendSlackNotification(plainMessage),
       this.sendTeamsNotification(`RFP Bulk Alert`, plainMessage, data.developer),
       this.sendTelegramNotification(message),
       this.sendEmailNotification(`[Release Flow] Bulk ${data.actionType} Alert`, emailBody)
-    ]).then(() => {}).catch(err => this.logger.error('Error during bulk broadcast notification', err));
+    ];
+
+    if (data.developer) {
+      const user = await this.prisma.user.findUnique({ where: { username: data.developer } });
+      if (user) {
+        const dmSlackMessage = plainMessage.replace('[RFP Bulk Alert]', '[DM] [RFP Bulk Alert]');
+        const dmTelegramMessage = message.replace('[RFP Bulk Alert]', '[DM] [RFP Bulk Alert]');
+
+        if (user.slackWebhookUrl) promises.push(this.sendSlackNotification(dmSlackMessage, user.slackWebhookUrl));
+        if (user.teamsWebhookUrl) promises.push(this.sendTeamsNotification(`[DM] RFP Bulk Alert`, plainMessage, data.developer, user.teamsWebhookUrl));
+        if (user.telegramChatId) promises.push(this.sendTelegramNotification(dmTelegramMessage, user.telegramChatId));
+        if (user.notifyViaEmail && user.email) promises.push(this.sendEmailNotification(`[DM] [Release Flow] Bulk ${data.actionType} Alert`, emailBody, user.email));
+      }
+    }
+
+    return Promise.all(promises).then(() => {}).catch(err => this.logger.error('Error during bulk broadcast notification', err));
   }
 
-  sendScheduleAlert(data: {
+  async sendScheduleAlert(data: {
     actionType: 'CREATED' | 'UPDATED' | 'DELETED' | 'IMPORTED';
     envName?: string;
     startTime?: string;
@@ -403,11 +450,26 @@ export class NotificationsService {
       </div>
     `;
 
-    return Promise.all([
+    const promises = [
       this.sendSlackNotification(plainMessage),
       this.sendTeamsNotification(`RFP Scheduler Alert`, plainMessage, data.developer),
       this.sendTelegramNotification(message),
       this.sendEmailNotification(`[Release Flow] Scheduler ${data.actionType} Alert`, emailBody)
-    ]).then(() => {}).catch(err => this.logger.error('Error during schedule broadcast notification', err));
+    ];
+
+    if (data.developer) {
+      const user = await this.prisma.user.findUnique({ where: { username: data.developer } });
+      if (user) {
+        const dmSlackMessage = plainMessage.replace('[RFP Scheduler]', '[DM] [RFP Scheduler]');
+        const dmTelegramMessage = message.replace('[RFP Scheduler]', '[DM] [RFP Scheduler]');
+
+        if (user.slackWebhookUrl) promises.push(this.sendSlackNotification(dmSlackMessage, user.slackWebhookUrl));
+        if (user.teamsWebhookUrl) promises.push(this.sendTeamsNotification(`[DM] RFP Scheduler Alert`, plainMessage, data.developer, user.teamsWebhookUrl));
+        if (user.telegramChatId) promises.push(this.sendTelegramNotification(dmTelegramMessage, user.telegramChatId));
+        if (user.notifyViaEmail && user.email) promises.push(this.sendEmailNotification(`[DM] [Release Flow] Scheduler ${data.actionType} Alert`, emailBody, user.email));
+      }
+    }
+
+    return Promise.all(promises).then(() => {}).catch(err => this.logger.error('Error during schedule broadcast notification', err));
   }
 }
