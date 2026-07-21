@@ -112,6 +112,19 @@ export class ReleaseService {
     return this.http.delete<void>(`${this.apiUrl}/environments/${id}`);
   }
 
+  // System Settings
+  getSettings(): Observable<Record<string, string>> {
+    return this.http.get<Record<string, string>>(`${this.apiUrl}/settings`);
+  }
+
+  updateSettings(data: Record<string, string>): Observable<Record<string, string>> {
+    return this.http.post<Record<string, string>>(`${this.apiUrl}/settings/bulk`, data);
+  }
+
+  testNotification(type: 'telegram' | 'email' | 'teams' | 'slack'): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/settings/test-notification`, { type });
+  }
+
   // Release Packages
   getReleasePackages(): Observable<ReleasePackage[]> {
     return this.http.get<ReleasePackage[]>(`${this.apiUrl}/release-packages`);
@@ -154,20 +167,16 @@ export class ReleaseService {
     return this.http.post<DeploymentWindow>(`${this.apiUrl}/deployment-windows`, data);
   }
 
-  updateDeploymentWindow(id: number, data: {
-    startTime?: string;
-    endTime?: string;
-    freezeTime?: string;
-    capacity?: number;
-    status?: string;
-    policyId?: number;
-    environmentId?: number;
-  }): Observable<DeploymentWindow> {
+  updateDeploymentWindow(id: number, data: Partial<DeploymentWindow>): Observable<DeploymentWindow> {
     return this.http.put<DeploymentWindow>(`${this.apiUrl}/deployment-windows/${id}`, data);
   }
 
   deleteDeploymentWindow(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/deployment-windows/${id}`);
+  }
+
+  notifyScheduleChange(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deployment-windows/notify`, data);
   }
 
   // Deployment Policies

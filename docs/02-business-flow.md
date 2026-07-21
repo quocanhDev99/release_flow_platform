@@ -61,25 +61,3 @@ ReleaseHotfix
 
 DeployProduction
 ```
-
----
-
-## Miss Deployment
-
-```mermaid
-flowchart LR
-
-Merged
-
--->
-
-DecisionEngine
-
--->
-
-MissWindow
-
--->
-
-AssignNextWindow
-```

@@ -1,36 +1,48 @@
-# REST API (MVP V1)
+# REST API (MVP V1 & V2.5)
 
 ## Dashboard
-* **GET `/dashboard`**: Hiển thị bảng tổng hợp (như giao diện Excel) nhóm theo Repos (`Core`, `E-com`) và các chỉ số thống kê (tổng số ticket đã merge, số ticket chờ QC, v.v.).
+* **GET `/dashboard`**: Displays the aggregated dashboard data (Excel-like view) grouped by Repos (`Core`, `E-com`) and statistical metrics (total merged tickets, pending QC, etc.).
 
 ---
 
-## Release (Phiên bản Phát hành / Fix version)
-* **GET `/releases`**: Liệt kê danh sách các Fix version (ví dụ: `som/1.9.6`, `som/1.12.x`).
-* **POST `/releases`**: Tạo một Fix version mới.
-* **PUT `/releases/{id}`**: Cập nhật thông tin của Fix version.
-* **DELETE `/releases/{id}`**: Xóa một Fix version.
+## Release Streams (Fix versions)
+* **GET `/releases`**: Lists all available Fix versions (e.g., `som/1.9.6`, `som/1.12.x`).
+* **POST `/releases`**: Creates a new Fix version.
+* **PUT `/releases/{id}`**: Updates a Fix version.
+* **DELETE `/releases/{id}`**: Deletes a Fix version.
 
 ---
 
-## Deployment Item (Quản lý các dòng dữ liệu Ticket)
-*   **GET `/deployment-items`**: Lấy danh sách toàn bộ các Ticket kèm thông tin chi tiết (lọc theo Repo, Fix Version, trạng thái QC, v.v.).
-*   **POST `/deployment-items`**: Tạo một bản ghi Ticket mới (thường tự động kích hoạt bởi Git Webhook khi có sự kiện merge branch).
-*   **GET `/deployment-items/{id}`**: Xem chi tiết một Ticket.
-*   **PUT `/deployment-items/{id}`**: Cập nhật thông tin bất kỳ trường nào của Ticket (ví dụ: sửa đổi nhánh build, trạng thái QC, ghi chú pending).
-*   **DELETE `/deployment-items/{id}`**: Xóa một bản ghi Ticket.
-*   **POST `/deployment-items/bulk-delete`**: Xóa đồng thời nhiều bản ghi Ticket được chọn (Payload: `{ ids: number[] }`).
-*   **POST `/deployment-items/bulk-update`**: Cập nhật đồng loạt các bản ghi Ticket được chọn (Payload: `{ ids: number[], releaseStreamId?: number | null, qcStatus?: string }`).
-*   **PATCH `/deployment-items/{id}/merge-devel`**: Cập nhật nhanh trạng thái checkbox "Merge on Devel".
-*   **PATCH `/deployment-items/{id}/qc`**: Cập nhật nhanh trạng thái "Ready For QC".
+## Deployment Items (Ticket Data Rows)
+*   **GET `/deployment-items`**: Retrieves all Tickets with detailed information (filterable by Repo, Fix Version, QC Status, etc.).
+*   **POST `/deployment-items`**: Creates a new Ticket record (typically triggered by Git Webhooks upon a branch merge event).
+*   **GET `/deployment-items/{id}`**: Views a specific Ticket detail.
+*   **PUT `/deployment-items/{id}`**: Updates any field of a Ticket (e.g., build environment, QC status, pending notes).
+*   **DELETE `/deployment-items/{id}`**: Deletes a Ticket record.
+*   **POST `/deployment-items/bulk-delete`**: Deletes multiple Ticket records simultaneously (Payload: `{ ids: number[] }`).
+*   **POST `/deployment-items/bulk-update`**: Updates multiple Ticket records simultaneously (Payload: `{ ids: number[], releaseStreamId?: number | null, qcStatus?: string }`).
+*   **PATCH `/deployment-items/{id}/merge-devel`**: Quick toggle for the "Merge on Devel" checkbox.
+*   **PATCH `/deployment-items/{id}/qc`**: Quick toggle for the "Ready For QC" status.
 
 ---
 
-## Authentication & User Settings (Xác thực & Người dùng)
-* **POST `/users/register`**: Đăng ký một tài khoản nhà phát triển mới.
-* **POST `/users/login`**: Xác thực thông tin đăng nhập và trả về hồ sơ người dùng (không bao gồm mật khẩu).
-* **PATCH `/users/{id}/theme`**: Cấu hình chế độ sáng/tối (Light/Dark mode) của người dùng hiện tại và lưu vào DB.
+## Deployment Windows (Schedules)
+*   **GET `/deployment-windows`**: Retrieves all schedules.
+*   **POST `/deployment-windows`**: Creates a new schedule.
+*   **PUT `/deployment-windows/{id}`**: Updates schedule details (Build Environment, Build Time, Fix Version).
+*   **DELETE `/deployment-windows/{id}`**: Deletes a schedule.
+*   **POST `/deployment-windows/clear-month`**: Deletes all schedules within a specific month (used prior to AI OCR sync).
 
 ---
 
-*Lưu ý: Các API về Pipeline và Deployment Window sẽ được bổ sung khi phát triển tiếp lên các phiên bản sau.*
+## System Settings
+*   **GET `/settings`**: Retrieves current system configurations (Webhook URLs, Telegram tokens, etc.).
+*   **POST `/settings`**: Saves new system configurations.
+*   **POST `/settings/test-notification`**: Triggers a multi-channel test notification.
+
+---
+
+## Authentication & User Settings
+* **POST `/users/register`**: Registers a new developer account.
+* **POST `/users/login`**: Authenticates user credentials and returns the user profile (excluding password).
+* **PATCH `/users/{id}/theme`**: Configures the Light/Dark mode preference for the current user and saves it to the database.

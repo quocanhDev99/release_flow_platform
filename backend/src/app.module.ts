@@ -13,6 +13,7 @@ import { EnvironmentsModule } from './environments/environments.module';
 import { ReleasePackagesModule } from './release-packages/release-packages.module';
 import { DeploymentWindowsModule } from './deployment-windows/deployment-windows.module';
 import { DeploymentBookingsModule } from './deployment-bookings/deployment-bookings.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { DeploymentBookingsModule } from './deployment-bookings/deployment-booki
     ReleasePackagesModule,
     DeploymentWindowsModule,
     DeploymentBookingsModule,
+    SettingsModule,
   ],
   controllers: [AppController, RepositoriesController, UsersController],
   providers: [AppService],

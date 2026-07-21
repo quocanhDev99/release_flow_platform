@@ -55,16 +55,14 @@ flowchart TD
 *   **External Integration (Webhooks)**: Dedicated REST endpoints parse external payloads from GitHub and Bitbucket, mapping source branches to target releases.
 
 ### 3. Domain Layer (Business Logic Services)
-*   **Pure Domain Services**: Houses core business rules (e.g., finding the correct environment mapping, calculating freeze time, ensuring no duplicate release package versions).
+*   **Pure Domain Services**: Houses core business rules (e.g., finding the correct environment mapping, calculating freeze time).
 *   **AI OCR Matching**: Maps parsed schedule dates and environments to actual DB IDs, automatically defaulting build start times to 10:00 AM.
-*   **Atomic Transactions**: Wraps cascade operations (like deleting a parent window and clearing its associated bookings) inside secure Prisma database transactions (`prisma.$transaction`).
+*   **Atomic Transactions**: Wraps cascade operations inside secure Prisma database transactions (`prisma.$transaction`).
 
 ### 4. Infrastructure & Data Layer (PostgreSQL & Prisma)
 *   **Object-Relational Mapping**: Prisma Client provides full type safety for database models and schema synchronization.
 *   **Normalized SQL DB**: PostgreSQL stores relational data:
     *   `users`: User credentials, avatar base64 data, and configurations.
     *   `deployment_items`: Track branch merges and build links.
-    *   `release_packages`: Version tags.
     *   `deployment_windows`: Schedule windows.
-    *   `deployment_bookings`: Many-to-Many mapping table linking `ReleasePackage` and `DeploymentWindow` together.
 *   **Cloud Migrations**: Database schema migrations run automatically via `prisma migrate deploy` in the cloud environment build phase.

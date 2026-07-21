@@ -1,100 +1,99 @@
-# Hướng dẫn Triển khai Hệ thống lên Cloud Miễn phí (Deployment Guide)
+# Free Cloud Deployment Guide
 
-Tài liệu này hướng dẫn chi tiết cách deploy toàn bộ hệ thống **Release Flow Platform** (Angular + NestJS + PostgreSQL) lên các nền tảng đám mây miễn phí ổn định nhất hiện nay, cùng cách quản lý API và xem dữ liệu Database trực quan.
+This document provides a detailed guide on how to deploy the entire **Release Flow Platform** (Angular + NestJS + PostgreSQL) to the most stable free cloud platforms available, along with managing APIs and viewing database records visually.
 
 ---
 
-## 🏗️ Kiến trúc Triển khai Cloud
+## 🏗️ Cloud Deployment Architecture
 
 ```mermaid
 flowchart TD
-    Client([Trình duyệt Người dùng])
+    Client([User Browser])
     Vercel[Frontend Host: Vercel]
     Render[Backend Host: Render]
     Supabase[Database Host: Supabase / Neon]
 
-    Client -- HTTPS (yêu cầu UI) --> Vercel
+    Client -- HTTPS (UI requests) --> Vercel
     Client -- API Requests (/api) --> Render
     Render -- Prisma Client Connection --> Supabase
 ```
 
-Vì hệ thống không sử dụng Redis trong logic cốt lõi ở MVP1, ta chỉ cần triển khai 3 thành phần chính:
-1. **Frontend (Angular)**: Deploy lên **Vercel** hoặc **Netlify** (Miễn phí, hỗ trợ CDN tốc độ cao).
-2. **Backend (NestJS)**: Deploy lên **Render** hoặc **Koyeb** (Miễn phí runtime Node.js).
-3. **Database (PostgreSQL)**: Deploy lên **Supabase** hoặc **Neon.tech** (Miễn phí quản lý DB PostgreSQL đám mây).
+Since the core MVP logic does not require Redis, we only need to deploy three main components:
+1. **Frontend (Angular)**: Deploy to **Vercel** or **Netlify** (Free, high-speed CDN).
+2. **Backend (NestJS)**: Deploy to **Render** or **Koyeb** (Free Node.js runtime).
+3. **Database (PostgreSQL)**: Deploy to **Supabase** or **Neon.tech** (Free managed cloud PostgreSQL).
 
 ---
 
-## 🗄️ Bước 1: Khởi tạo Database PostgreSQL trên Supabase hoặc Neon
+## 🗄️ Step 1: Initialize PostgreSQL Database on Supabase
 
-### Phương án khuyên dùng: **Supabase**
-Supabase cung cấp cơ sở dữ liệu PostgreSQL thực thụ kèm giao diện quản lý bảng trực quan như Excel (Table Editor) ngay trên trình duyệt.
+### Recommended: **Supabase**
+Supabase provides a real PostgreSQL database with a visual Table Editor (like Excel) directly in the browser.
 
-1. Truy cập [Supabase.com](https://supabase.com/) và đăng ký tài khoản miễn phí (bằng GitHub).
-2. Tạo một Project mới (ví dụ: `release-flow-db`). Đặt tên mật khẩu cho DB và chọn khu vực máy chủ gần nhất (ví dụ: *Singapore - ap-southeast-1*).
-3. Sau khi Project khởi tạo xong, truy cập vào mục **Project Settings** -> **Database**.
-4. Lấy chuỗi **Connection String** dạng **Transaction** hoặc **Session** (ví dụ):
+1. Go to [Supabase.com](https://supabase.com/) and sign up for a free account via GitHub.
+2. Create a new Project (e.g., `release-flow-db`). Set a strong database password and select the closest server region.
+3. Once the Project is provisioned, go to **Project Settings** -> **Database**.
+4. Retrieve your **Connection String** (Transaction or Session mode):
    ```text
    postgresql://postgres.[YOUR-PROJECT-ID]:[YOUR-PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres
    ```
-   *(Nhớ thay `[YOUR-PASSWORD]` bằng mật khẩu thật bạn đã tạo).*
+   *(Remember to replace `[YOUR-PASSWORD]` with your actual password).*
 
 ---
 
-## 🔌 Bước 2: Deploy Backend NestJS lên Render
+## 🔌 Step 2: Deploy NestJS Backend to Render
 
-Render cho phép host ứng dụng Node.js miễn phí, tự động build lại mỗi khi push code lên GitHub.
+Render hosts Node.js applications for free and automatically rebuilds upon every GitHub push.
 
-1. Đẩy mã nguồn của bạn lên một repository **GitHub** (chế độ Private hoặc Public).
-2. Đăng nhập vào [Render.com](https://render.com/) bằng tài khoản GitHub.
-3. Chọn **New** -> **Web Service**.
-4. Kết nối tới GitHub repo của dự án.
-5. Cấu hình dịch vụ Web Service:
+1. Push your source code to a **GitHub** repository.
+2. Log into [Render.com](https://render.com/) using GitHub.
+3. Click **New** -> **Web Service**.
+4. Connect your GitHub repository.
+5. Configure the Web Service:
    * **Root Directory**: `backend`
    * **Runtime**: `Node`
    * **Build Command**: `npm install && npm run build`
-   * **Start Command**: `npm run start:prod` (Hoặc `node dist/src/main.js`)
+   * **Start Command**: `npm run start:prod`
    * **Instance Type**: `Free`
-6. Click vào **Advanced** -> **Add Environment Variable** để thêm các biến môi trường bắt buộc:
-   * `DATABASE_URL`: Dán chuỗi Connection String lấy từ Supabase ở **Bước 1**.
+6. Click **Advanced** -> **Add Environment Variable** to add mandatory variables:
+   * `DATABASE_URL`: Paste the Connection String from Supabase (Step 1).
    * `PORT`: `3000`
-7. Chọn **Create Web Service**. Sau khi quá trình build hoàn tất, Render sẽ cung cấp một URL miễn phí dạng: `https://release-flow-backend.onrender.com`.
+7. Click **Create Web Service**. Once built, Render will provide a free URL (e.g., `https://release-flow-backend.onrender.com`).
 
-### ⚠️ Lưu ý về Render Free Tier:
-Nếu không có lượt truy cập nào trong vòng 15 phút, server Render sẽ tự động chuyển sang chế độ "ngủ đông". Lượt truy cập tiếp theo sẽ mất khoảng 50 giây để khởi động lại máy chủ.
+> [!NOTE]
+> **Render Free Tier Limit:** If there is no incoming traffic for 15 minutes, the Render server will sleep. The next request will take ~50 seconds to spin the server back up.
 
 ---
 
-## ⚡ Bước 3: Chạy Database Migration trên Cloud
+## ⚡ Step 3: Run Database Migrations on the Cloud
 
-Để tạo cấu trúc bảng trên Database Supabase mới:
-1. Mở file `backend/.env` cục bộ của bạn, tạm thời thay thế biến `DATABASE_URL` thành URL kết nối Supabase ở **Bước 1**.
-2. Mở terminal tại thư mục `backend` và chạy lệnh migrate:
+To create the table schemas on your new Supabase database:
+1. Open your local `backend/.env` file, temporarily replace the `DATABASE_URL` with your Supabase Connection String.
+2. Open a terminal in the `backend` directory and run the migration:
    ```bash
    npx prisma migrate deploy
    ```
-3. Chạy lệnh seed để nạp dữ liệu người dùng mặc định (`john_doe`, `alice_smith`):
+3. Run the seed script to inject default user data (`john_doe`, `alice_smith`):
    ```bash
    npx prisma db seed
    ```
-4. *Quan trọng:* Trả lại file `.env` cục bộ về kết nối localhost để không ảnh hưởng đến môi trường dev của bạn.
+4. *Important:* Revert your local `.env` file back to the localhost connection to avoid impacting local development.
 
 ---
 
-## 💻 Bước 4: Deploy Frontend Angular lên Vercel
+## 💻 Step 4: Deploy Angular Frontend to Vercel
 
-Vercel là nền tảng tối ưu nhất để host các ứng dụng Single Page Application (SPA) như Angular.
+Vercel is the most optimized platform for hosting Single Page Applications (SPAs) like Angular.
 
-### 1. Điều chỉnh API Endpoint
-Trước khi deploy, hãy cấu hình cho Angular trỏ API tới Backend Render thay vì localhost:
-Mở file [frontend/src/app/services/auth.service.ts](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/frontend/src/app/services/auth.service.ts) (và [release.service.ts](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/frontend/src/app/services/release.service.ts)), cập nhật lại `apiUrl`:
+### 1. Adjust API Endpoint
+Before deploying, point Angular's API to your Render backend instead of localhost:
+Open `frontend/src/app/services/release.service.ts` and update `apiUrl`:
 ```typescript
-private apiUrl = 'https://release-flow-backend.onrender.com/api'; // Thay bằng URL backend Render của bạn
+private apiUrl = 'https://release-flow-backend.onrender.com/api';
 ```
 
-### 2. Cấu hình định tuyến Route trên Vercel (SPA Fallback)
-Để tránh lỗi `404 Not Found` khi người dùng tải lại trang F5 ở các URL con (như `/login`), hãy tạo tệp cấu hình cấu trúc thư mục sau tại thư mục gốc của frontend:
-Tạo file [frontend/vercel.json](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/frontend/vercel.json):
+### 2. Configure Route Fallback (SPA Routing)
+To prevent `404 Not Found` errors when users hit F5 on sub-routes (like `/login`), create a `vercel.json` file in the root of your `frontend` directory:
 ```json
 {
   "rewrites": [
@@ -103,37 +102,36 @@ Tạo file [frontend/vercel.json](file:///d:/PROGRAMMING/PROJECT/release_flow_pl
 }
 ```
 
-### 3. Tiến hành Deploy trên Vercel
-1. Đăng nhập vào [Vercel.com](https://vercel.com/) bằng tài khoản GitHub.
+### 3. Deploy on Vercel
+1. Log into [Vercel.com](https://vercel.com/) via GitHub.
 2. Click **Add New** -> **Project**.
-3. Import repository GitHub của bạn.
-4. Cấu hình Project:
-   * **Framework Preset**: Chọn `Angular` (Vercel sẽ tự động cấu hình các lệnh build).
+3. Import your GitHub repository.
+4. Project Configuration:
+   * **Framework Preset**: Select `Angular`.
    * **Root Directory**: `frontend`
-5. Click **Deploy**. Vercel sẽ tự động build và cấp cho bạn một domain HTTPS miễn phí (ví dụ: `https://release-flow.vercel.app`).
+5. Click **Deploy**. Vercel will build and assign a free HTTPS domain (e.g., `https://release-flow.vercel.app`).
 
 ---
 
-## 🔎 Bước 5: Quản lý và Xem Dữ liệu Database ở đâu?
+## 🔎 Step 5: How to Manage and View Database Records?
 
-Bạn có 3 cách rất tiện lợi để xem và chỉnh sửa dữ liệu trực quan:
+You have 3 convenient ways to view and edit data visually:
 
-### Cách 1: Sử dụng giao diện Supabase Table Editor (Khuyên dùng)
-* Đăng nhập vào trang quản trị Supabase.
-* Chọn dự án của bạn -> Click vào biểu tượng **Table Editor** (hình bảng tính) ở thanh sidebar trái.
-* Tại đây, bạn có thể xem danh sách các bảng như `users`, `repositories`, `deployment_items`, `tickets` dạng lưới.
-* Bạn có thể lọc dữ liệu, thêm dòng trực tiếp, sửa giá trị ô hoặc xóa bản ghi bằng chuột giống hệt như Excel.
+### Method 1: Supabase Table Editor (Recommended)
+* Log into Supabase admin console.
+* Go to your project -> Click **Table Editor** on the left sidebar.
+* You can view tables like `users`, `deployment_items`, `tickets` as a grid.
+* Filter data, add rows, edit cell values, or delete records exactly like Excel.
 
-### Cách 2: Sử dụng Prisma Studio cục bộ (Xem DB Product từ xa)
-Bạn có thể khởi động giao diện quản lý cơ sở dữ liệu của Prisma ngay trên máy tính của mình nhưng kết nối thẳng vào database cloud:
-1. Sửa file `backend/.env` trỏ `DATABASE_URL` tới link Supabase.
-2. Chạy lệnh tại thư mục `backend`:
+### Method 2: Local Prisma Studio (Cloud DB Access)
+You can launch Prisma's DB manager locally but point it to the cloud:
+1. Temporarily point `DATABASE_URL` in `backend/.env` to Supabase.
+2. Run this command in the `backend` folder:
    ```bash
    npx prisma studio
    ```
-3. Trình duyệt tự động mở trang `http://localhost:5555`, hiển thị toàn bộ bảng dữ liệu trên Cloud để bạn chỉnh sửa.
+3. Your browser will open `http://localhost:5555`, displaying cloud data for editing.
 
-### Cách 3: Sử dụng DBeaver / pgAdmin (Client Tool)
-* Tải phần mềm kết nối DB miễn phí như **DBeaver**.
-* Tạo kết nối PostgreSQL mới, nhập Host, Port (5432), Database Name (postgres), Username (postgres) và Password của bạn lấy từ mục Cấu hình Supabase.
-* Bạn sẽ truy cập được trực tiếp cấu trúc bảng và chạy các câu lệnh SQL Query.
+### Method 3: DBeaver / pgAdmin (Client Tools)
+* Download a free DB client like **DBeaver**.
+* Create a new PostgreSQL connection, enter the Host, Port (5432), Database Name, Username, and Password from your Supabase settings.

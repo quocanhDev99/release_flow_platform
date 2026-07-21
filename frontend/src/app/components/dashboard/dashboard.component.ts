@@ -15,6 +15,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatTabsModule } from '@angular/material/tabs';
 import { ReleaseService } from '../../services/release.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
@@ -46,6 +47,7 @@ import { forkJoin } from 'rxjs';
     MatProgressSpinnerModule,
     MatExpansionModule,
     MatTooltipModule,
+    MatTabsModule,
     ToastComponent
   ],
   templateUrl: './dashboard.component.html',
@@ -387,6 +389,20 @@ export class DashboardComponent implements OnInit {
   newStatus = 'merged';
   newEnvironmentName = '';
 
+  // System Settings Config
+  settingsForm = {
+    TELEGRAM_BOT_TOKEN: '',
+    TELEGRAM_CHAT_ID: '',
+    TEAMS_WEBHOOK_URL: '',
+    SLACK_WEBHOOK_URL: '',
+    SMTP_HOST: '',
+    SMTP_PORT: '',
+    SMTP_USER: '',
+    SMTP_PASS: '',
+    SMTP_FROM: '',
+    SMTP_TO: ''
+  };
+
   // New Branch Build selections
   newBranchBuilds: string[] = [];
   activeBranchBuilds: string[] = [];
@@ -717,6 +733,7 @@ export class DashboardComponent implements OnInit {
     this.newRepoName = '';
     this.newRepoGitUrl = '';
     this.newEnvironmentName = '';
+    this.loadSettings();
     // Use dummy activeItem to open sidebar
     this.activeItem = {} as any;
   }
@@ -820,6 +837,53 @@ export class DashboardComponent implements OnInit {
       error: (err) => {
         console.error(err);
         this.toast.error('Failed to add branch build.');
+      }
+    });
+  }
+
+  // System Settings methods
+  loadSettings() {
+    this.releaseService.getSettings().subscribe({
+      next: (res) => {
+        this.settingsForm.TELEGRAM_BOT_TOKEN = res['TELEGRAM_BOT_TOKEN'] || '';
+        this.settingsForm.TELEGRAM_CHAT_ID = res['TELEGRAM_CHAT_ID'] || '';
+        this.settingsForm.TEAMS_WEBHOOK_URL = res['TEAMS_WEBHOOK_URL'] || '';
+        this.settingsForm.SLACK_WEBHOOK_URL = res['SLACK_WEBHOOK_URL'] || '';
+        this.settingsForm.SMTP_HOST = res['SMTP_HOST'] || '';
+        this.settingsForm.SMTP_PORT = res['SMTP_PORT'] || '';
+        this.settingsForm.SMTP_USER = res['SMTP_USER'] || '';
+        this.settingsForm.SMTP_PASS = res['SMTP_PASS'] || '';
+        this.settingsForm.SMTP_FROM = res['SMTP_FROM'] || '';
+        this.settingsForm.SMTP_TO = res['SMTP_TO'] || '';
+      },
+      error: (err) => console.error('Failed to load settings', err)
+    });
+  }
+
+  saveSettings() {
+    this.isSaving.set(true);
+    this.releaseService.updateSettings(this.settingsForm).subscribe({
+      next: () => {
+        this.toast.success('System configurations saved successfully.');
+        this.isSaving.set(false);
+      },
+      error: (err) => {
+        console.error(err);
+        this.toast.error('Failed to save configurations.');
+        this.isSaving.set(false);
+      }
+    });
+  }
+
+  testNotification(type: 'telegram' | 'email' | 'teams' | 'slack') {
+    this.toast.info(`Sending test ${type} notification...`);
+    this.releaseService.testNotification(type).subscribe({
+      next: () => {
+        this.toast.success(`Test ${type} notification sent successfully!`);
+      },
+      error: (err) => {
+        console.error(err);
+        this.toast.error(err.error?.message || `Failed to send test ${type} notification.`);
       }
     });
   }

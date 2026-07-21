@@ -300,7 +300,7 @@ export class SchedulerComponent implements OnInit {
     });
 
     this.deleteWindowsSequentially(0, oldWindows, () => {
-      this.importOCRItems(0, items);
+      this.importOCRItems(0, items, items.length);
     });
   }
 
@@ -315,9 +315,16 @@ export class SchedulerComponent implements OnInit {
     });
   }
 
-  private importOCRItems(index: number, items: any[]) {
+  private importOCRItems(index: number, items: any[], total: number) {
     if (index >= items.length) {
       this.toastService.success(`Successfully synchronized ${items.length} schedules to database!`);
+      // Send bulk import notification
+      this.releaseService.notifyScheduleChange({
+        actionType: 'IMPORTED',
+        count: total,
+        developer: this.currentUser()?.username || 'Unknown'
+      }).subscribe();
+      
       this.clearOCR();
       this.loadAll();
       return;
@@ -348,15 +355,15 @@ export class SchedulerComponent implements OnInit {
               status: 'approved'
             }).subscribe({
               next: () => {
-                this.importOCRItems(index + 1, items);
+                this.importOCRItems(index + 1, items, total);
               },
-              error: () => this.importOCRItems(index + 1, items)
+              error: () => this.importOCRItems(index + 1, items, total)
             });
           },
-          error: () => this.importOCRItems(index + 1, items)
+          error: () => this.importOCRItems(index + 1, items, total)
         });
       },
-      error: () => this.importOCRItems(index + 1, items)
+      error: () => this.importOCRItems(index + 1, items, total)
     });
   }
 
@@ -438,6 +445,16 @@ export class SchedulerComponent implements OnInit {
             }).subscribe({
               next: () => {
                 this.toastService.success('Successfully updated deployment schedule!');
+                
+                const envName = this.environments().find(e => e.id === Number(environmentId))?.name || 'Unknown';
+                this.releaseService.notifyScheduleChange({
+                  actionType: 'UPDATED',
+                  envName: envName,
+                  startTime: this.formatDate(start) + ' ' + this.formatTime(start),
+                  version: fixVersion,
+                  developer: this.currentUser()?.username || 'Unknown'
+                }).subscribe();
+                
                 this.closeWindowModal();
                 this.loadAll();
               },
@@ -460,6 +477,16 @@ export class SchedulerComponent implements OnInit {
                 }).subscribe({
                   next: () => {
                     this.toastService.success('Successfully updated deployment schedule!');
+                    
+                    const envName = this.environments().find(e => e.id === Number(environmentId))?.name || 'Unknown';
+                    this.releaseService.notifyScheduleChange({
+                      actionType: 'UPDATED',
+                      envName: envName,
+                      startTime: this.formatDate(start) + ' ' + this.formatTime(start),
+                      version: fixVersion,
+                      developer: this.currentUser()?.username || 'Unknown'
+                    }).subscribe();
+                    
                     this.closeWindowModal();
                     this.loadAll();
                   },
@@ -504,6 +531,16 @@ export class SchedulerComponent implements OnInit {
               }).subscribe({
                 next: () => {
                   this.toastService.success('Successfully created deployment schedule!');
+                  
+                  const envName = this.environments().find(e => e.id === Number(environmentId))?.name || 'Unknown';
+                  this.releaseService.notifyScheduleChange({
+                    actionType: 'CREATED',
+                    envName: envName,
+                    startTime: this.formatDate(start) + ' ' + this.formatTime(start),
+                    version: fixVersion,
+                    developer: this.currentUser()?.username || 'Unknown'
+                  }).subscribe();
+                  
                   this.closeWindowModal();
                   this.loadAll();
                 },
@@ -527,13 +564,22 @@ export class SchedulerComponent implements OnInit {
     }
   }
 
-  deleteWindow(id: number) {
+  deleteWindow(win: DeploymentWindow) {
     if (!confirm('Are you sure you want to delete this deployment schedule?')) return;
 
     this.loading.set(true);
-    this.releaseService.deleteDeploymentWindow(id).subscribe({
+    this.releaseService.deleteDeploymentWindow(win.id).subscribe({
       next: () => {
         this.toastService.success('Deployment schedule deleted!');
+        
+        this.releaseService.notifyScheduleChange({
+          actionType: 'DELETED',
+          envName: win.environment.name,
+          startTime: this.formatDate(win.startTime) + ' ' + this.formatTime(win.startTime),
+          version: this.getFixVersion(win),
+          developer: this.currentUser()?.username || 'Unknown'
+        }).subscribe();
+        
         this.loadAll();
       },
       error: () => {

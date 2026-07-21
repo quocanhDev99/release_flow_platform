@@ -5,6 +5,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 export class TicketDto {
   id?: number;
@@ -60,7 +61,10 @@ export class BulkCreateItemDto {
 
 @Injectable()
 export class DeploymentItemsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   private async resolveReleasePackageId(
     releaseVersion?: string,
@@ -284,7 +288,24 @@ export class DeploymentItemsService {
       }
     }
 
-    return this.findOne(newItem.id);
+    const createdItem = await this.findOne(newItem.id);
+    if (createdItem) {
+      const repoName = createdItem.repositories?.[0]?.name || 'Unknown';
+      const user = createdItem.user?.username || 'system';
+      const ticket = createdItem.tickets?.[0];
+
+      this.notificationsService.sendDeploymentAlert({
+        repoName,
+        ticketId: ticket?.ticketId || 'N/A',
+        summary: ticket?.summary || '',
+        changeType: ticket?.changeType || 'Feature',
+        releaseVersion: createdItem.releaseStream?.version || 'Unknown',
+        sourceBranch: createdItem.sourceBranch || 'main',
+        developer: user,
+      }).catch(err => console.error('Failed to trigger deployment alert:', err));
+    }
+
+    return createdItem;
   }
 
   async update(id: number, data: UpdateDeploymentItemDto) {
@@ -383,7 +404,25 @@ export class DeploymentItemsService {
       }
     }
 
-    return this.findOne(id);
+    const updatedItem = await this.findOne(id);
+    if (updatedItem) {
+      const repoName = updatedItem.repositories?.[0]?.name || 'Unknown';
+      const user = updatedItem.user?.username || 'system';
+      const ticket = updatedItem.tickets?.[0];
+      
+      this.notificationsService.sendDeploymentAlert({
+        repoName,
+        ticketId: ticket?.ticketId || 'N/A',
+        summary: ticket?.summary || '',
+        changeType: ticket?.changeType || 'Feature',
+        releaseVersion: updatedItem.releaseStream?.version || 'Unknown',
+        sourceBranch: updatedItem.sourceBranch || 'main',
+        developer: user,
+        actionType: 'UPDATED',
+      }).catch(err => console.error('Failed to trigger update deployment alert:', err));
+    }
+
+    return updatedItem;
   }
 
   async patchMergeDevel(id: number, isMergedOnDevel: boolean) {
@@ -441,6 +480,23 @@ export class DeploymentItemsService {
         },
       },
     });
+
+    if (isMergedOnDevel) {
+      const repoName = updated.repositories?.[0]?.name || 'Unknown';
+      const user = updated.user?.username || 'system';
+      const ticket = updated.tickets?.[0];
+      
+      this.notificationsService.sendDeploymentAlert({
+        repoName,
+        ticketId: ticket?.ticketId || 'N/A',
+        summary: ticket?.summary || '',
+        changeType: ticket?.changeType || 'Feature',
+        releaseVersion: updated.releasePackage?.version || 'Unknown',
+        sourceBranch: updated.sourceBranch || 'main',
+        developer: user,
+        actionType: 'MERGED',
+      }).catch(err => console.error('Failed to trigger merge deployment alert:', err));
+    }
 
     const { releasePackage, ...rest } = updated;
     return {
@@ -590,11 +646,24 @@ export class DeploymentItemsService {
 
       results.push(dbItem);
     }
+    
+    // Trigger ONE single notification for the entire import operation
+    if (results.length > 0) {
+      const username = items[0]?.username || 'system';
+      this.notificationsService.sendBulkDeploymentAlert({
+        actionType: 'IMPORTED',
+        count: results.length,
+        developer: username,
+      }).catch(err => console.error('Failed to trigger bulk import alert:', err));
+    }
+    
     return results;
   }
 
   async remove(id: number) {
-    return this.prisma.$transaction(async (tx) => {
+    const itemToDelete = await this.findOne(id);
+
+    const result = await this.prisma.$transaction(async (tx) => {
       const item = await tx.deploymentItem.findUnique({
         where: { id },
         include: { tickets: { include: { deploymentItems: true } } },
@@ -613,13 +682,32 @@ export class DeploymentItemsService {
         where: { id },
       });
     });
+
+    if (itemToDelete) {
+      const repoName = itemToDelete.repositories?.[0]?.name || 'Unknown';
+      const user = itemToDelete.user?.username || 'system';
+      const ticket = itemToDelete.tickets?.[0];
+      
+      this.notificationsService.sendDeploymentAlert({
+        repoName,
+        ticketId: ticket?.ticketId || 'N/A',
+        summary: ticket?.summary || '',
+        changeType: ticket?.changeType || 'Feature',
+        releaseVersion: itemToDelete.releaseStream?.version || 'Unknown',
+        sourceBranch: itemToDelete.sourceBranch || 'main',
+        developer: user,
+        actionType: 'DELETED',
+      }).catch(err => console.error('Failed to trigger delete deployment alert:', err));
+    }
+
+    return result;
   }
 
   async bulkDelete(ids: number[]) {
-    return this.prisma.$transaction(async (tx) => {
+    const txResult = await this.prisma.$transaction(async (tx) => {
       const items = await tx.deploymentItem.findMany({
         where: { id: { in: ids } },
-        include: { tickets: { include: { deploymentItems: true } } },
+        include: { tickets: { include: { deploymentItems: true } }, user: true },
       });
       const ticketIdsToDelete = [];
       for (const item of items) {
@@ -640,10 +728,23 @@ export class DeploymentItemsService {
       await tx.build.deleteMany({
         where: { deploymentItemId: { in: ids } },
       });
-      return tx.deploymentItem.deleteMany({
+      const result = await tx.deploymentItem.deleteMany({
         where: { id: { in: ids } },
       });
+      
+      return { result, items };
     });
+
+    if (txResult.items && txResult.items.length > 0) {
+      const user = txResult.items[0].user?.username || 'system';
+      this.notificationsService.sendBulkDeploymentAlert({
+        actionType: 'DELETED',
+        count: ids.length,
+        developer: user,
+      }).catch(err => console.error('Failed to trigger bulk delete alert:', err));
+    }
+
+    return txResult.result;
   }
 
   async bulkUpdate(data: {
@@ -654,7 +755,7 @@ export class DeploymentItemsService {
     isMergedOnDevel?: boolean;
     status?: string;
   }) {
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const updateData: any = {};
       const targetPackageId =
         data.releasePackageId !== undefined
@@ -688,7 +789,23 @@ export class DeploymentItemsService {
           data: { qcStatus: data.qcStatus },
         });
       }
+      
+      return tx.deploymentItem.findMany({
+        where: { id: { in: data.ids.map(Number) } },
+        include: { user: true }
+      });
     });
+
+    if (result && result.length > 0) {
+      const user = result[0].user?.username || 'system';
+      this.notificationsService.sendBulkDeploymentAlert({
+        actionType: 'UPDATED',
+        count: data.ids.length,
+        developer: user,
+      }).catch(err => console.error('Failed to trigger bulk update alert:', err));
+    }
+    
+    return result;
   }
 
   async repairDb() {

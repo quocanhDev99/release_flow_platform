@@ -11,7 +11,7 @@ timeline
     title Release Flow Platform Roadmap
     MVP (Version 1) : Core Architecture : Tree Accordion View : User Authentication : Theme Swapping
     Version 2 : CI/CD Automation : GitHub/Bitbucket Webhooks : ChatOps Alerts (Slack/Teams) : User Profile Settings
-    Version 2.5 : Interactive Calendar : Month Calendar Grid : AI OCR Schedule Scanner : 10:00 AM Default Build Time
+    Version 2.5 : Interactive Calendar : Month Calendar Grid : AI OCR Schedule Scanner : System Settings UI : Adaptive Cards Mentions
     Version 3 : Quality Assurance Gate : Role-based Access (RBAC) : Test Report Attachments : Jira Blocker Checkers
     Version 4 : Analytics Dashboard : Automated Changelog Exporter : Velocity & Lead Time Charts : Build Success Rate
 ```
@@ -46,6 +46,7 @@ timeline
 *   **Automatic Cleanup on Sync**: Deletes pre-existing schedules for the target month before syncing new OCR inputs to prevent duplicate entries and outdated times.
 *   **10:00 AM Default Time**: Automatically formats build times to 10:00 AM across form creators and OCR simulations.
 *   **Simplified Inputs**: Shifted UI focus from complex policies to simple fields: Build Environment, Build Time, and Fix Version.
+*   **Adaptive Cards & UI Settings**: Upgraded MS Teams notifications to use Adaptive Cards with direct user @mentions based on UPN mapping. Added a System Settings UI for managing webhooks without touching `.env`.
 
 ---
 

@@ -1,9 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class DeploymentWindowsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
+
+  async notifySchedule(data: any) {
+    return this.notificationsService.sendScheduleAlert(data);
+  }
 
   // 1. Windows CRUD
   async findAllWindows() {

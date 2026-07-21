@@ -65,6 +65,11 @@ export class DeploymentWindowsController {
     return this.deploymentWindowsService.removeWindow(id);
   }
 
+  @Post('notify')
+  notifySchedule(@Body() data: any) {
+    return this.deploymentWindowsService.notifySchedule(data);
+  }
+
   // Policies Endpoints
   @Get('policies/all')
   findAllPolicies() {
