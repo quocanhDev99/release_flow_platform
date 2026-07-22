@@ -14,6 +14,8 @@ import { ReleasePackagesModule } from './release-packages/release-packages.modul
 import { DeploymentWindowsModule } from './deployment-windows/deployment-windows.module';
 import { DeploymentBookingsModule } from './deployment-bookings/deployment-bookings.module';
 import { SettingsModule } from './settings/settings.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { SchedulerModule } from './scheduler/scheduler.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { SettingsModule } from './settings/settings.module';
     DeploymentWindowsModule,
     DeploymentBookingsModule,
     SettingsModule,
+    ScheduleModule.forRoot(),
+    SchedulerModule,
   ],
   controllers: [AppController, RepositoriesController, UsersController],
   providers: [AppService],

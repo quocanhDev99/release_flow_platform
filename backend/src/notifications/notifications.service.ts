@@ -457,16 +457,28 @@ export class NotificationsService {
       this.sendEmailNotification(`[Release Flow] Scheduler ${data.actionType} Alert`, emailBody)
     ];
 
+    const globalTelegramChatId = (await this.settingsService.getSetting('TELEGRAM_CHAT_ID')) || process.env.TELEGRAM_CHAT_ID;
+    const globalSlackWebhook = (await this.settingsService.getSetting('SLACK_WEBHOOK_URL')) || process.env.SLACK_WEBHOOK_URL;
+    const globalTeamsWebhook = (await this.settingsService.getSetting('TEAMS_WEBHOOK_URL')) || process.env.TEAMS_WEBHOOK_URL;
+
     if (data.developer) {
       const user = await this.prisma.user.findUnique({ where: { username: data.developer } });
       if (user) {
         const dmSlackMessage = plainMessage.replace('[RFP Scheduler]', '[DM] [RFP Scheduler]');
         const dmTelegramMessage = message.replace('[RFP Scheduler]', '[DM] [RFP Scheduler]');
 
-        if (user.slackWebhookUrl) promises.push(this.sendSlackNotification(dmSlackMessage, user.slackWebhookUrl));
-        if (user.teamsWebhookUrl) promises.push(this.sendTeamsNotification(`[DM] RFP Scheduler Alert`, plainMessage, data.developer, user.teamsWebhookUrl));
-        if (user.telegramChatId) promises.push(this.sendTelegramNotification(dmTelegramMessage, user.telegramChatId));
-        if (user.notifyViaEmail && user.email) promises.push(this.sendEmailNotification(`[DM] [Release Flow] Scheduler ${data.actionType} Alert`, emailBody, user.email));
+        if (user.slackWebhookUrl && user.slackWebhookUrl !== globalSlackWebhook) {
+          promises.push(this.sendSlackNotification(dmSlackMessage, user.slackWebhookUrl));
+        }
+        if (user.teamsWebhookUrl && user.teamsWebhookUrl !== globalTeamsWebhook) {
+          promises.push(this.sendTeamsNotification(`[DM] RFP Scheduler Alert`, plainMessage, data.developer, user.teamsWebhookUrl));
+        }
+        if (user.telegramChatId && user.telegramChatId !== globalTelegramChatId) {
+          promises.push(this.sendTelegramNotification(dmTelegramMessage, user.telegramChatId));
+        }
+        if (user.notifyViaEmail && user.email) {
+          promises.push(this.sendEmailNotification(`[DM] [Release Flow] Scheduler ${data.actionType} Alert`, emailBody, user.email));
+        }
       }
     }
 
