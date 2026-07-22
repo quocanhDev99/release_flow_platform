@@ -22,6 +22,7 @@ Many enterprise teams still manage software release schedules using manual Excel
 *   **Tree-indented Grouping:** Automatically categorizes release streams into a clear visual hierarchy (`ReleaseGroup` -> `Sub-release` -> `Patch`).
 *   **CI/CD Webhook Automation:** Integrates directly with GitHub and Bitbucket. Automatically extracts Ticket IDs (`MAG-\d+`), branch names, authors, maps them to the correct target version, and filters out duplicates safely.
 *   **Interactive Scheduler:** Manages multi-environment deployment schedules on an interactive month calendar grid.
+*   **Automated Cron Reminders:** Automatically sends daily broadcast alerts for today's and tomorrow's upcoming deployments (e.g. 8:00 AM daily alerts, 4:30 PM reminder to merge code).
 *   **AI OCR Scanner:** Automatically scans and digitizes schedule information from images (spreadsheets, emails) directly into the database without manual input.
 *   **ChatOps & Notifications:** Broadcasts real-time multi-channel alerts (Telegram, Email, Slack, Teams) upon significant changes. Features Microsoft Teams Adaptive Cards with automatic user @mentions based on UPNs. Supports both **System-wide Webhooks** and **Personal Notifications** for individual user preferences.
 *   **System Settings UI:** Allows Administrators to configure API Tokens and Webhook URLs directly via the Web UI without modifying source code or `.env` files.

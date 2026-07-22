@@ -23,6 +23,22 @@ The platform supports two independent layers of notifications to prevent alert f
 
 ---
 
+## ⏰ Automated Cron Reminders
+
+In addition to event-driven notifications (like when a schedule is created), the platform runs automated background jobs (Cron) to proactively remind the team about deployments:
+
+1. **Today's Deployments (8:00 AM Daily)**
+   * Sends a summary list of all deployments scheduled for the current day.
+   * Broadcasts to all configured global channels and direct messages.
+
+2. **Tomorrow's Deployments (4:30 PM Daily)**
+   * Sends an action-required reminder to ensure all code is merged into the `devel` branch for deployments happening the next day.
+   * Format: `⚠️ Action Required: Upcoming Deployments Tomorrow`
+
+*Note: Cron jobs automatically use the global configurations defined in the System Settings.*
+
+---
+
 ## 1. Telegram Setup ✈️
 
 To receive alerts via Telegram, you must create a Bot and obtain your Chat ID.
