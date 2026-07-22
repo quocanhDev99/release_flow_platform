@@ -41,21 +41,44 @@ The system is designed with a **Normalized Backend** model while displaying a **
 
 ## 📖 Docs Index
 
-All technical deep-dives are stored in the `docs/` directory. **This README serves as the Single Source of Truth**, overriding any conflicting details in child documents.
+All technical deep-dives and architectural diagrams are stored in the `docs/` directory, which is structured by domain for maximum extensibility. **This README serves as the Single Source of Truth**, overriding any conflicting details in child documents.
 
+### 01. Product Overview
 | Document | Detailed Content |
 | :--- | :--- |
-| 📄 [docs/01-overview.md](docs/01-overview.md) | **Overview:** Project vision and Concept Mindmap. |
-| 📄 [docs/02-business-flow.md](docs/02-business-flow.md) | **Business Flow:** Normal Release and Hotfix flow diagrams. |
-| 📄 [docs/03-domain-model.md](docs/03-domain-model.md) | **Domain Model:** Object-oriented design for scalability. |
-| 📄 [docs/04-architecture.md](docs/04-architecture.md) | **Architecture:** System layers (Presentation, App, Domain, Infra). |
-| 📄 [docs/05-database.md](docs/05-database.md) | **Database:** Normalized ERD for the MVP. |
-| 📄 [docs/06-api.md](docs/06-api.md) | **REST API:** NestJS Server Endpoints specification. |
-| 📄 [docs/07-deployment.md](docs/07-deployment.md) | **Deployment:** Guide to deploy on Vercel, Render, and Supabase. |
-| 📄 [docs/08-roadmap.md](docs/08-roadmap.md) | **Roadmap:** Detailed plan from MVP to V4. |
-| 📄 [docs/09-future-architecture-proposals.md](docs/09-future-architecture-proposals.md) | **Future Plans:** Advanced feature proposals (Phase 2+). |
-| 📄 [docs/10-cicd-webhook-setup.md](docs/10-cicd-webhook-setup.md) | **Inbound Webhooks:** GitHub/Bitbucket setup guide. |
-| 📄 [docs/11-setup-notifications.md](docs/11-setup-notifications.md) | **Outbound Alerts:** Telegram, Email, Teams, Slack setup guide. |
+| 📄 [Vision & Scope](docs/01-Product-Overview/01.1-vision-and-scope.md) | Project vision and Concept Mindmap. |
+| 📄 [Business Flow](docs/01-Product-Overview/01.2-business-flow.md) | Normal Release and Hotfix flow diagrams. |
+| 📄 [Roadmap](docs/01-Product-Overview/01.3-roadmap.md) | Detailed plan from MVP to V4. |
+
+### 02. Architecture
+| Document | Detailed Content |
+| :--- | :--- |
+| 📄 [System Architecture](docs/02-Architecture/02.1-system-architecture.md) | System layers (Presentation, App, Domain, Infra). |
+| 📄 [Domain Model](docs/02-Architecture/02.2-domain-model.md) | Object-oriented design for scalability. |
+| 📄 [Database Schema](docs/02-Architecture/02.3-database-schema.md) | Normalized ERD for the MVP. |
+| 📄 [Future Proposals](docs/02-Architecture/02.4-future-proposals.md) | Advanced feature proposals (Phase 2+). |
+
+### 03. Features & Usecases (Diagrams)
+| Document | Detailed Content |
+| :--- | :--- |
+| 📄 [Deployment Scheduler](docs/03-Features-and-Usecases/03.1-deployment-scheduler.md) | Use Case & Sequence Diagrams for scheduling. |
+| 📄 [CI/CD Webhooks](docs/03-Features-and-Usecases/03.2-cicd-automation.md) | Use Case & Sequence Diagrams for PR webhook handling. |
+| 📄 [AI OCR Scanner](docs/03-Features-and-Usecases/03.3-ai-ocr-scanner.md) | Use Case & Sequence Diagrams for Image-to-JSON extraction. |
+| 📄 [Automated Reminders](docs/03-Features-and-Usecases/03.4-automated-reminders.md) | Use Case & Sequence Diagrams for daily Cron jobs. |
+| 📄 [ChatOps Notifications](docs/03-Features-and-Usecases/03.5-chatops-notifications.md) | Use Case & Sequence Diagrams for event broadcasts. |
+| 📄 [System Settings](docs/03-Features-and-Usecases/03.6-system-settings.md) | Use Case & Sequence Diagrams for Settings Configuration API. |
+
+### 04. API Reference
+| Document | Detailed Content |
+| :--- | :--- |
+| 📄 [REST API](docs/04-API-Reference/04.1-rest-api.md) | NestJS Server Endpoints specification. |
+
+### 05. Operations Guide
+| Document | Detailed Content |
+| :--- | :--- |
+| 📄 [Deployment Guide](docs/05-Operations-Guide/05.1-deployment-guide.md) | Guide to deploy on Vercel, Render, and Supabase. |
+| 📄 [CI/CD Webhook Setup](docs/05-Operations-Guide/05.2-cicd-webhook-setup.md) | Inbound Webhooks: GitHub/Bitbucket setup guide. |
+| 📄 [Setup Notifications](docs/05-Operations-Guide/05.3-setup-notifications.md) | Outbound Alerts: Telegram, Email, Teams, Slack setup guide. |
 
 ---
 
