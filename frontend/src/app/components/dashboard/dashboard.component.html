@@ -148,6 +148,10 @@
         <mat-icon>{{ currentSort.icon }}</mat-icon>
         Sort: {{ currentSort.label }}
       </button>
+      <button mat-stroked-button (click)="toggleExpandAll()" *ngIf="isGrouped()">
+        <mat-icon>{{ isExpandAll() ? 'unfold_less' : 'unfold_more' }}</mat-icon>
+        {{ isExpandAll() ? 'Collapse All' : 'Expand All' }}
+      </button>
       <button mat-stroked-button (click)="toggleGrouping()" [color]="isGrouped() ? 'primary' : ''">
         <mat-icon>{{ isGrouped() ? 'grid_on' : 'splitscreen' }}</mat-icon>
         {{ isGrouped() ? 'Ungroup' : 'Group by Release' }}
@@ -174,7 +178,7 @@
       <!-- Grouped View (Hierarchical Expansion Panels) -->
       <ng-container *ngIf="isGrouped(); else flatView">
         <mat-accordion class="hierarchical-accordion" multi="true">
-          <mat-expansion-panel *ngFor="let l1 of groupedHierarchicalData()" class="version-panel version-panel--l1" [expanded]="true">
+          <mat-expansion-panel *ngFor="let l1 of groupedHierarchicalData()" class="version-panel version-panel--l1" [expanded]="isPanelExpanded(l1.versionKey)" (opened)="onPanelToggle(l1.versionKey, true)" (closed)="onPanelToggle(l1.versionKey, false)">
             <mat-expansion-panel-header>
               <mat-panel-title>
                 <mat-icon class="version-panel__icon">account_tree</mat-icon>
@@ -197,7 +201,7 @@
 
               <!-- Level 2 Sub-releases -->
               <mat-accordion *ngIf="l1.subNodes.length > 0" class="hierarchical-accordion" multi="true">
-                <mat-expansion-panel *ngFor="let l2 of l1.subNodes" class="version-panel version-panel--l2" [expanded]="true">
+                <mat-expansion-panel *ngFor="let l2 of l1.subNodes" class="version-panel version-panel--l2" [expanded]="isPanelExpanded(l2.versionKey)" (opened)="onPanelToggle(l2.versionKey, true)" (closed)="onPanelToggle(l2.versionKey, false)">
                   <mat-expansion-panel-header>
                     <mat-panel-title>
                       <mat-icon class="version-panel__icon">subdirectory_arrow_right</mat-icon>
@@ -220,7 +224,7 @@
 
                     <!-- Level 3 Patches -->
                     <mat-accordion *ngIf="l2.subNodes.length > 0" class="hierarchical-accordion" multi="true">
-                      <mat-expansion-panel *ngFor="let l3 of l2.subNodes" class="version-panel version-panel--l3" [expanded]="true">
+                      <mat-expansion-panel *ngFor="let l3 of l2.subNodes" class="version-panel version-panel--l3" [expanded]="isPanelExpanded(l3.versionKey)" (opened)="onPanelToggle(l3.versionKey, true)" (closed)="onPanelToggle(l3.versionKey, false)">
                         <mat-expansion-panel-header>
                           <mat-panel-title>
                             <mat-icon class="version-panel__icon">tag</mat-icon>
@@ -954,4 +958,9 @@
 
   <!-- Toast notifications -->
   <app-toast></app-toast>
+
+  <!-- Scroll to top button -->
+  <button mat-fab class="scroll-to-top" *ngIf="showScrollToTop()" (click)="scrollToTop()" matTooltip="Scroll to Top">
+    <mat-icon>keyboard_arrow_up</mat-icon>
+  </button>
 </div>

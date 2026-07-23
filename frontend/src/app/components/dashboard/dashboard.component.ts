@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -73,11 +73,69 @@ export class DashboardComponent implements OnInit {
 
   // Grouping state & helpers
   isGrouped = signal<boolean>(true);
+  expandedPanels = signal<Set<string>>(new Set());
+  isExpandAll = computed(() => this.expandedPanels().size > 0);
+  showScrollToTop = signal<boolean>(false);
 
   toggleGrouping() {
     this.isGrouped.update(val => !val);
     this.pageIndex.set(0);
     this.loadData();
+  }
+
+  isPanelExpanded(key: string): boolean {
+    return this.expandedPanels().has(key);
+  }
+
+  onPanelToggle(key: string, expanded: boolean) {
+    const current = new Set(this.expandedPanels());
+    if (expanded) {
+      current.add(key);
+    } else {
+      current.delete(key);
+    }
+    this.expandedPanels.set(current);
+    localStorage.setItem('RFP_PANEL_STATE_V2', JSON.stringify(Array.from(current)));
+  }
+
+  private getAllVersionKeys(): string[] {
+    const keys: string[] = [];
+    const traverse = (nodes: any[]) => {
+      for (const node of nodes) {
+        keys.push(node.versionKey);
+        if (node.subNodes && node.subNodes.length > 0) {
+          traverse(node.subNodes);
+        }
+      }
+    };
+    traverse(this.groupedHierarchicalData());
+    return keys;
+  }
+
+  toggleExpandAll() {
+    if (this.isExpandAll()) {
+      // Currently some/all expanded, so collapse all
+      this.expandedPanels.set(new Set());
+    } else {
+      // Currently all collapsed, so expand all
+      const allKeys = this.getAllVersionKeys();
+      this.expandedPanels.set(new Set(allKeys));
+    }
+    localStorage.setItem('RFP_PANEL_STATE_V2', JSON.stringify(Array.from(this.expandedPanels())));
+  }
+
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    const yOffset = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    if (yOffset > 300) {
+      this.showScrollToTop.set(true);
+    } else {
+      this.showScrollToTop.set(false);
+    }
+  }
+
+  scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   /** Returns the raw numeric version key from a deployment item (e.g. "1.12.1"). */
@@ -482,12 +540,20 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     const user = this.authService.getCurrentUser();
     if (user) {
       this.currentUser.set(user);
       this.applyTheme(user.theme || 'light');
     }
+
+    const savedPanels = localStorage.getItem('RFP_PANEL_STATE_V2');
+    if (savedPanels) {
+      try {
+        this.expandedPanels.set(new Set(JSON.parse(savedPanels)));
+      } catch (e) {}
+    }
+
     this.loadData();
   }
 

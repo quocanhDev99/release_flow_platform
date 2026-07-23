@@ -67,6 +67,7 @@ All technical deep-dives and architectural diagrams are stored in the `docs/` di
 | 📄 [Automated Reminders](docs/03-Features-and-Usecases/03.4-automated-reminders.md) | Use Case & Sequence Diagrams for daily Cron jobs. |
 | 📄 [ChatOps Notifications](docs/03-Features-and-Usecases/03.5-chatops-notifications.md) | Use Case & Sequence Diagrams for event broadcasts. |
 | 📄 [System Settings](docs/03-Features-and-Usecases/03.6-system-settings.md) | Use Case & Sequence Diagrams for Settings Configuration API. |
+| 📄 [Dashboard Management](docs/03-Features-and-Usecases/03.7-dashboard-management.md) | Dashboard UI, Grouping, State Persistence. |
 
 ### 04. API Reference
 | Document | Detailed Content |
