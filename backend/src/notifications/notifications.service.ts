@@ -241,17 +241,17 @@ export class NotificationsService {
 
     const slackMessage = `${emoji} *[RFP Alert]* ${actionText}
 • *Repository:* ${data.repoName}
-• *Ticket:* <${data.url || '#'}|${data.ticketId}> - ${data.summary}
+• *Ticket:* ${data.url ? `<${data.url}|${data.ticketId}>` : data.ticketId}${data.summary ? ` - ${data.summary}` : ''}
 • *Change Type:* ${data.changeType}
 • *Release Version:* ${data.releaseVersion}
 • *Branch:* \`${data.sourceBranch}\`
 • *Developer:* @${data.developer}`;
 
-    const teamsMessage = `**Action:** ${actionText}  \n**Repository:** ${data.repoName}  \n**Ticket:** [${data.ticketId}](${data.url || '#'}) - ${data.summary}  \n**Change Type:** ${data.changeType}  \n**Release Version:** ${data.releaseVersion}  \n**Branch:** \`${data.sourceBranch}\`  \n**Developer:** @${data.developer}`;
+    const teamsMessage = `**Action:** ${actionText}  \n**Repository:** ${data.repoName}  \n**Ticket:** ${data.url ? `[${data.ticketId}](${data.url})` : data.ticketId}${data.summary ? ` - ${data.summary}` : ''}  \n**Change Type:** ${data.changeType}  \n**Release Version:** ${data.releaseVersion}  \n**Branch:** \`${data.sourceBranch}\`  \n**Developer:** @${data.developer}`;
 
     const telegramMessage = `${emoji} <b>[RFP Alert] ${actionText}</b>\n\n` +
       `📦 <b>Repository:</b> ${data.repoName}\n` +
-      `🎫 <b>Ticket:</b> <a href="${data.url || '#'}">${data.ticketId}</a> - ${data.summary}\n` +
+      `🎫 <b>Ticket:</b> ${data.url ? `<a href="${data.url}">${data.ticketId}</a>` : data.ticketId}${data.summary ? ` - ${data.summary}` : ''}\n` +
       `🏷 <b>Change Type:</b> ${data.changeType}\n` +
       `🚀 <b>Release Version:</b> ${data.releaseVersion}\n` +
       `🌿 <b>Branch:</b> <code>${data.sourceBranch}</code>\n` +
@@ -268,7 +268,7 @@ export class NotificationsService {
           </tr>
           <tr>
             <td style="padding: 10px; border-bottom: 1px solid #eee; background: #f9f9f9;"><strong>Ticket</strong></td>
-            <td style="padding: 10px; border-bottom: 1px solid #eee;"><a href="${data.url || '#'}">${data.ticketId}</a> ${data.summary ? `- ${data.summary}` : ''}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${data.url ? `<a href="${data.url}">${data.ticketId}</a>` : data.ticketId} ${data.summary ? `- ${data.summary}` : ''}</td>
           </tr>
           <tr>
             <td style="padding: 10px; border-bottom: 1px solid #eee; background: #f9f9f9;"><strong>Type</strong></td>
