@@ -299,7 +299,9 @@
           <th mat-header-cell *matHeaderCellDef>Ticket</th>
           <td mat-cell *matCellDef="let item">
             <ng-container *ngIf="item.tickets && item.tickets.length > 0; else noTickets">
-              <div *ngFor="let t of item.tickets" class="ticket-id">{{ t.ticketId }}</div>
+              <div *ngFor="let t of item.tickets" class="ticket-id">
+                <a [href]="`https://storai.atlassian.net/browse/${t.ticketId}`" target="_blank" rel="noopener noreferrer">{{t.ticketId}}</a>
+              </div>
             </ng-container>
             <ng-template #noTickets>—</ng-template>
           </td>
@@ -314,8 +316,8 @@
         <!-- Source Branch Column -->
         <ng-container matColumnDef="sourceBranch">
           <th mat-header-cell *matHeaderCellDef>Branch</th>
-          <td mat-cell *matCellDef="let item" [matTooltip]="item.sourceBranch">
-            <span class="code-chip">{{ item.sourceBranch }}</span>
+          <td mat-cell *matCellDef="let item" [matTooltip]="item.sourceBranch + ' (click to copy)'">
+            <span class="code-chip code-chip--copyable" (click)="copyToClipboard(item.sourceBranch)">{{ item.sourceBranch }}</span>
           </td>
         </ng-container>
 
@@ -332,8 +334,8 @@
         <!-- Branch Build Column -->
         <ng-container matColumnDef="branchBuilds">
           <th mat-header-cell *matHeaderCellDef>Branch Build</th>
-          <td mat-cell *matCellDef="let item" [matTooltip]="getBuildsString(item)">
-            <span class="code-chip">{{ getBuildsString(item) }}</span>
+          <td mat-cell *matCellDef="let item" [matTooltip]="getBuildsString(item) + ' (click to copy)'">
+            <span class="code-chip code-chip--copyable" (click)="copyToClipboard(getBuildsString(item))">{{ getBuildsString(item) }}</span>
           </td>
         </ng-container>
 

@@ -1242,6 +1242,14 @@ export class DashboardComponent implements OnInit {
     input.value = '';
   }
 
+  copyToClipboard(text: string): void {
+    if (!text || text === '-') return;
+    navigator.clipboard.writeText(text).then(
+      () => this.toast.success('Copied to clipboard.'),
+      () => this.toast.error('Failed to copy to clipboard.')
+    );
+  }
+
   // Helper method to display build environments as a string
   getBuildsString(item: DeploymentItem): string {
     if (!item.builds || item.builds.length === 0) return '-';
