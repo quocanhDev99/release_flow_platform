@@ -450,6 +450,10 @@ $transition-base: all 0.2s ease;
   color: $color-brand;
   font-family: $font-mono;
   letter-spacing: -0.2px;
+
+  &:not(:last-child)::after {
+    content: ',';
+  }
 }
 
 // ─── Branch / Build code chips ────────────────────────────────────────────────
@@ -1007,7 +1011,7 @@ $transition-base: all 0.2s ease;
 /* Config Sidebar specific overrides */
 .sidebar__body--config {
   padding: 0;
-  
+
   ::ng-deep .mat-mdc-tab-header {
     background-color: #f5f7fa;
     border-bottom: 1px solid #e0e0e0;
@@ -1043,7 +1047,7 @@ $transition-base: all 0.2s ease;
     padding: 16px;
     margin-bottom: 24px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    
+
     &__header {
       display: flex;
       align-items: flex-start;
@@ -1058,7 +1062,7 @@ $transition-base: all 0.2s ease;
         height: 28px;
         width: 28px;
       }
-      
+
       .email-icon {
         color: #d44638;
         font-size: 28px;
@@ -1090,7 +1094,7 @@ $transition-base: all 0.2s ease;
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    
+
     &.gap-2 {
       gap: 16px;
     }
