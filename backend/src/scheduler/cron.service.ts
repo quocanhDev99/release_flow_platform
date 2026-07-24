@@ -12,7 +12,10 @@ export class CronService {
     private notificationsService: NotificationsService,
   ) {}
 
-  @Cron('0 8 * * *', { name: 'daily_deployments_reminder' })
+  @Cron('0 8 * * *', {
+    name: 'daily_deployments_reminder',
+    timeZone: 'Asia/Ho_Chi_Minh',
+  })
   // For testing, we can temporarily uncomment the line below to run every 10 seconds:
   // @Cron('*/10 * * * * *', { name: 'test_reminder' })
   async handleDailyReminder() {
@@ -96,7 +99,10 @@ export class CronService {
     }
   }
 
-  @Cron('30 16 * * *', { name: 'tomorrow_deployments_reminder' })
+  @Cron('30 16 * * *', { 
+    name: 'tomorrow_deployments_reminder',
+    timeZone: 'Asia/Ho_Chi_Minh'
+  })
   async handleTomorrowReminder() {
     this.logger.debug('Running tomorrow deployment reminder check...');
 
