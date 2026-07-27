@@ -6,5 +6,6 @@ import { NotificationsModule } from '../notifications/notifications.module';
 @Module({
   imports: [PrismaModule, NotificationsModule],
   providers: [CronService],
+  exports: [CronService],
 })
 export class SchedulerModule {}

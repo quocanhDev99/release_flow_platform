@@ -1,24 +1,41 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
-export class CronService {
+export class CronService implements OnModuleInit {
   private readonly logger = new Logger(CronService.name);
+  private lastSentDateStr = '';
 
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
   ) {}
 
+  async onModuleInit() {
+    this.logger.log('CronService initialized. Checking today\'s deployment schedule for automatic morning notifications...');
+    // Automatically check and send morning notification if there are deployments today
+    await this.handleDailyReminder(false);
+  }
+
   @Cron('0 8 * * *', {
     name: 'daily_deployments_reminder',
     timeZone: 'Asia/Ho_Chi_Minh',
   })
-  // For testing, we can temporarily uncomment the line below to run every 10 seconds:
-  // @Cron('*/10 * * * * *', { name: 'test_reminder' })
-  async handleDailyReminder() {
+  async triggerDailyCron() {
+    await this.handleDailyReminder(true);
+  }
+
+  async handleDailyReminder(force = false, currentUsername?: string) {
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10);
+
+    if (!force && this.lastSentDateStr === todayStr) {
+      this.logger.debug(`Daily deployment reminder for ${todayStr} has already been sent automatically.`);
+      return;
+    }
+
     this.logger.debug('Running daily deployment reminder check...');
 
     const todayStart = new Date();
@@ -52,10 +69,21 @@ export class CronService {
       return;
     }
 
-    this.logger.debug(`Found ${windows.length} deployments for today.`);
+    // Resolve user username to mention
+    let mentionUser = currentUsername;
+    if (!mentionUser) {
+      const defaultUser = await this.prisma.user.findFirst();
+      mentionUser = defaultUser?.username || 'ReleaseManager';
+    }
 
-    let message = `🔔 <b>Today's Deployments Reminder</b>\n\n`;
-    let plainMessage = `🔔 Today's Deployments Reminder\n\n`;
+    this.logger.debug(`Found ${windows.length} deployments for today. Sending automated notifications (Mentioning @${mentionUser})...`);
+
+    let message = `🔔 <b>Today's Deployments Reminder</b>\n`;
+    message += `👤 <b>Responsible/Mention:</b> @${mentionUser}\n\n`;
+
+    let plainMessage = `🔔 Today's Deployments Reminder\n`;
+    plainMessage += `👤 Responsible/Mention: @${mentionUser}\n\n`;
+
     let emailHtml = `<ul style="font-family: Arial; font-size: 14px; line-height: 1.6;">`;
 
     windows.forEach((win) => {
@@ -77,7 +105,7 @@ export class CronService {
           <p style="color: #666; margin-top: 5px; font-size: 14px;">Release Flow Platform Scheduler</p>
         </div>
         
-        <p>Here are the scheduled deployments for today:</p>
+        <p>Attention @${mentionUser}, here are the scheduled deployments for today:</p>
         ${emailHtml}
         
         <div style="margin-top: 30px; padding-top: 15px; border-top: 1px dashed #eee; text-align: center;">
@@ -90,10 +118,11 @@ export class CronService {
       await Promise.all([
         this.notificationsService.sendTelegramNotification(message),
         this.notificationsService.sendSlackNotification(plainMessage),
-        this.notificationsService.sendTeamsNotification('⏰ Daily Deployments Reminder', plainMessage),
+        this.notificationsService.sendTeamsNotification('⏰ Daily Deployments Reminder', plainMessage, mentionUser),
         this.notificationsService.sendEmailNotification('[Release Flow] Today\'s Deployments Reminder', emailBody)
       ]);
-      this.logger.debug('Successfully broadcasted daily reminder.');
+      this.lastSentDateStr = todayStr;
+      this.logger.log(`Successfully sent automated daily deployment notification for ${todayStr} (Mentioned @${mentionUser}).`);
     } catch (err) {
       this.logger.error('Failed to broadcast daily reminder', err);
     }
@@ -103,7 +132,7 @@ export class CronService {
     name: 'tomorrow_deployments_reminder',
     timeZone: 'Asia/Ho_Chi_Minh'
   })
-  async handleTomorrowReminder() {
+  async handleTomorrowReminder(currentUsername?: string) {
     this.logger.debug('Running tomorrow deployment reminder check...');
 
     const tomorrowStart = new Date();
@@ -139,21 +168,24 @@ export class CronService {
       return;
     }
 
-    this.logger.debug(`Found ${windows.length} deployments for tomorrow.`);
+    let mentionUser = currentUsername;
+    if (!mentionUser) {
+      const defaultUser = await this.prisma.user.findFirst();
+      mentionUser = defaultUser?.username || 'ReleaseManager';
+    }
 
-    let message = `⚠️ <b>Action Required: Upcoming Deployments Tomorrow</b>\n\n`;
+    this.logger.debug(`Found ${windows.length} deployments for tomorrow. Mentioning @${mentionUser}...`);
+
+    let message = `⚠️ <b>Action Required: Upcoming Deployments Tomorrow</b>\n`;
+    message += `👤 <b>Attention:</b> @${mentionUser}\n\n`;
     message += `Please ensure all your code is fully merged into the 'devel' branch or other relevant branches for tomorrow's deployment!\n\n`;
 
-    let plainMessage = `⚠️ Action Required: Upcoming Deployments Tomorrow\n\nPlease ensure all your code is fully merged into the 'devel' branch or other relevant branches for tomorrow's deployment!\n\n`;
+    let plainMessage = `⚠️ Action Required: Upcoming Deployments Tomorrow\n👤 Attention: @${mentionUser}\n\nPlease ensure all your code is fully merged into the 'devel' branch or other relevant branches for tomorrow's deployment!\n\n`;
 
     let emailHtml = `<ul style="font-family: Arial; font-size: 14px; line-height: 1.6;">`;
 
     windows.forEach((win) => {
-      const time = new Date(win.startTime).toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      });
+      const time = new Date(win.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
       const env = win.environment.name;
       const version = win.bookings?.[0]?.releasePackage?.version || 'N/A';
 
@@ -167,17 +199,15 @@ export class CronService {
     const emailBody = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
         <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #e67e22; margin: 0;">⚠️ Action Required</h2>
-          <p style="color: #666; margin-top: 5px; font-size: 14px;">Deployments Scheduled for Tomorrow</p>
+          <h2 style="color: #d9534f; margin: 0;">⚠️ Tomorrow's Deployments Warning</h2>
+          <p style="color: #666; margin-top: 5px; font-size: 14px;">Release Flow Platform Scheduler</p>
         </div>
         
-        <p style="font-size: 15px; color: #333;"><strong>Reminder for all developers:</strong> Please ensure all your code is fully merged into the 'devel' branch or other relevant branches for tomorrow's deployment!</p>
-        
-        <p>Deployments list:</p>
+        <p>Attention @${mentionUser}, please make sure your changes are merged into target branches before deployment time tomorrow:</p>
         ${emailHtml}
         
         <div style="margin-top: 30px; padding-top: 15px; border-top: 1px dashed #eee; text-align: center;">
-          <p style="margin: 0; font-size: 12px; color: #999;">This is an automated reminder from the Release Flow Platform.</p>
+          <p style="margin: 0; font-size: 12px; color: #999;">Automated notification from Release Flow Platform.</p>
         </div>
       </div>
     `;
@@ -186,12 +216,12 @@ export class CronService {
       await Promise.all([
         this.notificationsService.sendTelegramNotification(message),
         this.notificationsService.sendSlackNotification(plainMessage),
-        this.notificationsService.sendTeamsNotification('⚠️ Upcoming Deployments Tomorrow', plainMessage),
-        this.notificationsService.sendEmailNotification('[Action Required] Deployments Scheduled for Tomorrow', emailBody)
+        this.notificationsService.sendTeamsNotification('⚠️ Tomorrow\'s Deployments Warning', plainMessage, mentionUser),
+        this.notificationsService.sendEmailNotification('[Release Flow] Tomorrow\'s Deployments Warning', emailBody)
       ]);
-      this.logger.debug('Successfully broadcasted tomorrow reminder.');
+      this.logger.log('Successfully broadcasted tomorrow deployment reminder.');
     } catch (err) {
-      this.logger.error('Failed to broadcast tomorrow reminder', err);
+      this.logger.error('Failed to broadcast tomorrow deployment reminder', err);
     }
   }
 }

@@ -23,7 +23,7 @@
         <mat-icon>{{ theme() === 'light' ? 'dark_mode' : 'light_mode' }}</mat-icon>
       </button>
 
-      <div class="navbar__user" *ngIf="currentUser()">
+      <div class="navbar__user" *ngIf="currentUser()" [routerLink]="['/profile']" matTooltip="Profile & Notification Settings" style="cursor: pointer;">
         <div class="navbar__avatar">
           <mat-icon>account_circle</mat-icon>
         </div>

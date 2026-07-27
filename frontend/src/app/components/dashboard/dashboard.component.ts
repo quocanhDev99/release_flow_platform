@@ -52,7 +52,7 @@ import { ToastComponent } from '../toast/toast.component';
     DashboardSidebarComponent
   ],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss'
+  styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
   private releaseService = inject(ReleaseService);
