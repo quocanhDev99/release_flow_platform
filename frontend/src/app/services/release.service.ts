@@ -179,6 +179,18 @@ export class ReleaseService {
     return this.http.post<any>(`${this.apiUrl}/deployment-windows/notify`, data);
   }
 
+  triggerDailyReminder(developer?: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deployment-windows/trigger-reminder`, { developer });
+  }
+
+  getCronStatus(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/deployment-windows/cron/status`);
+  }
+
+  runCronJob(jobId: string, developer?: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deployment-windows/cron/run/${jobId}`, { developer });
+  }
+
   // Deployment Policies
   getDeploymentPolicies(): Observable<DeploymentPolicy[]> {
     return this.http.get<DeploymentPolicy[]>(`${this.apiUrl}/deployment-windows/policies/all`);

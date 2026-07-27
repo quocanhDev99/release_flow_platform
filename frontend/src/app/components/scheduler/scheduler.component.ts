@@ -39,7 +39,7 @@ import { ToastComponent } from '../toast/toast.component';
     ToastComponent
   ],
   templateUrl: './scheduler.component.html',
-  styleUrl: './scheduler.component.scss'
+  styleUrls: ['./scheduler.component.scss']
 })
 export class SchedulerComponent implements OnInit {
   private releaseService = inject(ReleaseService);
@@ -129,6 +129,13 @@ export class SchedulerComponent implements OnInit {
       next: (res) => this.environments.set(res),
       error: () => this.toastService.error('Error loading environments'),
       complete: () => this.loading.set(false)
+    });
+  }
+
+  sendDailyAlertNotification() {
+    this.releaseService.triggerDailyReminder().subscribe({
+      next: () => this.toastService.success('Successfully sent Today\'s Deployments Alert to Teams & Telegram!'),
+      error: () => this.toastService.error('Failed to send deployment alert notification')
     });
   }
 

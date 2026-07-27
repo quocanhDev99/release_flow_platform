@@ -70,6 +70,21 @@ export class DeploymentWindowsController {
     return this.deploymentWindowsService.notifySchedule(data);
   }
 
+  @Post('trigger-reminder')
+  triggerReminder(@Body() body?: { developer?: string }) {
+    return this.deploymentWindowsService.triggerReminder(body?.developer);
+  }
+
+  @Get('cron/status')
+  getCronStatus() {
+    return this.deploymentWindowsService.getCronStatus();
+  }
+
+  @Post('cron/run/:jobId')
+  runCronJob(@Param('jobId') jobId: string, @Body() body?: { developer?: string }) {
+    return this.deploymentWindowsService.runCronJob(jobId, body?.developer);
+  }
+
   // Policies Endpoints
   @Get('policies/all')
   findAllPolicies() {
