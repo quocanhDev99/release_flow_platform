@@ -1,0 +1,432 @@
+<!-- Backdrop -->
+<div class="sidebar-backdrop" *ngIf="activeItem !== null" (click)="closeEditPanel()"></div>
+
+<aside class="sidebar" [class.sidebar--open]="activeItem !== null">
+  <div class="sidebar__header">
+    <h3 class="sidebar__title" *ngIf="isCreateMode">New Deployment Record</h3>
+    <h3 class="sidebar__title" *ngIf="isConfigMode">System Configuration</h3>
+    <h3 class="sidebar__title" *ngIf="!isCreateMode && !isConfigMode && activeTicket">
+      Edit — {{ activeTicket.ticketId }}
+    </h3>
+    <button mat-icon-button type="button" (click)="closeEditPanel()" aria-label="Close panel" [disabled]="isSaving()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Header Loading Bar -->
+  <div class="sidebar__loading-bar" *ngIf="isSaving()"></div>
+
+  <!-- Unified Deployment Record Form (Create & Edit Mode) -->
+  <form *ngIf="!isConfigMode && (isCreateMode || (activeItem && activeTicket))" #recordForm="ngForm"
+    (ngSubmit)="recordForm.valid && saveTicketDetails()">
+    <div class="sidebar__body" [class.sidebar__body--saving]="isSaving()">
+      <p class="sidebar__section-title">Branch Information</p>
+
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Repository</mat-label>
+        <mat-select multiple required name="repositoryIds" #repoSelect="ngModel" [(ngModel)]="formModel.repositoryIds">
+          <mat-option *ngFor="let repo of repositories" [value]="repo.id">{{ repo.name }}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="repoSelect.invalid && (repoSelect.touched || repoSelect.dirty || recordForm.submitted)">Repository is required.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Developer</mat-label>
+        <mat-select required name="userId" #userSelect="ngModel" [(ngModel)]="formModel.userId">
+          <mat-option *ngFor="let u of users" [value]="u.id">{{ u.username }}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="userSelect.invalid && (userSelect.touched || userSelect.dirty || recordForm.submitted)">Developer is required.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Release Stream (Fix Version)</mat-label>
+        <mat-select required name="releaseStreamId" #releaseStreamSelect="ngModel" [(ngModel)]="formModel.releaseStreamId">
+          <mat-option *ngFor="let rel of sortedReleasesWithIndent" [value]="rel.id">
+            <span *ngFor="let space of rel.indentArray" style="display: inline-block; width: 16px;"></span>
+            {{ rel.displayName }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="releaseStreamSelect.invalid && (releaseStreamSelect.touched || releaseStreamSelect.dirty || recordForm.submitted)">Release Stream is required.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Development Branch</mat-label>
+        <input matInput name="sourceBranch" required [(ngModel)]="formModel.sourceBranch"
+          (ngModelChange)="onBranchChange($event)" placeholder="e.g. feature/auth-fix" #branchInput="ngModel">
+        <mat-error *ngIf="branchInput.invalid && (branchInput.touched || branchInput.dirty || recordForm.submitted)">Development Branch is required.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Branch Status</mat-label>
+        <mat-select name="status" [(ngModel)]="formModel.status">
+          <mat-option *ngFor="let s of statuses" [value]="s">{{ s | uppercase }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Branch Build</mat-label>
+        <mat-select name="branchBuilds" [(ngModel)]="formModel.branchBuilds" multiple>
+          <mat-option *ngFor="let opt of branchBuildOptions" [value]="opt">{{ opt }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-checkbox name="isMergedOnDevel" [(ngModel)]="formModel.isMergedOnDevel" style="margin-top:4px">
+        Merged to Devel
+      </mat-checkbox>
+
+      <hr class="sidebar__divider">
+      <p class="sidebar__section-title">Ticket Details</p>
+
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Ticket ID</mat-label>
+        <input matInput name="ticketId" required [(ngModel)]="formModel.ticketId" placeholder="e.g. MAG-20479"
+          #ticketInput="ngModel">
+        <mat-error *ngIf="ticketInput.invalid && (ticketInput.touched || ticketInput.dirty || recordForm.submitted)">Ticket ID is required.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Ticket Summary</mat-label>
+        <input matInput name="summary" [(ngModel)]="formModel.summary" placeholder="Short description of the task">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Classification (Type)</mat-label>
+        <mat-select name="changeType" [(ngModel)]="formModel.changeType">
+          <mat-option *ngFor="let type of changeTypes" [value]="type">{{ type }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>QC Readiness Status</mat-label>
+        <mat-select name="qcStatus" [(ngModel)]="formModel.qcStatus">
+          <mat-option *ngFor="let status of qcStatuses" [value]="status">{{ status }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-100 has-textarea">
+        <mat-label>Pending Issues / Remarks</mat-label>
+        <textarea matInput name="pendingIssues" rows="3" [(ngModel)]="formModel.pendingIssues"
+          placeholder="Enter any pending issues..."></textarea>
+      </mat-form-field>
+    </div>
+
+    <div class="sidebar__footer">
+      <button mat-stroked-button type="button" (click)="closeEditPanel()" [disabled]="isSaving()">Cancel</button>
+      <button mat-raised-button type="submit" color="primary" [disabled]="isSaving() || recordForm.invalid">
+        <span *ngIf="!isSaving()">Save Changes</span>
+        <span *ngIf="isSaving()">Saving...</span>
+      </button>
+    </div>
+  </form>
+
+  <!-- Release & Repository Config Mode Form -->
+  <form *ngIf="isConfigMode" #configForm="ngForm" (ngSubmit)="saveSettings()">
+    <div class="sidebar__body sidebar__body--config">
+      <mat-tab-group animationDuration="0ms" class="custom-tabs">
+
+        <!-- Tab 1: Environment & Core Data -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">view_list</mat-icon>
+            Core Data
+          </ng-template>
+
+          <div class="tab-content-wrapper">
+            <!-- 1. Release Streams section -->
+            <div class="config-card">
+              <div class="config-card__header">
+                <mat-icon class="card-icon">timeline</mat-icon>
+                <div class="header-text">
+                  <h4>Active Release Streams</h4>
+                  <p>Manage software versions and deployment streams.</p>
+                </div>
+              </div>
+
+              <div class="release-chip-list mb-3">
+                <span *ngFor="let rel of releases" class="release-chip">
+                  {{ rel.version }}
+                  <mat-icon class="release-chip__remove" (click)="deleteReleaseStream(rel, $event)">close</mat-icon>
+                </span>
+                <span *ngIf="releases.length === 0" class="release-chip-empty">No release streams configured.</span>
+              </div>
+
+              <div class="row mt-3">
+                <div class="col-12">
+                  <mat-form-field appearance="outline" class="w-100 mb-0">
+                    <mat-label>Version (e.g. sow/1.14.x)</mat-label>
+                    <input matInput name="newReleaseVersionName" [(ngModel)]="newReleaseVersionName"
+                      placeholder="e.g. sow/1.14.x" autocomplete="off">
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-end mt-3">
+                <button mat-stroked-button type="button" color="primary" (click)="addReleaseVersion()"
+                  [disabled]="!newReleaseVersionName.trim()">
+                  <mat-icon>add</mat-icon> Add Stream
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. Repositories section -->
+            <div class="config-card">
+              <div class="config-card__header">
+                <mat-icon class="card-icon">source</mat-icon>
+                <div class="header-text">
+                  <h4>Active Repositories</h4>
+                  <p>Configure Git repositories linked to deployments.</p>
+                </div>
+              </div>
+
+              <div class="release-chip-list mb-3">
+                <span *ngFor="let repo of repositories" class="release-chip">
+                  {{ repo.name }}
+                  <mat-icon class="release-chip__remove" (click)="deleteRepository(repo, $event)">close</mat-icon>
+                </span>
+                <span *ngIf="repositories.length === 0" class="release-chip-empty">No repositories configured.</span>
+              </div>
+
+              <div class="row mt-3">
+                <div class="col-12">
+                  <mat-form-field appearance="outline" class="w-100 mb-0">
+                    <mat-label>Repository Name (e.g. CMS)</mat-label>
+                    <input matInput name="newRepoName" [(ngModel)]="newRepoName" placeholder="e.g. CMS"
+                      autocomplete="off">
+                  </mat-form-field>
+                </div>
+                <div class="col-12 mt-3">
+                  <mat-form-field appearance="outline" class="w-100 mb-0">
+                    <mat-label>Git URL (Optional)</mat-label>
+                    <input matInput name="newRepoGitUrl" [(ngModel)]="newRepoGitUrl"
+                      placeholder="https://github.com/..." autocomplete="off">
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-end mt-3">
+                <button mat-stroked-button type="button" color="primary" (click)="addRepository()"
+                  [disabled]="!newRepoName.trim()">
+                  <mat-icon>add</mat-icon> Add Repository
+                </button>
+              </div>
+            </div>
+
+            <!-- 3. Branch Build / Environments section -->
+            <div class="config-card mb-0">
+              <div class="config-card__header">
+                <mat-icon class="card-icon">dns</mat-icon>
+                <div class="header-text">
+                  <h4>Branch Builds (Environments)</h4>
+                  <p>Define deployment environments like dev, STG, UAT.</p>
+                </div>
+              </div>
+
+              <div class="release-chip-list mb-3">
+                <span *ngFor="let env of environments" class="release-chip">
+                  {{ env.name }}
+                  <mat-icon class="release-chip__remove" (click)="deleteEnvironment(env, $event)">close</mat-icon>
+                </span>
+                <span *ngIf="environments.length === 0" class="release-chip-empty">No dynamic branch builds
+                  configured.</span>
+              </div>
+
+              <div class="row mt-3">
+                <div class="col-12">
+                  <mat-form-field appearance="outline" class="w-100 mb-0">
+                    <mat-label>Branch Build Name</mat-label>
+                    <input matInput name="newEnvironmentName" [(ngModel)]="newEnvironmentName"
+                      placeholder="e.g. release/v1.1.1" autocomplete="off">
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-end mt-3">
+                <button mat-stroked-button type="button" color="primary" (click)="addEnvironment()"
+                  [disabled]="!newEnvironmentName.trim()">
+                  <mat-icon>add</mat-icon> Add Build
+                </button>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Tab 2: Notifications Config -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">notifications</mat-icon>
+            Alerts & Notifications
+          </ng-template>
+
+          <div class="tab-content-wrapper">
+            <!-- Telegram Config -->
+            <div class="config-card">
+              <div class="config-card__header">
+                <mat-icon class="telegram-icon">telegram</mat-icon>
+                <div class="header-text">
+                  <h4>Telegram Bot Integration</h4>
+                  <p>Send deployment and bulk alerts to a Telegram chat.</p>
+                </div>
+              </div>
+
+              <div class="row mt-2">
+                <div class="col-12">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Bot Token</mat-label>
+                    <input matInput type="password" name="TELEGRAM_BOT_TOKEN"
+                      [(ngModel)]="settingsForm.TELEGRAM_BOT_TOKEN" placeholder="Enter Bot Token"
+                      autocomplete="new-password">
+                  </mat-form-field>
+                </div>
+
+                <div class="col-12">
+                  <mat-form-field appearance="outline" class="w-100 mt-3">
+                    <mat-label>Chat ID</mat-label>
+                    <input matInput name="TELEGRAM_CHAT_ID" [(ngModel)]="settingsForm.TELEGRAM_CHAT_ID"
+                      placeholder="Enter Chat ID" autocomplete="off">
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-end mt-3">
+                <button mat-stroked-button type="button" color="primary" (click)="testNotification('telegram')">
+                  <mat-icon>send</mat-icon> Test Message
+                </button>
+              </div>
+            </div>
+
+            <!-- Email Config -->
+            <div class="config-card mb-0">
+              <div class="config-card__header">
+                <mat-icon class="email-icon">email</mat-icon>
+                <div class="header-text">
+                  <h4>SMTP Email Settings</h4>
+                  <p>Configure automated email notifications.</p>
+                </div>
+              </div>
+
+              <div class="row mt-2">
+                <div class="col-12">
+                  <mat-form-field appearance="outline" class="w-100 mb-0">
+                    <mat-label>SMTP Host</mat-label>
+                    <input matInput name="SMTP_HOST" [(ngModel)]="settingsForm.SMTP_HOST"
+                      placeholder="e.g. smtp.gmail.com" autocomplete="off">
+                  </mat-form-field>
+                </div>
+
+                <div class="col-sm-4 col-md-3 pe-md-1 mt-3">
+                  <mat-form-field appearance="outline" class="w-100 mb-0">
+                    <mat-label>Port</mat-label>
+                    <input matInput name="SMTP_PORT" [(ngModel)]="settingsForm.SMTP_PORT" placeholder="e.g. 587"
+                      autocomplete="off">
+                  </mat-form-field>
+                </div>
+
+                <div class="col-sm-8 col-md-9 ps-md-1 mt-3">
+                  <mat-form-field appearance="outline" class="w-100 mb-0">
+                    <mat-label>Sender (From)</mat-label>
+                    <input matInput name="SMTP_FROM" [(ngModel)]="settingsForm.SMTP_FROM"
+                      placeholder="Alert <noreply@site.com>" autocomplete="off">
+                  </mat-form-field>
+                </div>
+
+                <div class="col-12 mt-3">
+                  <mat-form-field appearance="outline" class="w-100 mb-0">
+                    <mat-label>SMTP Username</mat-label>
+                    <input matInput name="SMTP_USER" [(ngModel)]="settingsForm.SMTP_USER" placeholder="Username / Email"
+                      autocomplete="off">
+                  </mat-form-field>
+                </div>
+
+                <div class="col-12 mt-3">
+                  <mat-form-field appearance="outline" class="w-100 mb-0">
+                    <mat-label>SMTP Password</mat-label>
+                    <input matInput type="password" name="SMTP_PASS" [(ngModel)]="settingsForm.SMTP_PASS"
+                      placeholder="App Password" autocomplete="new-password">
+                  </mat-form-field>
+                </div>
+
+                <div class="col-12 mt-3">
+                  <mat-form-field appearance="outline" class="w-100 mb-0">
+                    <mat-label>Default Receiver (To)</mat-label>
+                    <input matInput name="SMTP_TO" [(ngModel)]="settingsForm.SMTP_TO" placeholder="Receiver email"
+                      autocomplete="off">
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-end mt-3">
+                <button mat-stroked-button type="button" color="primary" (click)="testNotification('email')">
+                  <mat-icon>forward_to_inbox</mat-icon> Test Email
+                </button>
+              </div>
+            </div>
+
+            <!-- Microsoft Teams Config -->
+            <div class="config-card mt-3">
+              <div class="config-card__header">
+                <mat-icon class="teams-icon" style="color: #6264a7;">groups</mat-icon>
+                <div class="header-text">
+                  <h4>Microsoft Teams Integration</h4>
+                  <p>Send deployment alerts to a Teams Channel via Webhook.</p>
+                </div>
+              </div>
+
+              <div class="row mt-2">
+                <div class="col-12">
+                  <mat-form-field appearance="outline" class="w-100 mb-0">
+                    <mat-label>Teams Webhook URL</mat-label>
+                    <input matInput name="TEAMS_WEBHOOK_URL" [(ngModel)]="settingsForm.TEAMS_WEBHOOK_URL"
+                      placeholder="https://<tenant>.webhook.office.com/..." autocomplete="off">
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-end mt-3">
+                <button mat-stroked-button type="button" color="primary" (click)="testNotification('teams')">
+                  <mat-icon>send</mat-icon> Test Teams
+                </button>
+              </div>
+            </div>
+
+            <!-- Slack Config -->
+            <div class="config-card mt-3 mb-4">
+              <div class="config-card__header">
+                <mat-icon class="slack-icon" style="color: #4a154b;">chat</mat-icon>
+                <div class="header-text">
+                  <h4>Slack Integration</h4>
+                  <p>Send deployment alerts to a Slack Workspace via Webhook.</p>
+                </div>
+              </div>
+
+              <div class="row mt-2">
+                <div class="col-12">
+                  <mat-form-field appearance="outline" class="w-100 mb-0">
+                    <mat-label>Slack Webhook URL</mat-label>
+                    <input matInput name="SLACK_WEBHOOK_URL" [(ngModel)]="settingsForm.SLACK_WEBHOOK_URL"
+                      placeholder="https://hooks.slack.com/services/..." autocomplete="off">
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-end mt-3">
+                <button mat-stroked-button type="button" color="primary" (click)="testNotification('slack')">
+                  <mat-icon>send</mat-icon> Test Slack
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </mat-tab>
+
+      </mat-tab-group>
+    </div>
+
+    <div class="sidebar__footer">
+      <button mat-stroked-button type="button" (click)="closeEditPanel()" [disabled]="isSaving()">Cancel</button>
+      <button mat-raised-button type="submit" color="primary" [disabled]="isSaving()">
+        <span *ngIf="!isSaving()">Save Settings</span>
+        <span *ngIf="isSaving()">Saving...</span>
+      </button>
+    </div>
+  </form>
+</aside>

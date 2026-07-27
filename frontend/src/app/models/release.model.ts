@@ -119,3 +119,18 @@ export interface DeploymentBooking {
   deploymentWindowId: number;
   deploymentWindow?: DeploymentWindow;
 }
+
+export interface RecordFormModel {
+  repositoryIds: number[];
+  userId: number | null;
+  releaseStreamId: number | undefined;
+  sourceBranch: string;
+  status: string;
+  branchBuilds: string[];
+  isMergedOnDevel: boolean;
+  ticketId: string;
+  summary: string;
+  changeType: 'Feature' | 'Fix bug' | 'Enhance';
+  qcStatus: string;
+  pendingIssues: string;
+}

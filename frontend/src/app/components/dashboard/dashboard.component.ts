@@ -1,30 +1,30 @@
-import { Component, OnInit, inject, signal, computed, HostListener } from '@angular/core';
+import { SelectionModel } from '@angular/cdk/collections';
 import { CommonModule } from '@angular/common';
+import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
-import { MatTableModule } from '@angular/material/table';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSelectModule } from '@angular/material/select';
+import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
-import { ReleaseService } from '../../services/release.service';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { Router, RouterModule } from '@angular/router';
+import * as XLSX from 'xlsx';
+import { DeploymentItem, ReleaseStream, Repository, Ticket, User } from '../../models/release.model';
 import { AuthService } from '../../services/auth.service';
+import { ReleaseService } from '../../services/release.service';
 import { ToastService } from '../../services/toast.service';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { DashboardSidebarComponent } from '../dashboard-sidebar/dashboard-sidebar.component';
 import { ToastComponent } from '../toast/toast.component';
-import { DeploymentItem, ReleaseStream, Ticket, Repository, User } from '../../models/release.model';
-import * as XLSX from 'xlsx';
-import { SelectionModel } from '@angular/cdk/collections';
-import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -48,7 +48,8 @@ import { forkJoin } from 'rxjs';
     MatExpansionModule,
     MatTooltipModule,
     MatTabsModule,
-    ToastComponent
+    ToastComponent,
+    DashboardSidebarComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
@@ -427,43 +428,10 @@ export class DashboardComponent implements OnInit {
     this.loadData();
   }
 
-  // Create Mode state
+  // Sidebar Panel State
   isCreateMode = false;
   isConfigMode = false;
-  newReleaseVersionName = '';
-  newRepoName = '';
-  newRepoGitUrl = '';
-  newRepoIds: number[] = [];
-  activeRepoIds: number[] = [];
-  newUserId: number | null = null;
-  newReleaseStreamId: number | undefined = undefined;
-  newSourceBranch = '';
-  newTicketId = '';
-  newSummary = '';
-  newChangeType: 'Feature' | 'Fix bug' | 'Enhance' = 'Feature';
-  newQCStatus = 'waiting for QC test';
-  newPendingIssues = '';
-  newIsMergedOnDevel = false;
-  newStatus = 'merged';
-  newEnvironmentName = '';
-
-  // System Settings Config
-  settingsForm = {
-    TELEGRAM_BOT_TOKEN: '',
-    TELEGRAM_CHAT_ID: '',
-    TEAMS_WEBHOOK_URL: '',
-    SLACK_WEBHOOK_URL: '',
-    SMTP_HOST: '',
-    SMTP_PORT: '',
-    SMTP_USER: '',
-    SMTP_PASS: '',
-    SMTP_FROM: '',
-    SMTP_TO: ''
-  };
-
-  // New Branch Build selections
-  newBranchBuilds: string[] = [];
-  activeBranchBuilds: string[] = [];
+  preselectedReleaseStreamId?: number;
   branchBuildOptions = ['dev', 'dev2', 'devel', 'STG', 'UAT', 'Production'];
 
   // Selection state
@@ -745,11 +713,12 @@ export class DashboardComponent implements OnInit {
   // open panel to edit ticket detail (Pending Issues, builds)
   openEditPanel(item: DeploymentItem, ticket?: Ticket | null) {
     this.isCreateMode = false;
+    this.isConfigMode = false;
+    this.preselectedReleaseStreamId = undefined;
     this.activeItem = {
       ...item,
       releaseStreamId: item.releaseStreamId || item.releaseStream?.id
     };
-    this.activeRepoIds = item.repositories ? item.repositories.map(r => r.id) : [];
     this.activeTicket = ticket ? { ...ticket } : {
       id: undefined,
       ticketId: '',
@@ -758,30 +727,12 @@ export class DashboardComponent implements OnInit {
       qcStatus: '—',
       pendingIssues: ''
     } as any;
-    this.activeBranchBuilds = item.builds
-      ? item.builds
-        .filter(b => b.status === 'SUCCESS' && b.environment && this.branchBuildOptions.includes(b.environment.name))
-        .map(b => b.environment.name)
-      : [];
   }
 
   openCreatePanel() {
     this.isCreateMode = true;
-    this.newRepoIds = this.repositories().length > 0 ? [this.repositories()[0].id] : [];
-    // Auto-fill userId from logged-in account
-    this.newUserId = this.currentUser()?.id ?? null;
-    this.newReleaseStreamId = undefined;
-    this.newSourceBranch = '';
-    this.newTicketId = '';
-    this.newSummary = '';
-    this.newChangeType = 'Feature';
-    this.newQCStatus = '—';
-    this.newPendingIssues = '';
-    this.newIsMergedOnDevel = false;
-    this.newStatus = 'in progress';
-    this.newBranchBuilds = [];
-
-    // Use dummy items to open the panel
+    this.isConfigMode = false;
+    this.preselectedReleaseStreamId = undefined;
     this.activeItem = {} as any;
     this.activeTicket = {} as any;
   }
@@ -791,311 +742,25 @@ export class DashboardComponent implements OnInit {
     this.activeTicket = null;
     this.isCreateMode = false;
     this.isConfigMode = false;
+    this.preselectedReleaseStreamId = undefined;
   }
 
   openConfigPanel() {
+    this.isCreateMode = false;
     this.isConfigMode = true;
-    this.newReleaseVersionName = '';
-    this.newRepoName = '';
-    this.newRepoGitUrl = '';
-    this.newEnvironmentName = '';
-    this.loadSettings();
-    // Use dummy activeItem to open sidebar
+    this.preselectedReleaseStreamId = undefined;
     this.activeItem = {} as any;
-  }
-
-  addReleaseVersion() {
-    if (!this.newReleaseVersionName.trim()) {
-      this.toast.warn('Please enter a release version name.');
-      return;
-    }
-
-    this.releaseService.createRelease(this.newReleaseVersionName.trim()).subscribe({
-      next: () => {
-        this.toast.success('Release stream added successfully.');
-        this.newReleaseVersionName = '';
-        this.loadData();
-      },
-      error: (err) => {
-        console.error(err);
-        this.toast.error('An error occurred or this release stream already exists.');
-      }
-    });
+    this.activeTicket = null;
   }
 
   openCreatePanelWithVersion(versionKey: string, event: MouseEvent) {
     event.stopPropagation();
-    this.openCreatePanel();
-
-    // Find the original release version in the DB list that matches this clean key
     const match = this.releases().find(r => this.cleanVersion(r.version) === versionKey);
-    if (match) {
-      this.newReleaseStreamId = match.id;
-    }
-  }
-
-  addRepository() {
-    if (!this.newRepoName.trim()) {
-      this.toast.warn('Please enter a repository name.');
-      return;
-    }
-
-    this.releaseService.createRepository(this.newRepoName.trim(), this.newRepoGitUrl.trim() || undefined).subscribe({
-      next: (repo) => {
-        this.toast.success(`Repository ${repo.name} added successfully.`);
-        this.newRepoName = '';
-        this.newRepoGitUrl = '';
-        this.loadData();
-      },
-      error: (err) => {
-        console.error(err);
-        this.toast.error('An error occurred or this repository already exists.');
-      }
-    });
-  }
-
-  deleteReleaseStream(rel: any, event: MouseEvent) {
-    event.stopPropagation();
-    const confirmed = confirm(`Are you sure you want to delete the release stream "${rel.version}"?`);
-    if (!confirmed) return;
-
-    this.releaseService.deleteRelease(rel.id).subscribe({
-      next: () => {
-        this.toast.success(`Release stream "${rel.version}" deleted successfully.`);
-        this.loadData();
-      },
-      error: (err) => {
-        console.error(err);
-        this.toast.error(err.error?.message || 'Failed to delete release stream.');
-      }
-    });
-  }
-
-  deleteRepository(repo: any, event: MouseEvent) {
-    event.stopPropagation();
-    const confirmed = confirm(`Are you sure you want to delete the repository "${repo.name}"? This will also delete all associated deployment records under it.`);
-    if (!confirmed) return;
-
-    this.releaseService.deleteRepository(repo.id).subscribe({
-      next: () => {
-        this.toast.success(`Repository "${repo.name}" deleted successfully.`);
-        this.loadData();
-      },
-      error: (err) => {
-        console.error(err);
-        this.toast.error(err.error?.message || 'Failed to delete repository.');
-      }
-    });
-  }
-
-  addEnvironment() {
-    const trimmed = this.newEnvironmentName.trim();
-    if (!trimmed) {
-      this.toast.warn('Please enter a valid branch build / environment name.');
-      return;
-    }
-    this.releaseService.createEnvironment(trimmed, `Môi trường ${trimmed}`).subscribe({
-      next: () => {
-        this.toast.success(`Branch Build/Environment "${trimmed}" added successfully.`);
-        this.newEnvironmentName = '';
-        this.loadEnvironments();
-      },
-      error: (err) => {
-        console.error(err);
-        this.toast.error('Failed to add branch build.');
-      }
-    });
-  }
-
-  // System Settings methods
-  loadSettings() {
-    this.releaseService.getSettings().subscribe({
-      next: (res) => {
-        this.settingsForm.TELEGRAM_BOT_TOKEN = res['TELEGRAM_BOT_TOKEN'] || '';
-        this.settingsForm.TELEGRAM_CHAT_ID = res['TELEGRAM_CHAT_ID'] || '';
-        this.settingsForm.TEAMS_WEBHOOK_URL = res['TEAMS_WEBHOOK_URL'] || '';
-        this.settingsForm.SLACK_WEBHOOK_URL = res['SLACK_WEBHOOK_URL'] || '';
-        this.settingsForm.SMTP_HOST = res['SMTP_HOST'] || '';
-        this.settingsForm.SMTP_PORT = res['SMTP_PORT'] || '';
-        this.settingsForm.SMTP_USER = res['SMTP_USER'] || '';
-        this.settingsForm.SMTP_PASS = res['SMTP_PASS'] || '';
-        this.settingsForm.SMTP_FROM = res['SMTP_FROM'] || '';
-        this.settingsForm.SMTP_TO = res['SMTP_TO'] || '';
-      },
-      error: (err) => console.error('Failed to load settings', err)
-    });
-  }
-
-  saveSettings() {
-    this.isSaving.set(true);
-    this.releaseService.updateSettings(this.settingsForm).subscribe({
-      next: () => {
-        this.toast.success('System configurations saved successfully.');
-        this.isSaving.set(false);
-      },
-      error: (err) => {
-        console.error(err);
-        this.toast.error('Failed to save configurations.');
-        this.isSaving.set(false);
-      }
-    });
-  }
-
-  testNotification(type: 'telegram' | 'email' | 'teams' | 'slack') {
-    this.toast.info(`Sending test ${type} notification...`);
-    this.releaseService.testNotification(type).subscribe({
-      next: () => {
-        this.toast.success(`Test ${type} notification sent successfully!`);
-      },
-      error: (err) => {
-        console.error(err);
-        this.toast.error(err.error?.message || `Failed to send test ${type} notification.`);
-      }
-    });
-  }
-
-  deleteEnvironment(env: any, event: MouseEvent) {
-    event.stopPropagation();
-    const confirmed = confirm(`Are you sure you want to delete branch build "${env.name}"? Builds associated with this environment will be deleted.`);
-    if (!confirmed) return;
-
-    this.releaseService.deleteEnvironment(env.id).subscribe({
-      next: () => {
-        this.toast.success(`Branch Build "${env.name}" deleted successfully.`);
-        this.loadEnvironments();
-      },
-      error: (err) => {
-        console.error(err);
-        this.toast.error(err.error?.message || 'Failed to delete branch build.');
-      }
-    });
-  }
-
-  onBranchChange(branchName: string, mode: 'create' | 'edit') {
-    if (!branchName) return;
-    
-    // Regex to match ticket IDs like MAG-18878, SBMV1-405, etc.
-    const ticketRegex = /[a-zA-Z]+[a-zA-Z0-9]*-\d+/g;
-    const matches = branchName.match(ticketRegex);
-    
-    if (matches && matches.length > 0) {
-      // Deduplicate and format to uppercase
-      const uniqueTickets = Array.from(new Set(matches.map(m => m.toUpperCase())));
-      const ticketStr = uniqueTickets.join(', ');
-      
-      if (mode === 'create') {
-        this.newTicketId = ticketStr;
-      } else if (mode === 'edit' && this.activeTicket) {
-        this.activeTicket.ticketId = ticketStr;
-      }
-    }
-  }
-
-  // Save details from panel
-  saveTicketDetails() {
-    if (this.isCreateMode) {
-      // Validate: use selected user ID, or fallback to logged-in user ID
-      const userId = this.newUserId || this.currentUser()?.id;
-      if (this.newRepoIds.length === 0 || !userId || !this.newTicketId.trim() || !this.newSourceBranch.trim()) {
-        this.toast.warn('Please fill in all required fields: Repository, Developer, Ticket ID, and Branch.');
-        return;
-      }
-
-      let branchBuilds = [...this.newBranchBuilds];
-      if (this.newIsMergedOnDevel) {
-        if (!branchBuilds.includes('devel')) {
-          branchBuilds.push('devel');
-        }
-      } else {
-        branchBuilds = branchBuilds.filter(b => b !== 'devel');
-      }
-
-      const payload = {
-        repositoryIds: this.newRepoIds,
-        userId: userId,
-        releaseStreamId: this.newReleaseStreamId,
-        sourceBranch: this.newSourceBranch,
-        isMergedOnDevel: this.newIsMergedOnDevel,
-        status: this.newStatus,
-        branchBuilds,
-        tickets: [
-          {
-            ticketId: this.newTicketId,
-            summary: this.newSummary,
-            changeType: this.newChangeType,
-            qcStatus: this.newQCStatus,
-            pendingIssues: this.newPendingIssues
-          }
-        ]
-      };
-
-      this.isSaving.set(true);
-      this.releaseService.createDeploymentItem(payload).subscribe({
-        next: () => {
-          this.toast.success('Deployment record created successfully.');
-          this.loadData();
-          this.closeEditPanel();
-          this.isSaving.set(false);
-        },
-        error: (err) => {
-          console.error('Failed to create deployment item', err);
-          this.toast.error('Failed to create the record. Please try again.');
-          this.isSaving.set(false);
-        }
-      });
-    } else {
-      if (!this.activeItem || !this.activeTicket) return;
-
-      const userId = this.activeItem.userId || this.currentUser()?.id;
-      if (this.activeRepoIds.length === 0 || !userId || !this.activeTicket.ticketId.trim() || !this.activeItem.sourceBranch.trim()) {
-        this.toast.warn('Please fill in all required fields: Repository, Developer, Ticket ID, and Branch.');
-        return;
-      }
-
-      let branchBuilds = [...this.activeBranchBuilds];
-      if (this.activeItem.isMergedOnDevel) {
-        if (!branchBuilds.includes('devel')) {
-          branchBuilds.push('devel');
-        }
-      } else {
-        branchBuilds = branchBuilds.filter(b => b !== 'devel');
-      }
-
-      const payload = {
-        repositoryIds: this.activeRepoIds,
-        userId: userId,
-        sourceBranch: this.activeItem.sourceBranch,
-        isMergedOnDevel: this.activeItem.isMergedOnDevel,
-        releaseStreamId: this.activeItem.releaseStreamId,
-        status: this.activeItem.status,
-        branchBuilds,
-        tickets: [
-          {
-            id: this.activeTicket.id,
-            ticketId: this.activeTicket.ticketId,
-            summary: this.activeTicket.summary,
-            changeType: this.activeTicket.changeType,
-            qcStatus: this.activeTicket.qcStatus,
-            pendingIssues: this.activeTicket.pendingIssues
-          }
-        ]
-      };
-
-      this.isSaving.set(true);
-      this.releaseService.updateDeploymentItem(this.activeItem.id, payload).subscribe({
-        next: () => {
-          this.toast.success('Record updated successfully.');
-          this.loadData();
-          this.closeEditPanel();
-          this.isSaving.set(false);
-        },
-        error: (err) => {
-          console.error('Failed to save details', err);
-          this.toast.error('Failed to save changes. Please try again.');
-          this.isSaving.set(false);
-        }
-      });
-    }
+    this.isCreateMode = true;
+    this.isConfigMode = false;
+    this.preselectedReleaseStreamId = match ? match.id : undefined;
+    this.activeItem = {} as any;
+    this.activeTicket = {} as any;
   }
 
   // Excel / CSV Upload parsing

@@ -3,62 +3,11 @@
 // Convention: BEM  (Block__Element--Modifier)
 // ═══════════════════════════════════════════════════════════════════════════
 
-// ─── Design Tokens ─────────────────────────────────────────────────────────
-$font-primary: 'Outfit', 'Inter', sans-serif;
-$font-mono:    'Fira Code', 'JetBrains Mono', 'Courier New', monospace;
-
-$color-bg-page:        var(--color-bg-page);
-$color-bg-surface:     var(--color-bg-surface);
-$color-bg-subtle:      var(--color-bg-subtle);
-$color-bg-subtle-hover:var(--color-bg-subtle-hover);
-$color-border:         var(--color-border);
-$color-border-strong:  var(--color-border-strong);
-
-$color-text-primary: var(--color-text-primary);
-$color-text-body:    var(--color-text-body);
-$color-text-muted:   var(--color-text-muted);
-$color-text-faint:   var(--color-text-faint);
-
-$color-brand:        var(--color-brand);
-$color-brand-dark:   var(--color-brand-dark);
-$color-brand-light:  var(--color-brand-light);
-
-$color-success:       var(--color-success);
-$color-success-bg:    var(--color-success-bg);
-$color-success-border:var(--color-success-border);
-
-$color-warn:          var(--color-warn);
-$color-warn-bg:       var(--color-warn-bg);
-$color-warn-border:   var(--color-warn-border);
-
-$color-danger:        var(--color-danger);
-$color-danger-bg:     var(--color-danger-bg);
-$color-danger-border: var(--color-danger-border);
-
-$color-purple:    var(--color-purple);
-$color-purple-bg: var(--color-purple-bg);
-
-$radius-xs:   4px;
-$radius-sm:   6px;
-$radius-md:   10px;
-$radius-lg:   12px;
-$radius-xl:   16px;
-$radius-pill: 9999px;
-
-$shadow-xs:    0 1px 2px rgba(0,0,0,.04);
-$shadow-sm:    0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-$shadow-card:  0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06);
-$shadow-panel: -8px 0 40px rgba(0,0,0,.14);
-
-$transition-fast: all 0.15s ease;
-$transition-base: all 0.2s ease;
+@use '../../../styles/tokens' as *;
 
 // ─── Global Host ───────────────────────────────────────────────────────────
 :host {
-  display: block;
-  background: $color-bg-page;
-  min-height: 100vh;
-  font-family: $font-primary;
+  @include page-host;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -739,7 +688,13 @@ $transition-base: all 0.2s ease;
 // Angular Material global overrides
 // ═══════════════════════════════════════════════════════════════════════════
 ::ng-deep {
-  .mat-mdc-form-field-subscript-wrapper { display: none !important; }
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+  .mat-mdc-form-field-subscript-wrapper:has(mat-error),
+  .mat-mdc-form-field-subscript-wrapper:has(.mat-mdc-form-field-error) {
+    display: block !important;
+  }
   .sidebar__body .mat-mdc-form-field:not(.has-textarea) {
     width: 100%;
 
