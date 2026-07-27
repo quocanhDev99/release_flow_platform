@@ -73,7 +73,7 @@
     &:hover { color: $color-text-muted; }
   }
 
-  &__user-info {
+  .dashboard &__user-info {
     display: flex;
     align-items: center;
     gap: 5px;

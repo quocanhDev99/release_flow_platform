@@ -414,7 +414,42 @@
                 </button>
               </div>
             </div>
+          </div>
+        </mat-tab>
 
+        <!-- Tab 3: Automated Cron Jobs Manager -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">update</mat-icon>
+            Automated Cron Jobs
+          </ng-template>
+
+          <div class="tab-content-wrapper">
+            <div class="config-card mb-3" *ngFor="let job of cronJobs()">
+              <div class="config-card__header">
+                <mat-icon class="cron-icon">alarm</mat-icon>
+                <div class="header-text">
+                  <h4>{{ job.name }}</h4>
+                  <p>{{ job.description }}</p>
+                </div>
+                <span class="badge bg-success ms-auto" style="font-size: 11px; padding: 4px 8px;">{{ job.status | uppercase }}</span>
+              </div>
+
+              <div class="row mt-2" style="font-size: 12.5px; color: var(--color-text-body);">
+                <div class="col-6">
+                  <strong>Schedule:</strong> {{ job.scheduleTime }}
+                </div>
+                <div class="col-6">
+                  <strong>Channels:</strong> {{ job.channels.join(', ') }}
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-end mt-3">
+                <button mat-stroked-button type="button" color="primary" (click)="runCronJob(job.id)">
+                  <mat-icon>play_arrow</mat-icon> Run Job Now
+                </button>
+              </div>
+            </div>
           </div>
         </mat-tab>
 

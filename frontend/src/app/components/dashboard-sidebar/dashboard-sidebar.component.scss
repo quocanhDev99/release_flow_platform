@@ -240,18 +240,40 @@
       padding-bottom: 12px;
       border-bottom: 1px solid #f0f0f0;
 
+      mat-icon {
+        flex-shrink: 0;
+        overflow: visible;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
       .telegram-icon {
         color: #0088cc;
-        font-size: 28px;
-        height: 28px;
-        width: 28px;
+        font-size: 24px;
+        height: 24px;
+        width: 24px;
+        line-height: 24px;
+        flex-shrink: 0;
       }
       
       .email-icon {
         color: #d44638;
-        font-size: 28px;
-        height: 28px;
-        width: 28px;
+        font-size: 24px;
+        height: 24px;
+        width: 24px;
+        line-height: 24px;
+        flex-shrink: 0;
+      }
+
+      .cron-icon {
+        color: #2563eb;
+        font-size: 24px;
+        height: 24px;
+        width: 24px;
+        line-height: 24px;
+        flex-shrink: 0;
+        overflow: visible;
       }
 
       .header-text {

@@ -93,6 +93,7 @@ export class DashboardSidebarComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (this.isConfigMode) {
       if (changes['isConfigMode']) this.initConfigMode();
+      this.loadCronStatus();
       return;
     }
 
@@ -409,6 +410,30 @@ export class DashboardSidebarComponent implements OnChanges {
       error: (err) => {
         console.error(err);
         this.toast.error(err.error?.message || `Failed to send test ${type} notification.`);
+      }
+    });
+  }
+
+  cronJobs = signal<any[]>([]);
+
+  loadCronStatus(): void {
+    this.releaseService.getCronStatus().subscribe({
+      next: (res) => {
+        if (res && res.jobs) {
+          this.cronJobs.set(res.jobs);
+        }
+      }
+    });
+  }
+
+  runCronJob(jobId: string): void {
+    this.toast.info('Triggering automated cron job...');
+    this.releaseService.runCronJob(jobId).subscribe({
+      next: (res) => {
+        this.toast.success(res.message || 'Cron job triggered successfully!');
+      },
+      error: () => {
+        this.toast.error('Failed to trigger cron job.');
       }
     });
   }

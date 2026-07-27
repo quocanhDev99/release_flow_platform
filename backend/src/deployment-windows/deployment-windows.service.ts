@@ -1,16 +1,57 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { CronService } from '../scheduler/cron.service';
 
 @Injectable()
 export class DeploymentWindowsService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
+    private cronService: CronService,
   ) {}
 
   async notifySchedule(data: any) {
     return this.notificationsService.sendScheduleAlert(data);
+  }
+
+  async triggerReminder(developer?: string) {
+    return this.cronService.handleDailyReminder(true, developer);
+  }
+
+  async getCronStatus() {
+    return {
+      jobs: [
+        {
+          id: 'daily_reminder',
+          name: 'Daily Morning Deployment Alert',
+          cron: '0 8 * * *',
+          scheduleTime: '08:00 AM (Asia/Ho_Chi_Minh)',
+          status: 'active',
+          channels: ['Telegram', 'MS Teams', 'Slack', 'Email'],
+          description: 'Automatically scans today\'s deployment schedule and notifies team with @mention.'
+        },
+        {
+          id: 'tomorrow_reminder',
+          name: 'Tomorrow Deployment Warning Alert',
+          cron: '30 16 * * *',
+          scheduleTime: '16:30 PM (Asia/Ho_Chi_Minh)',
+          status: 'active',
+          channels: ['Telegram', 'MS Teams', 'Slack', 'Email'],
+          description: 'Notifies team about upcoming tomorrow deployments to merge code on time.'
+        }
+      ]
+    };
+  }
+
+  async runCronJob(jobId: string, developer?: string) {
+    if (jobId === 'tomorrow_reminder') {
+      await this.cronService.handleTomorrowReminder(developer);
+      return { success: true, message: 'Tomorrow deployment warning alert triggered successfully!' };
+    } else {
+      await this.cronService.handleDailyReminder(true, developer);
+      return { success: true, message: 'Daily morning deployment alert triggered successfully!' };
+    }
   }
 
   // 1. Windows CRUD
