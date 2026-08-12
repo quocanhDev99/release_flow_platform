@@ -22,6 +22,8 @@ import { DeploymentItem, ReleaseStream, Repository, Ticket, User } from '../../m
 import { AuthService } from '../../services/auth.service';
 import { ReleaseService } from '../../services/release.service';
 import { ToastService } from '../../services/toast.service';
+import { SafeHtmlPipe } from '../../pipes/safe-html.pipe';
+import { CommandPaletteComponent } from '../command-palette/command-palette.component';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { DashboardSidebarComponent } from '../dashboard-sidebar/dashboard-sidebar.component';
 import { ToastComponent } from '../toast/toast.component';
@@ -49,7 +51,9 @@ import { ToastComponent } from '../toast/toast.component';
     MatTooltipModule,
     MatTabsModule,
     ToastComponent,
-    DashboardSidebarComponent
+    DashboardSidebarComponent,
+    SafeHtmlPipe,
+    CommandPaletteComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -57,7 +61,7 @@ import { ToastComponent } from '../toast/toast.component';
 export class DashboardComponent implements OnInit {
   private releaseService = inject(ReleaseService);
   private authService = inject(AuthService);
-  private router = inject(Router);
+  public router = inject(Router);
   private dialog = inject(MatDialog);
   private toast = inject(ToastService);
 
@@ -71,6 +75,10 @@ export class DashboardComponent implements OnInit {
   users = signal<User[]>([]);
   environments = signal<any[]>([]);
   currentUser = signal<User | null>(this.authService.getCurrentUser());
+
+  // Command Palette & Preview States
+  isCommandPaletteOpen = signal<boolean>(false);
+  previewModalTicket = signal<Ticket | null>(null);
 
   // Grouping state & helpers
   isGrouped = signal<boolean>(true);
@@ -1062,6 +1070,57 @@ export class DashboardComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
+  }
+
+  // -------------------------------------------------------------------------
+  // Helper Utility Functions for UX & Readiness Gates
+  // -------------------------------------------------------------------------
+
+  getPlainTextSnippet(html: string | undefined | null): string {
+    if (!html) return '—';
+    const tmp = document.createElement('DIV');
+    tmp.innerHTML = html;
+    const text = tmp.textContent || tmp.innerText || '';
+    return text.trim() || '—';
+  }
+
+  hasImages(html: string | undefined | null): boolean {
+    if (!html) return false;
+    return html.includes('<img') || html.includes('src="data:image');
+  }
+
+  openRichTextPreview(ticket: Ticket): void {
+    this.previewModalTicket.set(ticket);
+  }
+
+  closeRichTextPreview(): void {
+    this.previewModalTicket.set(null);
+  }
+
+  getReleaseGateStatus(items: DeploymentItem[]): { isReady: boolean; blockedCount: number; passedCount: number; totalCount: number } {
+    let totalCount = 0;
+    let passedCount = 0;
+    let blockedCount = 0;
+
+    items.forEach(item => {
+      if (item.tickets && item.tickets.length > 0) {
+        item.tickets.forEach(t => {
+          totalCount++;
+          if (t.qcStatus === 'Passed' && item.isMergedOnDevel) {
+            passedCount++;
+          } else {
+            blockedCount++;
+          }
+        });
+      }
+    });
+
+    return {
+      isReady: totalCount > 0 && blockedCount === 0,
+      blockedCount,
+      passedCount,
+      totalCount
+    };
   }
 }
 

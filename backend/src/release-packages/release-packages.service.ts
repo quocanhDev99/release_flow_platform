@@ -77,6 +77,14 @@ export class ReleasePackagesService {
     id: number,
     data: { version?: string; buildArtifactHash?: string; status?: string },
   ) {
+    if (data.version) {
+      const existing = await this.prisma.releasePackage.findUnique({
+        where: { version: data.version },
+      });
+      if (existing && existing.id !== id) {
+        return existing;
+      }
+    }
     return this.prisma.releasePackage.update({
       where: { id },
       data: {

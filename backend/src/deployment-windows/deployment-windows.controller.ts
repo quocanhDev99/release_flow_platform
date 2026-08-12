@@ -71,8 +71,8 @@ export class DeploymentWindowsController {
   }
 
   @Post('trigger-reminder')
-  triggerReminder(@Body() body?: { developer?: string }) {
-    return this.deploymentWindowsService.triggerReminder(body?.developer);
+  triggerReminder(@Body() body?: { developer?: string; targetDate?: string }) {
+    return this.deploymentWindowsService.triggerReminder(body?.developer, body?.targetDate);
   }
 
   @Get('cron/status')

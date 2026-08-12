@@ -49,6 +49,48 @@ export class ReleasesService {
     }));
   }
 
+  async getTicketsMap() {
+    const items = await this.prisma.deploymentItem.findMany({
+      include: {
+        tickets: true,
+        releasePackage: true,
+      },
+    });
+
+    const baseUrl = 'https://storai.atlassian.net/browse/';
+    const result: Record<string, Array<{ ticketId: string; summary?: string; url: string }>> = {};
+
+    for (const item of items) {
+      const verStr = item.releasePackage?.version || '';
+      if (!verStr) continue;
+
+      const match = verStr.match(/\d+(\.\d+)+/);
+      const cleanVer = match ? match[0] : verStr.trim().replace(/^v/i, '');
+      if (!cleanVer) continue;
+
+      if (!result[cleanVer]) {
+        result[cleanVer] = [];
+      }
+
+      for (const t of item.tickets) {
+        if (t.ticketId) {
+          const ids = t.ticketId.split(',').map((s) => s.trim()).filter(Boolean);
+          for (const singleId of ids) {
+            if (!result[cleanVer].some((existing) => existing.ticketId === singleId)) {
+              result[cleanVer].push({
+                ticketId: singleId,
+                summary: t.summary || undefined,
+                url: `${baseUrl}${singleId}`,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
   async create(version: string) {
     return this.prisma.releasePackage.create({
       data: { version },
