@@ -129,7 +129,7 @@ export class CommandPaletteComponent {
                 id: `ticket-${item.id}-${t.id}`,
                 icon: 'confirmation_number',
                 title: ticketId,
-                subtitle: `${summary.replace(/<[^>]*>?/gm, '').substring(0, 60)}... (${item.repository?.name || 'Repo'})`,
+                subtitle: `${summary.replace(/<[^>]*>?/gm, '').substring(0, 60)}... (${item.repositories?.[0]?.name || 'Repo'})`,
                 category: 'Tickets',
                 action: () => this.selectTicket.emit(item)
               });

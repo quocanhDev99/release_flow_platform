@@ -61,7 +61,7 @@ import { ToastComponent } from '../toast/toast.component';
 export class DashboardComponent implements OnInit {
   private releaseService = inject(ReleaseService);
   private authService = inject(AuthService);
-  private router = inject(Router);
+  public router = inject(Router);
   private dialog = inject(MatDialog);
   private toast = inject(ToastService);
 
