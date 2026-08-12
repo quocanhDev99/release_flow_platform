@@ -17,7 +17,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { ReleaseService } from '../../services/release.service';
 import { ToastService } from '../../services/toast.service';
 import { AuthService } from '../../services/auth.service';
-import { DeploymentWindow, ReleasePackage, Environment } from '../../models/release.model';
+import { DeploymentWindow, ReleasePackage, Environment, DeploymentItem } from '../../models/release.model';
 import { ToastComponent } from '../toast/toast.component';
 
 @Component({
@@ -51,12 +51,14 @@ export class SchedulerComponent implements OnInit {
   // Core Data Signals
   windows = signal<DeploymentWindow[]>([]);
   environments = signal<Environment[]>([]);
+  releasePackages = signal<ReleasePackage[]>([]);
+  versionTicketsMap = signal<Record<string, Array<{ ticketId: string; summary?: string; url: string }>>>({});
   loading = signal<boolean>(false);
 
-  // Calendar State Signals
-  currentMonth = signal<Date>(new Date(2026, 6, 1)); // Default to July 2026 to match image
+  // Calendar State Signals dynamically initialized to user system's current date/month/year
+  currentMonth = signal<Date>(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   calendarDays = signal<Date[]>([]);
-  selectedDay = signal<Date | null>(new Date(2026, 6, 10)); // Selected default date
+  selectedDay = signal<Date | null>(new Date());
 
   // AI OCR Scanner simulation state
   selectedImageName = signal<string>('');
@@ -78,6 +80,19 @@ export class SchedulerComponent implements OnInit {
 
   // Active theme
   theme = signal<string>('light');
+
+  // Computed list of available Fix Versions dynamically from ReleasePackages and Windows
+  availableVersions = computed(() => {
+    const set = new Set<string>();
+    this.releasePackages().forEach(pkg => {
+      if (pkg.version) set.add(pkg.version.trim());
+    });
+    this.windows().forEach(win => {
+      const v = this.getFixVersion(win);
+      if (v && v !== 'N/A') set.add(v.trim());
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  });
 
   // Computed alert list of windows happening today
   upcomingAlerts = computed(() => {
@@ -127,14 +142,83 @@ export class SchedulerComponent implements OnInit {
 
     this.releaseService.getEnvironments().subscribe({
       next: (res) => this.environments.set(res),
-      error: () => this.toastService.error('Error loading environments'),
+      error: () => this.toastService.error('Error loading environments')
+    });
+
+    this.releaseService.getReleasePackages().subscribe({
+      next: (res) => this.releasePackages.set(res),
+      error: () => {}
+    });
+
+    this.releaseService.getTicketsMap().subscribe({
+      next: (map) => this.versionTicketsMap.set(map),
+      error: () => {},
       complete: () => this.loading.set(false)
     });
   }
 
+  getRelatedTicketsForWindow(win: DeploymentWindow): { ticketId: string; url: string; summary?: string }[] {
+    const ticketsMap = new Map<string, { ticketId: string; url: string; summary?: string }>();
+    const baseUrl = 'https://storai.atlassian.net/browse/';
+
+    const version = this.getFixVersion(win);
+    if (!version || version === 'N/A') return [];
+
+    // Extract clean numerical version e.g. "1.12.0" from "v1.12.0", "Release STG - 1.12.0", etc.
+    const match = version.match(/\d+(\.\d+)+/);
+    const cleanVer = match ? match[0] : version.trim().replace(/^v/i, '');
+
+    // 1. Check direct relation items from ReleasePackage
+    const releasePackage = win.bookings?.[0]?.releasePackage as any;
+    if (releasePackage && releasePackage.deploymentItems && Array.isArray(releasePackage.deploymentItems)) {
+      releasePackage.deploymentItems.forEach((item: any) => {
+        if (item.tickets) {
+          item.tickets.forEach((t: any) => {
+            if (t.ticketId) {
+              const ids = t.ticketId.split(',').map((s: string) => s.trim()).filter(Boolean);
+              ids.forEach((singleId: string) => {
+                if (!ticketsMap.has(singleId)) {
+                  ticketsMap.set(singleId, {
+                    ticketId: singleId,
+                    url: `${baseUrl}${singleId}`,
+                    summary: t.summary || undefined
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+    }
+
+    // 2. Dedicated Version-Tickets API Lookup
+    if (cleanVer) {
+      const tickets = this.versionTicketsMap()[cleanVer];
+      if (tickets && Array.isArray(tickets)) {
+        tickets.forEach(t => {
+          if (!ticketsMap.has(t.ticketId)) {
+            ticketsMap.set(t.ticketId, t);
+          }
+        });
+      }
+    }
+
+    return Array.from(ticketsMap.values());
+  }
+
   sendDailyAlertNotification() {
-    this.releaseService.triggerDailyReminder().subscribe({
-      next: () => this.toastService.success('Successfully sent Today\'s Deployments Alert to Teams & Telegram!'),
+    const dev = this.currentUser()?.username || 'ReleaseManager';
+    const sel = this.selectedDay() || new Date();
+    this.releaseService.triggerDailyReminder(dev, sel.toISOString()).subscribe({
+      next: (res: any) => {
+        if (res && res.success) {
+          this.toastService.success(res.message || 'Successfully sent Deployment Reminder with Fix Version Tickets to Teams & Telegram!');
+        } else if (res && res.message) {
+          this.toastService.warn(res.message);
+        } else {
+          this.toastService.success('Successfully sent Deployment Reminder with Fix Version Tickets to Teams & Telegram!');
+        }
+      },
       error: () => this.toastService.error('Failed to send deployment alert notification')
     });
   }
@@ -435,6 +519,21 @@ export class SchedulerComponent implements OnInit {
 
     const selectedWin = this.selectedWindow();
 
+    const ensureReleasePackage = (ver: string, callback: (pkg: ReleasePackage) => void) => {
+      const existing = this.releasePackages().find(p => p.version === ver);
+      if (existing) {
+        callback(existing);
+      } else {
+        this.releaseService.createReleasePackage({ version: ver, status: 'active' }).subscribe({
+          next: (pkg) => callback(pkg),
+          error: () => {
+            this.toastService.error('Error creating or finding Release Package');
+            this.loadAll();
+          }
+        });
+      }
+    };
+
     if (selectedWin) {
       // --- EDIT MODE ---
       this.releaseService.updateDeploymentWindow(selectedWin.id, {
@@ -444,71 +543,56 @@ export class SchedulerComponent implements OnInit {
         environmentId: Number(environmentId)
       }).subscribe({
         next: () => {
-          const booking = selectedWin.bookings?.[0];
-          if (booking && booking.releasePackageId) {
-            // Update existing Release Package version
-            this.releaseService.updateReleasePackage(booking.releasePackageId, {
-              version: fixVersion
-            }).subscribe({
-              next: () => {
-                this.toastService.success('Successfully updated deployment schedule!');
-                
-                const envName = this.environments().find(e => e.id === Number(environmentId))?.name || 'Unknown';
-                this.releaseService.notifyScheduleChange({
-                  actionType: 'UPDATED',
-                  envName: envName,
-                  startTime: this.formatDate(start) + ' ' + this.formatTime(start),
-                  version: fixVersion,
-                  developer: this.currentUser()?.username || 'Unknown'
-                }).subscribe();
-                
-                this.closeWindowModal();
-                this.loadAll();
-              },
-              error: () => {
-                this.toastService.error('Error updating build version');
-                this.loadAll();
-              }
-            });
-          } else {
-            // No booking existed, create a new package and link it
-            this.releaseService.createReleasePackage({
-              version: fixVersion,
-              status: 'active'
-            }).subscribe({
-              next: (pkg) => {
-                this.releaseService.createDeploymentBooking({
-                  releasePackageId: pkg.id,
-                  deploymentWindowId: selectedWin.id,
-                  status: 'approved'
-                }).subscribe({
-                  next: () => {
-                    this.toastService.success('Successfully updated deployment schedule!');
-                    
-                    const envName = this.environments().find(e => e.id === Number(environmentId))?.name || 'Unknown';
-                    this.releaseService.notifyScheduleChange({
-                      actionType: 'UPDATED',
-                      envName: envName,
-                      startTime: this.formatDate(start) + ' ' + this.formatTime(start),
-                      version: fixVersion,
-                      developer: this.currentUser()?.username || 'Unknown'
-                    }).subscribe();
-                    
-                    this.closeWindowModal();
-                    this.loadAll();
-                  },
-                  error: () => {
-                    this.toastService.error('Error linking deployment schedule');
-                    this.loadAll();
-                  }
-                });
-              },
-              error: () => {
-                this.toastService.error('Error creating Release Package');
-                this.loadAll();
-              }
-            });
-          }
+          ensureReleasePackage(fixVersion, (pkg) => {
+            const booking = selectedWin.bookings?.[0];
+            const envName = this.environments().find(e => e.id === Number(environmentId))?.name || 'Unknown';
+
+            if (booking) {
+              this.releaseService.updateDeploymentBooking(booking.id, {
+                releasePackageId: pkg.id
+              }).subscribe({
+                next: () => {
+                  this.toastService.success('Successfully updated deployment schedule!');
+                  this.releaseService.notifyScheduleChange({
+                    actionType: 'UPDATED',
+                    envName: envName,
+                    startTime: this.formatDate(start) + ' ' + this.formatTime(start),
+                    version: fixVersion,
+                    developer: this.currentUser()?.username || 'Unknown'
+                  }).subscribe();
+                  this.closeWindowModal();
+                  this.loadAll();
+                },
+                error: () => {
+                  this.toastService.error('Error updating deployment schedule booking');
+                  this.loadAll();
+                }
+              });
+            } else {
+              this.releaseService.createDeploymentBooking({
+                releasePackageId: pkg.id,
+                deploymentWindowId: selectedWin.id,
+                status: 'approved'
+              }).subscribe({
+                next: () => {
+                  this.toastService.success('Successfully updated deployment schedule!');
+                  this.releaseService.notifyScheduleChange({
+                    actionType: 'UPDATED',
+                    envName: envName,
+                    startTime: this.formatDate(start) + ' ' + this.formatTime(start),
+                    version: fixVersion,
+                    developer: this.currentUser()?.username || 'Unknown'
+                  }).subscribe();
+                  this.closeWindowModal();
+                  this.loadAll();
+                },
+                error: () => {
+                  this.toastService.error('Error linking deployment schedule');
+                  this.loadAll();
+                }
+              });
+            }
+          });
         },
         error: (err) => {
           this.toastService.error(err.error?.message || 'Unable to update deployment schedule');
@@ -526,41 +610,30 @@ export class SchedulerComponent implements OnInit {
         environmentId: Number(environmentId)
       }).subscribe({
         next: (win) => {
-          this.releaseService.createReleasePackage({
-            version: fixVersion,
-            status: 'active'
-          }).subscribe({
-            next: (pkg) => {
-              this.releaseService.createDeploymentBooking({
-                releasePackageId: pkg.id,
-                deploymentWindowId: win.id,
-                status: 'approved'
-              }).subscribe({
-                next: () => {
-                  this.toastService.success('Successfully created deployment schedule!');
-                  
-                  const envName = this.environments().find(e => e.id === Number(environmentId))?.name || 'Unknown';
-                  this.releaseService.notifyScheduleChange({
-                    actionType: 'CREATED',
-                    envName: envName,
-                    startTime: this.formatDate(start) + ' ' + this.formatTime(start),
-                    version: fixVersion,
-                    developer: this.currentUser()?.username || 'Unknown'
-                  }).subscribe();
-                  
-                  this.closeWindowModal();
-                  this.loadAll();
-                },
-                error: () => {
-                  this.toastService.error('Error linking deployment schedule');
-                  this.loadAll();
-                }
-              });
-            },
-            error: () => {
-              this.toastService.error('Error creating Release Package');
-              this.loadAll();
-            }
+          ensureReleasePackage(fixVersion, (pkg) => {
+            this.releaseService.createDeploymentBooking({
+              releasePackageId: pkg.id,
+              deploymentWindowId: win.id,
+              status: 'approved'
+            }).subscribe({
+              next: () => {
+                this.toastService.success('Successfully created deployment schedule!');
+                const envName = this.environments().find(e => e.id === Number(environmentId))?.name || 'Unknown';
+                this.releaseService.notifyScheduleChange({
+                  actionType: 'CREATED',
+                  envName: envName,
+                  startTime: this.formatDate(start) + ' ' + this.formatTime(start),
+                  version: fixVersion,
+                  developer: this.currentUser()?.username || 'Unknown'
+                }).subscribe();
+                this.closeWindowModal();
+                this.loadAll();
+              },
+              error: () => {
+                this.toastService.error('Error linking deployment schedule');
+                this.loadAll();
+              }
+            });
           });
         },
         error: (err) => {

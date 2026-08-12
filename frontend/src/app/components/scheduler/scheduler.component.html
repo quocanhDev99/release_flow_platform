@@ -41,7 +41,7 @@
 
   <!-- Notification Banner (Today's Deployment Alerts) -->
   <div class="scheduler__alerts" *ngIf="upcomingAlerts().length > 0">
-    <div class="alert-banner">
+    <div class="alert-banner" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
       <mat-icon class="alert-banner__icon">campaign</mat-icon>
       <div class="alert-banner__text">
         <strong>Today's Alerts:</strong> There are <strong>{{ upcomingAlerts().length }}</strong> deployments scheduled for today!
@@ -51,6 +51,9 @@
           [{{ alert.environment.name }}] {{ getFixVersion(alert) }} at {{ formatTime(alert.startTime) }}
         </span>
       </div>
+      <button mat-raised-button color="primary" class="btn btn--primary" style="margin-left: auto; border-radius: 20px; font-size: 0.8rem; padding: 0 14px;" (click)="sendDailyAlertNotification()">
+        <mat-icon style="font-size: 16px; width: 16px; height: 16px; margin-right: 4px;">send</mat-icon> Send Reminder Alert
+      </button>
     </div>
   </div>
 
@@ -212,6 +215,29 @@
                 </div>
               </div>
 
+              <!-- Related Tickets for Fix Version -->
+              <div class="side-window-card__tickets" style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(148,163,184,0.25);">
+                <div style="font-size: 0.78rem; font-weight: 600; color: var(--color-text-secondary, #64748b); margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                  <mat-icon style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;">confirmation_number</mat-icon>
+                  Related Tickets:
+                </div>
+                <div *ngIf="getRelatedTicketsForWindow(win).length > 0; else noTickets" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  <a *ngFor="let t of getRelatedTicketsForWindow(win)"
+                     [href]="t.url"
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     (click)="$event.stopPropagation()"
+                     class="ticket-id"
+                     style="font-size: 0.78rem; padding: 2px 8px; border-radius: 6px; background: rgba(99,102,241,0.12); color: #6366f1; text-decoration: none; font-weight: 600;"
+                     [matTooltip]="t.summary || t.ticketId">
+                    {{ t.ticketId }}
+                  </a>
+                </div>
+                <ng-template #noTickets>
+                  <span style="font-size: 0.75rem; color: #94a3b8; font-style: italic;">No tickets linked to {{ getFixVersion(win) }}</span>
+                </ng-template>
+              </div>
+
               <div class="side-window-card__actions">
                 <span></span>
                 <div class="ops">
@@ -253,7 +279,11 @@
 
           <mat-form-field appearance="outline">
             <mat-label>Fix Version Build</mat-label>
-            <input matInput formControlName="fixVersion" placeholder="e.g., release/1.12.1 or STG" />
+            <mat-select formControlName="fixVersion" placeholder="Select Fix Version (e.g., 1.12.0)">
+              <mat-option *ngFor="let ver of availableVersions()" [value]="ver">
+                {{ ver }}
+              </mat-option>
+            </mat-select>
           </mat-form-field>
         </div>
         <div class="modal-card__footer">

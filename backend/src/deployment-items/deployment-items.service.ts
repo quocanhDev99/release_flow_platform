@@ -71,20 +71,21 @@ export class DeploymentItemsService {
     releasePackageId?: number,
   ): Promise<number | null> {
     if (releaseVersion) {
-      const cleanVer = releaseVersion.replace(/x$/, '');
+      const cleanVer = releaseVersion.trim().replace(/^v/i, '').replace(/x$/, '');
       let release = await this.prisma.releasePackage.findFirst({
         where: {
           OR: [
+            { version: { equals: releaseVersion.trim(), mode: 'insensitive' } },
+            { version: { equals: cleanVer, mode: 'insensitive' } },
             { version: { endsWith: `/${cleanVer}`, mode: 'insensitive' } },
             { version: { contains: `/${cleanVer}.`, mode: 'insensitive' } },
-            { version: { contains: `/${cleanVer}x`, mode: 'insensitive' } },
-            { version: { equals: cleanVer, mode: 'insensitive' } },
+            { version: { contains: cleanVer, mode: 'insensitive' } },
           ],
         },
       });
       if (!release) {
         release = await this.prisma.releasePackage.create({
-          data: { version: `sow/${cleanVer}.x` },
+          data: { version: cleanVer || releaseVersion.trim() },
         });
       }
       return release.id;

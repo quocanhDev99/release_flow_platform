@@ -3,6 +3,12 @@ import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 
+export interface RelatedTicket {
+  ticketId: string;
+  summary?: string;
+  url: string;
+}
+
 @Injectable()
 export class CronService implements OnModuleInit {
   private readonly logger = new Logger(CronService.name);
@@ -27,28 +33,94 @@ export class CronService implements OnModuleInit {
     await this.handleDailyReminder(true);
   }
 
-  async handleDailyReminder(force = false, currentUsername?: string) {
-    const today = new Date();
-    const todayStr = today.toISOString().slice(0, 10);
+  /**
+   * Retrieves all tickets associated with a given Fix Version / Release Package.
+   */
+  async getTicketsForFixVersion(releasePackageId?: number, versionString?: string): Promise<RelatedTicket[]> {
+    if (!releasePackageId && (!versionString || versionString === 'N/A')) return [];
 
-    if (!force && this.lastSentDateStr === todayStr) {
-      this.logger.debug(`Daily deployment reminder for ${todayStr} has already been sent automatically.`);
-      return;
+    const match = versionString ? versionString.match(/\d+(\.\d+)+/) : null;
+    const cleanVer = match ? match[0] : (versionString || '').trim();
+
+    const whereConditions: any[] = [];
+    if (releasePackageId) {
+      whereConditions.push({ releasePackageId });
+    }
+    if (cleanVer) {
+      whereConditions.push({
+        releasePackage: {
+          version: { contains: cleanVer, mode: 'insensitive' }
+        }
+      });
     }
 
-    this.logger.debug('Running daily deployment reminder check...');
+    if (whereConditions.length === 0) return [];
 
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
+    const items = await this.prisma.deploymentItem.findMany({
+      where: {
+        OR: whereConditions
+      },
+      include: {
+        tickets: true,
+        releasePackage: true
+      }
+    });
 
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
+    // Strictly filter out items whose version doesn't actually match
+    const filteredItems = items.filter(item => {
+      if (releasePackageId && item.releasePackageId === releasePackageId) return true;
+      const itemVer = (item.releasePackage?.version || '').trim();
+      if (!itemVer) return false;
+      const itemMatch = itemVer.match(/\d+(\.\d+)+/);
+      const itemCleanVer = itemMatch ? itemMatch[0] : itemVer;
+      return Boolean(cleanVer && itemCleanVer === cleanVer);
+    });
+
+    const ticketMap = new Map<string, RelatedTicket>();
+    const baseUrl = 'https://storai.atlassian.net/browse/';
+
+    for (const item of filteredItems) {
+      for (const t of item.tickets) {
+        if (t.ticketId) {
+          const ids = t.ticketId.split(',').map(s => s.trim()).filter(Boolean);
+          for (const singleId of ids) {
+            if (!ticketMap.has(singleId)) {
+              ticketMap.set(singleId, {
+                ticketId: singleId,
+                summary: t.summary || undefined,
+                url: `${baseUrl}${singleId}`
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return Array.from(ticketMap.values());
+  }
+
+  async handleDailyReminder(force = false, currentUsername?: string, targetDateInput?: Date | string) {
+    const targetDate = targetDateInput ? new Date(targetDateInput) : new Date();
+    const dateStr = targetDate.toISOString().slice(0, 10);
+
+    if (!force && this.lastSentDateStr === dateStr) {
+      this.logger.debug(`Daily deployment reminder for ${dateStr} has already been sent automatically.`);
+      return { success: false, count: 0, message: `Daily deployment reminder for ${dateStr} has already been sent automatically.` };
+    }
+
+    this.logger.debug(`Running daily deployment reminder check for ${dateStr}...`);
+
+    const dayStart = new Date(targetDate);
+    dayStart.setHours(0, 0, 0, 0);
+
+    const dayEnd = new Date(targetDate);
+    dayEnd.setHours(23, 59, 59, 999);
 
     const windows = await this.prisma.deploymentWindow.findMany({
       where: {
         startTime: {
-          gte: todayStart,
-          lte: todayEnd,
+          gte: dayStart,
+          lte: dayEnd,
         },
         status: {
           notIn: ['cancelled', 'completed'],
@@ -65,8 +137,9 @@ export class CronService implements OnModuleInit {
     });
 
     if (windows.length === 0) {
-      this.logger.debug('No deployments scheduled for today. Doing nothing.');
-      return;
+      const msg = `No active deployment schedules found for ${dateStr}.`;
+      this.logger.debug(msg);
+      return { success: false, count: 0, message: msg };
     }
 
     // Resolve user username to mention
@@ -76,55 +149,105 @@ export class CronService implements OnModuleInit {
       mentionUser = defaultUser?.username || 'ReleaseManager';
     }
 
-    this.logger.debug(`Found ${windows.length} deployments for today. Sending automated notifications (Mentioning @${mentionUser})...`);
+    this.logger.debug(`Found ${windows.length} deployment(s) scheduled for ${dateStr}. Building deployment reminders...`);
 
-    let message = `🔔 <b>Today's Deployments Reminder</b>\n`;
-    message += `👤 <b>Responsible/Mention:</b> @${mentionUser}\n\n`;
-
-    let plainMessage = `🔔 Today's Deployments Reminder\n`;
-    plainMessage += `👤 Responsible/Mention: @${mentionUser}\n\n`;
-
-    let emailHtml = `<ul style="font-family: Arial; font-size: 14px; line-height: 1.6;">`;
-
-    windows.forEach((win) => {
-      const time = new Date(win.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-      const env = win.environment.name;
-      const version = win.bookings?.[0]?.releasePackage?.version || 'N/A';
-
-      message += `• <b>${env}</b> at ${time} (Version: <code>${version}</code>)\n`;
-      plainMessage += `• ${env} at ${time} (Version: ${version})\n`;
-      emailHtml += `<li><strong>${env}</strong> at ${time} (Version: <code>${version}</code>)</li>`;
+    const formattedDateStr = targetDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     });
 
-    emailHtml += `</ul>`;
+    // Build notification contents
+    let telegramMsg = `🚀 <b>Deployment Reminder</b>\n\n`;
+    telegramMsg += `Scheduled deployment plan for ${formattedDateStr}:\n\n`;
+
+    let plainMsg = `🚀 Deployment Reminder\n\n`;
+    plainMsg += `Scheduled deployment plan for ${formattedDateStr}:\n\n`;
+
+    let emailHtml = `<div style="font-family: Arial, sans-serif; line-height: 1.6;">`;
+
+    for (const win of windows) {
+      const timeStr = new Date(win.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      const envName = win.environment.name;
+      const releasePackage = win.bookings?.[0]?.releasePackage;
+      const version = releasePackage?.version || 'N/A';
+      const releasePackageId = releasePackage?.id;
+
+      // Get related tickets strictly for this Fix Version
+      const tickets = await this.getTicketsForFixVersion(releasePackageId, version);
+
+      // Telegram Message block
+      telegramMsg += `📌 <b>Version:</b> ${version}\n`;
+      telegramMsg += `📅 <b>Date:</b> ${formattedDateStr} (${timeStr} - ${envName})\n\n`;
+      telegramMsg += `📋 <b>Related Tickets:</b>\n`;
+
+      // Plain / Teams / Slack Message block
+      plainMsg += `📌 **Version:** ${version}\n`;
+      plainMsg += `📅 **Date:** ${formattedDateStr} (${timeStr} - ${envName})\n\n`;
+      plainMsg += `📋 **Related Tickets:**\n`;
+
+      // Email HTML block
+      emailHtml += `
+        <div style="background: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+          <h3 style="margin-top: 0; color: #2c3e50;">Version: ${version} (${envName} at ${timeStr})</h3>
+          <p style="margin: 4px 0;"><strong>Date:</strong> ${formattedDateStr}</p>
+          <h4 style="margin: 12px 0 6px 0; color: #495057;">Related Tickets:</h4>
+          <ul style="margin: 0; padding-left: 20px;">
+      `;
+
+      if (tickets.length > 0) {
+        tickets.forEach(t => {
+          telegramMsg += `- <a href="${t.url}">${t.ticketId}</a>${t.summary ? ` (${t.summary})` : ''}\n`;
+          plainMsg += `- [${t.ticketId}](${t.url})${t.summary ? ` (${t.summary})` : ''}\n`;
+          emailHtml += `<li><a href="${t.url}" style="color: #007bff; text-decoration: none; font-weight: bold;">${t.ticketId}</a>${t.summary ? ` - ${t.summary}` : ''}</li>`;
+        });
+      } else {
+        telegramMsg += `- <i>No tickets linked to Fix Version ${version} yet.</i>\n`;
+        plainMsg += `- No tickets linked to Fix Version ${version} yet.\n`;
+        emailHtml += `<li style="color: #888; italic;">No tickets linked to Fix Version ${version} yet.</li>`;
+      }
+
+      telegramMsg += `\n`;
+      plainMsg += `\n`;
+      emailHtml += `</ul></div>`;
+    }
+
+    telegramMsg += `👤 <b>Mention:</b> @${mentionUser}`;
+    plainMsg += `👤 Mention: @${mentionUser}`;
+    emailHtml += `</div>`;
 
     const emailBody = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #2c3e50; margin: 0;">⏰ Daily Reminder</h2>
-          <p style="color: #666; margin-top: 5px; font-size: 14px;">Release Flow Platform Scheduler</p>
+      <div style="font-family: Arial, sans-serif; max-width: 650px; border: 1px solid #e0e0e0; border-radius: 8px; padding: 24px; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+        <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #f1f3f5; padding-bottom: 15px;">
+          <h2 style="color: #2c3e50; margin: 0;">🚀 Deployment Reminder</h2>
+          <p style="color: #666; margin-top: 5px; font-size: 14px;">Release Flow Platform Calendar Scheduler</p>
         </div>
-        
-        <p>Attention @${mentionUser}, here are the scheduled deployments for today:</p>
+        <p style="font-size: 15px; color: #333;">Attention @${mentionUser}, here is the scheduled deployment plan for ${formattedDateStr}:</p>
         ${emailHtml}
-        
-        <div style="margin-top: 30px; padding-top: 15px; border-top: 1px dashed #eee; text-align: center;">
-          <p style="margin: 0; font-size: 12px; color: #999;">This is an automated daily reminder.</p>
+        <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed #eee; text-align: center;">
+          <p style="margin: 0; font-size: 12px; color: #999;">Automated notification based on the Deployment Calendar.</p>
         </div>
       </div>
     `;
 
     try {
       await Promise.all([
-        this.notificationsService.sendTelegramNotification(message),
-        this.notificationsService.sendSlackNotification(plainMessage),
-        this.notificationsService.sendTeamsNotification('⏰ Daily Deployments Reminder', plainMessage, mentionUser),
-        this.notificationsService.sendEmailNotification('[Release Flow] Today\'s Deployments Reminder', emailBody)
+        this.notificationsService.sendTelegramNotification(telegramMsg),
+        this.notificationsService.sendSlackNotification(plainMsg),
+        this.notificationsService.sendTeamsNotification('🚀 Deployment Reminder', plainMsg, mentionUser),
+        this.notificationsService.sendEmailNotification('[Release Flow] 🚀 Deployment Reminder', emailBody)
       ]);
-      this.lastSentDateStr = todayStr;
-      this.logger.log(`Successfully sent automated daily deployment notification for ${todayStr} (Mentioned @${mentionUser}).`);
+      this.lastSentDateStr = dateStr;
+      this.logger.log(`Successfully sent deployment reminder with tickets for ${dateStr} (Mentioned @${mentionUser}).`);
+      
+      return {
+        success: true,
+        count: windows.length,
+        message: `Successfully sent deployment reminder for ${formattedDateStr} (${windows.length} deployment(s)) to Teams & Telegram!`
+      };
     } catch (err) {
       this.logger.error('Failed to broadcast daily reminder', err);
+      return { success: false, count: windows.length, message: 'Error broadcasting deployment reminder notification.' };
     }
   }
 
@@ -133,95 +256,8 @@ export class CronService implements OnModuleInit {
     timeZone: 'Asia/Ho_Chi_Minh'
   })
   async handleTomorrowReminder(currentUsername?: string) {
-    this.logger.debug('Running tomorrow deployment reminder check...');
-
     const tomorrowStart = new Date();
     tomorrowStart.setDate(tomorrowStart.getDate() + 1);
-    tomorrowStart.setHours(0, 0, 0, 0);
-
-    const tomorrowEnd = new Date();
-    tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
-    tomorrowEnd.setHours(23, 59, 59, 999);
-
-    const windows = await this.prisma.deploymentWindow.findMany({
-      where: {
-        startTime: {
-          gte: tomorrowStart,
-          lte: tomorrowEnd,
-        },
-        status: {
-          notIn: ['cancelled', 'completed'],
-        },
-      },
-      include: {
-        environment: true,
-        bookings: {
-          include: {
-            releasePackage: true,
-          },
-        },
-      },
-    });
-
-    if (windows.length === 0) {
-      this.logger.debug('No deployments scheduled for tomorrow. Doing nothing.');
-      return;
-    }
-
-    let mentionUser = currentUsername;
-    if (!mentionUser) {
-      const defaultUser = await this.prisma.user.findFirst();
-      mentionUser = defaultUser?.username || 'ReleaseManager';
-    }
-
-    this.logger.debug(`Found ${windows.length} deployments for tomorrow. Mentioning @${mentionUser}...`);
-
-    let message = `⚠️ <b>Action Required: Upcoming Deployments Tomorrow</b>\n`;
-    message += `👤 <b>Attention:</b> @${mentionUser}\n\n`;
-    message += `Please ensure all your code is fully merged into the 'devel' branch or other relevant branches for tomorrow's deployment!\n\n`;
-
-    let plainMessage = `⚠️ Action Required: Upcoming Deployments Tomorrow\n👤 Attention: @${mentionUser}\n\nPlease ensure all your code is fully merged into the 'devel' branch or other relevant branches for tomorrow's deployment!\n\n`;
-
-    let emailHtml = `<ul style="font-family: Arial; font-size: 14px; line-height: 1.6;">`;
-
-    windows.forEach((win) => {
-      const time = new Date(win.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-      const env = win.environment.name;
-      const version = win.bookings?.[0]?.releasePackage?.version || 'N/A';
-
-      message += `• <b>${env}</b> at ${time} (Version: <code>${version}</code>)\n`;
-      plainMessage += `• ${env} at ${time} (Version: ${version})\n`;
-      emailHtml += `<li><strong>${env}</strong> at ${time} (Version: <code>${version}</code>)</li>`;
-    });
-
-    emailHtml += `</ul>`;
-
-    const emailBody = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #d9534f; margin: 0;">⚠️ Tomorrow's Deployments Warning</h2>
-          <p style="color: #666; margin-top: 5px; font-size: 14px;">Release Flow Platform Scheduler</p>
-        </div>
-        
-        <p>Attention @${mentionUser}, please make sure your changes are merged into target branches before deployment time tomorrow:</p>
-        ${emailHtml}
-        
-        <div style="margin-top: 30px; padding-top: 15px; border-top: 1px dashed #eee; text-align: center;">
-          <p style="margin: 0; font-size: 12px; color: #999;">Automated notification from Release Flow Platform.</p>
-        </div>
-      </div>
-    `;
-
-    try {
-      await Promise.all([
-        this.notificationsService.sendTelegramNotification(message),
-        this.notificationsService.sendSlackNotification(plainMessage),
-        this.notificationsService.sendTeamsNotification('⚠️ Tomorrow\'s Deployments Warning', plainMessage, mentionUser),
-        this.notificationsService.sendEmailNotification('[Release Flow] Tomorrow\'s Deployments Warning', emailBody)
-      ]);
-      this.logger.log('Successfully broadcasted tomorrow deployment reminder.');
-    } catch (err) {
-      this.logger.error('Failed to broadcast tomorrow deployment reminder', err);
-    }
+    await this.handleDailyReminder(true, currentUsername, tomorrowStart);
   }
 }

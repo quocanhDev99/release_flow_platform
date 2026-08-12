@@ -18,6 +18,11 @@ export class ReleasesController {
     return this.releasesService.findAll();
   }
 
+  @Get('tickets-map')
+  getTicketsMap() {
+    return this.releasesService.getTicketsMap();
+  }
+
   @Post()
   create(@Body('version') version: string) {
     return this.releasesService.create(version);
