@@ -99,7 +99,7 @@ export class DeploymentBookingsService {
     });
   }
 
-  async update(id: number, data: { status: string }) {
+  async update(id: number, data: { status?: string; releasePackageId?: number; deploymentWindowId?: number }) {
     const booking = await this.prisma.deploymentBooking.findUnique({
       where: { id },
     });
@@ -109,8 +109,9 @@ export class DeploymentBookingsService {
 
     if (data.status === 'approved') {
       // Check capacity of window
+      const targetWindowId = data.deploymentWindowId ? Number(data.deploymentWindowId) : booking.deploymentWindowId;
       const window = await this.prisma.deploymentWindow.findUnique({
-        where: { id: booking.deploymentWindowId },
+        where: { id: targetWindowId },
         include: {
           bookings: {
             where: { status: 'approved', id: { not: id } },
@@ -129,6 +130,8 @@ export class DeploymentBookingsService {
       where: { id },
       data: {
         status: data.status,
+        releasePackageId: data.releasePackageId ? Number(data.releasePackageId) : undefined,
+        deploymentWindowId: data.deploymentWindowId ? Number(data.deploymentWindowId) : undefined,
       },
     });
   }

@@ -15,8 +15,8 @@ export class DeploymentWindowsService {
     return this.notificationsService.sendScheduleAlert(data);
   }
 
-  async triggerReminder(developer?: string) {
-    return this.cronService.handleDailyReminder(true, developer);
+  async triggerReminder(developer?: string, targetDate?: string) {
+    return this.cronService.handleDailyReminder(true, developer, targetDate);
   }
 
   async getCronStatus() {
@@ -62,7 +62,15 @@ export class DeploymentWindowsService {
         policy: true,
         bookings: {
           include: {
-            releasePackage: true,
+            releasePackage: {
+              include: {
+                deploymentItems: {
+                  include: {
+                    tickets: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -78,7 +86,15 @@ export class DeploymentWindowsService {
         policy: true,
         bookings: {
           include: {
-            releasePackage: true,
+            releasePackage: {
+              include: {
+                deploymentItems: {
+                  include: {
+                    tickets: true,
+                  },
+                },
+              },
+            },
           },
         },
       },

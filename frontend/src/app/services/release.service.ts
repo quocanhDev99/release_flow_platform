@@ -59,9 +59,12 @@ export class ReleaseService {
     return this.http.patch<Ticket>(`${this.apiUrl}/tickets/${ticketId}/qc`, { qcStatus });
   }
 
-  // Release Streams (Fix versions)
   getReleases(): Observable<ReleaseStream[]> {
     return this.http.get<ReleaseStream[]>(`${this.apiUrl}/releases`);
+  }
+
+  getTicketsMap(): Observable<Record<string, Array<{ ticketId: string; summary?: string; url: string }>>> {
+    return this.http.get<Record<string, Array<{ ticketId: string; summary?: string; url: string }>>>(`${this.apiUrl}/releases/tickets-map`);
   }
 
   createRelease(version: string): Observable<ReleaseStream> {
@@ -179,8 +182,8 @@ export class ReleaseService {
     return this.http.post<any>(`${this.apiUrl}/deployment-windows/notify`, data);
   }
 
-  triggerDailyReminder(developer?: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/deployment-windows/trigger-reminder`, { developer });
+  triggerDailyReminder(developer?: string, targetDate?: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deployment-windows/trigger-reminder`, { developer, targetDate });
   }
 
   getCronStatus(): Observable<any> {
@@ -221,6 +224,10 @@ export class ReleaseService {
     status?: string;
   }): Observable<DeploymentBooking> {
     return this.http.post<DeploymentBooking>(`${this.apiUrl}/deployment-bookings`, data);
+  }
+
+  updateDeploymentBooking(id: number, data: { releasePackageId?: number; deploymentWindowId?: number; status?: string }): Observable<DeploymentBooking> {
+    return this.http.put<DeploymentBooking>(`${this.apiUrl}/deployment-bookings/${id}`, data);
   }
 
   updateDeploymentBookingStatus(id: number, status: string): Observable<DeploymentBooking> {

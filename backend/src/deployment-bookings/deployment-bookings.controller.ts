@@ -41,7 +41,7 @@ export class DeploymentBookingsController {
   @Put(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() data: { status: string },
+    @Body() data: { status?: string; releasePackageId?: number; deploymentWindowId?: number },
   ) {
     return this.deploymentBookingsService.update(id, data);
   }
