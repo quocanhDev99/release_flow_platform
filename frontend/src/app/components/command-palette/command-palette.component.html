@@ -1,0 +1,53 @@
+<div class="cmd-backdrop" *ngIf="isOpen" (click)="closePalette()">
+  <div class="cmd-dialog" (click)="$event.stopPropagation()">
+    
+    <!-- Search Bar -->
+    <div class="cmd-input-wrapper">
+      <mat-icon class="cmd-search-icon">search</mat-icon>
+      <input
+        type="text"
+        class="cmd-input"
+        placeholder="Type a command or search ticket (e.g. MAG-204, Failed)..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event); selectedIndex.set(0);"
+        autofocus
+      />
+      <span class="cmd-kbd-badge">ESC</span>
+    </div>
+
+    <!-- Command List -->
+    <div class="cmd-list" *ngIf="actions().length > 0">
+      <div
+        *ngFor="let item of actions(); let idx = index"
+        class="cmd-item"
+        [class.cmd-item--selected]="idx === selectedIndex()"
+        (click)="executeAction(item)"
+        (mouseenter)="selectedIndex.set(idx)"
+      >
+        <mat-icon class="cmd-item-icon">{{ item.icon }}</mat-icon>
+        <div class="cmd-item-text">
+          <div class="cmd-item-title">{{ item.title }}</div>
+          <div class="cmd-item-subtitle" *ngIf="item.subtitle">{{ item.subtitle }}</div>
+        </div>
+        <span class="cmd-category-tag">{{ item.category }}</span>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="cmd-empty" *ngIf="actions().length === 0">
+      <mat-icon class="cmd-empty-icon">search_off</mat-icon>
+      <p>No matching actions or tickets found</p>
+    </div>
+
+    <!-- Footer -->
+    <div class="cmd-footer">
+      <div class="cmd-hint">
+        <span class="cmd-kbd">↑</span> <span class="cmd-kbd">↓</span> Navigate
+        <span class="cmd-kbd">↵</span> Select
+        <span class="cmd-kbd">esc</span> Close
+      </div>
+      <div class="cmd-branding">Release Flow Platform</div>
+    </div>
+
+  </div>
+</div>

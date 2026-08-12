@@ -46,8 +46,8 @@
         <mat-icon>tune</mat-icon> Releases
       </button>
 
-      <button mat-icon-button (click)="loadData()" class="btn-refresh-icon" matTooltip="Refresh Data">
-        <mat-icon>refresh</mat-icon>
+      <button mat-stroked-button (click)="isCommandPaletteOpen.set(true)" class="btn-secondary" matTooltip="Command Palette (Cmd + K)">
+        <mat-icon>search</mat-icon> <span style="font-size: 0.8rem; opacity: 0.8;">Cmd+K</span>
       </button>
 
       <button mat-raised-button color="primary" (click)="openCreatePanel()" class="btn-new-record" matTooltip="Create New Deployment Record">
@@ -190,6 +190,12 @@
               </mat-panel-title>
               <mat-panel-description>
                 <span class="version-panel__count">{{ l1.totalCount }} items</span>
+                <span *ngIf="l1.versionKey !== 'Unclassified' && l1.totalCount > 0"
+                      class="readiness-gate"
+                      [ngClass]="getReleaseGateStatus(l1.directItems).isReady ? 'readiness-gate--ready' : 'readiness-gate--blocked'">
+                  <mat-icon style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;">{{ getReleaseGateStatus(l1.directItems).isReady ? 'verified' : 'block' }}</mat-icon>
+                  {{ getReleaseGateStatus(l1.directItems).isReady ? 'Ready to Release' : 'Blocked (' + getReleaseGateStatus(l1.directItems).blockedCount + ' pending)' }}
+                </span>
               </mat-panel-description>
             </mat-expansion-panel-header>
 
@@ -213,6 +219,12 @@
                     </mat-panel-title>
                     <mat-panel-description>
                       <span class="version-panel__count">{{ l2.totalCount }} items</span>
+                      <span *ngIf="l2.versionKey !== 'Unclassified' && l2.totalCount > 0"
+                            class="readiness-gate"
+                            [ngClass]="getReleaseGateStatus(l2.directItems).isReady ? 'readiness-gate--ready' : 'readiness-gate--blocked'">
+                        <mat-icon style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;">{{ getReleaseGateStatus(l2.directItems).isReady ? 'verified' : 'block' }}</mat-icon>
+                        {{ getReleaseGateStatus(l2.directItems).isReady ? 'Ready to Release' : 'Blocked (' + getReleaseGateStatus(l2.directItems).blockedCount + ' pending)' }}
+                      </span>
                     </mat-panel-description>
                   </mat-expansion-panel-header>
 
@@ -393,8 +405,16 @@
           <th mat-header-cell *matHeaderCellDef>Pending Issues</th>
           <td mat-cell *matCellDef="let item">
             <ng-container *ngIf="item.tickets && item.tickets.length > 0; else noPending">
-              <div *ngFor="let t of item.tickets" class="pending-text">
-                <div *ngIf="t.pendingIssues; else emptyPending" [innerHTML]="t.pendingIssues"></div>
+              <div *ngFor="let t of item.tickets">
+                <div *ngIf="t.pendingIssues; else emptyPending"
+                     class="rich-text-compact"
+                     (click)="openRichTextPreview(t)"
+                     matTooltip="Click to inspect full remarks & images">
+                  <span class="rich-text-compact__snippet">{{ getPlainTextSnippet(t.pendingIssues) }}</span>
+                  <span *ngIf="hasImages(t.pendingIssues)" class="rich-text-compact__img-badge">
+                    <mat-icon style="font-size: 11px; width: 11px; height: 11px; vertical-align: middle;">photo</mat-icon> Image
+                  </span>
+                </div>
                 <ng-template #emptyPending>—</ng-template>
               </div>
             </ng-container>
@@ -509,4 +529,39 @@
   <button mat-fab class="scroll-to-top" *ngIf="showScrollToTop()" (click)="scrollToTop()" matTooltip="Scroll to Top">
     <mat-icon>keyboard_arrow_up</mat-icon>
   </button>
+
+  <!-- Command Palette Modal -->
+  <app-command-palette
+    [isOpen]="isCommandPaletteOpen()"
+    [deploymentItems]="deploymentItems()"
+    [repositories]="repositories()"
+    [releases]="releases()"
+    (close)="isCommandPaletteOpen.set(false)"
+    (createRecord)="openCreatePanel()"
+    (filterQCStatus)="selectedQCStatus = $event; applyFilters()"
+    (navigateToScheduler)="router.navigate(['/scheduler'])"
+    (toggleTheme)="toggleTheme()"
+    (selectTicket)="openEditPanel($event, null)">
+  </app-command-palette>
+
+  <!-- Rich Text Remarks Inspection Modal -->
+  <div class="cmd-backdrop" *ngIf="previewModalTicket()" (click)="closeRichTextPreview()">
+    <div class="cmd-dialog" style="max-width: 720px; padding: 24px;" (click)="$event.stopPropagation()">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <mat-icon color="primary">confirmation_number</mat-icon>
+          <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;">{{ previewModalTicket()?.ticketId }} — Remarks Inspection</h3>
+        </div>
+        <button mat-icon-button (click)="closeRichTextPreview()"><mat-icon>close</mat-icon></button>
+      </div>
+
+      <div class="ql-editor pending-text" style="max-height: 480px; overflow-y: auto; background: var(--color-bg-page); border-radius: 8px; padding: 16px; border: 1px solid var(--color-border);" [innerHTML]="previewModalTicket()?.pendingIssues | safeHtml">
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+        <button mat-raised-button color="primary" (click)="closeRichTextPreview()">Close Inspection</button>
+      </div>
+    </div>
+  </div>
 </div>
+
