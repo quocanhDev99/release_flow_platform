@@ -85,11 +85,6 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="w-100">
-        <mat-label>Ticket Summary</mat-label>
-        <input matInput name="summary" [(ngModel)]="formModel.summary" placeholder="Short description of the task">
-      </mat-form-field>
-
-      <mat-form-field appearance="outline" class="w-100">
         <mat-label>Classification (Type)</mat-label>
         <mat-select name="changeType" [(ngModel)]="formModel.changeType">
           <mat-option *ngFor="let type of changeTypes" [value]="type">{{ type }}</mat-option>
@@ -103,11 +98,21 @@
         </mat-select>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="w-100 has-textarea">
-        <mat-label>Pending Issues / Remarks</mat-label>
-        <textarea matInput name="pendingIssues" rows="3" [(ngModel)]="formModel.pendingIssues"
-          placeholder="Enter any pending issues..."></textarea>
-      </mat-form-field>
+      <div class="rich-text-field mb-3">
+        <label class="form-label text-secondary fw-semibold small mb-1" style="font-size: 0.85rem; font-weight: 500;">Ticket Summary</label>
+        <quill-editor name="summary" [(ngModel)]="formModel.summary"
+          placeholder="Short description of the task, formatting, or paste screenshots..."
+          [modules]="quillModules">
+        </quill-editor>
+      </div>
+
+      <div class="rich-text-field mb-3">
+        <label class="form-label text-secondary fw-semibold small mb-1" style="font-size: 0.85rem; font-weight: 500;">Pending Issues / Remarks</label>
+        <quill-editor name="pendingIssues" [(ngModel)]="formModel.pendingIssues"
+          placeholder="Enter any pending issues, formatting, or paste screenshots..."
+          [modules]="quillModules">
+        </quill-editor>
+      </div>
     </div>
 
     <div class="sidebar__footer">
