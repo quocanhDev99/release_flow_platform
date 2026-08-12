@@ -19,6 +19,7 @@ Many enterprise teams still manage software release schedules using manual Excel
 ## ✨ Core Features
 
 *   **Excel-like Dashboard:** Provides a flat, Excel-like user interface supporting cross-filtering, dynamic sorting, and Bulk Actions.
+*   **Rich Text & Screenshot Upload (Quill.js):** Integrated WYSIWYG editor for **Ticket Summary** and **Pending Issues / Remarks**. Supports formatted text (bold, italic, colors, headers, lists, links) and direct screenshot pasting (`Ctrl+V` / `Cmd+V`) or image uploading.
 *   **Tree-indented Grouping:** Automatically categorizes release streams into a clear visual hierarchy (`ReleaseGroup` -> `Sub-release` -> `Patch`).
 *   **CI/CD Webhook Automation:** Integrates directly with GitHub and Bitbucket. Automatically extracts Ticket IDs (`MAG-\d+`), branch names, authors, maps them to the correct target version, and filters out duplicates safely.
 *   **Interactive Scheduler:** Manages multi-environment deployment schedules on an interactive month calendar grid.
@@ -33,8 +34,8 @@ Many enterprise teams still manage software release schedules using manual Excel
 
 The system is designed with a **Normalized Backend** model while displaying a **Flat Frontend** interface for the best user experience.
 
-*   **Frontend:** Angular 20, Angular Material, SCSS (BEM), Angular Signals (State Management).
-*   **Backend:** NestJS, Prisma ORM, PostgreSQL.
+*   **Frontend:** Angular 19/20, ngx-quill (Quill.js Rich Text), Angular Material, SCSS (BEM), Angular Signals (State Management).
+*   **Backend:** NestJS, Prisma ORM, PostgreSQL, Redis.
 *   **Automation:** GitHub/Bitbucket Webhooks, MS Teams Adaptive Cards, Slack Incoming Webhooks.
 
 ---

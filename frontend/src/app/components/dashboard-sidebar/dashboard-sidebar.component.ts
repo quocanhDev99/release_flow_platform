@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
+import { QuillModule } from 'ngx-quill';
 import { DeploymentItem, RecordFormModel, ReleaseStream, Repository, Ticket, User } from '../../models/release.model';
 import { ReleaseService } from '../../services/release.service';
 import { ToastService } from '../../services/toast.service';
@@ -25,12 +26,24 @@ import { ToastService } from '../../services/toast.service';
     MatIconModule,
     MatInputModule,
     MatFormFieldModule,
-    MatTabsModule
+    MatTabsModule,
+    QuillModule
   ],
   templateUrl: './dashboard-sidebar.component.html',
   styleUrls: ['./dashboard-sidebar.component.scss']
 })
 export class DashboardSidebarComponent implements OnChanges {
+  // Quill toolbar configuration
+  quillModules = {
+    toolbar: [
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'header': [1, 2, 3, false] }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      ['link', 'image'],
+      ['clean']
+    ]
+  };
   // Services
   private releaseService = inject(ReleaseService);
   private toast = inject(ToastService);
