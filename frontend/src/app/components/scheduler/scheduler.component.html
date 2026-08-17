@@ -122,13 +122,13 @@
         </div>
 
         <div class="image-import-card__body">
-          <p class="description">Upload your Excel spreadsheet screenshot or deployment email. The AI engine will automatically parse and map the schedules.</p>
+          <p class="description">Upload your deployment schedule image or Excel spreadsheet (.xlsx, .xls, .csv). The engine will automatically parse and map exact dates, versions, and environments.</p>
           
           <div class="upload-zone" [class.upload-zone--active]="selectedImageName()">
             <mat-icon class="upload-zone__icon">add_photo_alternate</mat-icon>
-            <span class="upload-zone__text" *ngIf="!selectedImageName()">Drag & drop schedule image or click to browse</span>
+            <span class="upload-zone__text" *ngIf="!selectedImageName()">Drag & drop schedule image or Excel file (.xlsx, .csv) or click to browse</span>
             <span class="upload-zone__filename" *ngIf="selectedImageName()">File: {{ selectedImageName() }}</span>
-            <input type="file" class="upload-zone__input" (change)="onImageSelected($event)" accept="image/*" />
+            <input type="file" class="upload-zone__input" (change)="onImageSelected($event)" accept="image/*, .xlsx, .xls, .csv" />
           </div>
 
           <!-- OCR Processing Progress -->
@@ -145,23 +145,36 @@
             </div>
           </div>
 
-          <!-- OCR Proposed Results -->
+          <!-- OCR Proposed Results (Interactive & Editable) -->
           <div class="ocr-results" *ngIf="ocrResult()">
-            <h4><mat-icon>playlist_add_check</mat-icon> Extracted Schedules from Image:</h4>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <h4 class="m-0"><mat-icon>playlist_add_check</mat-icon> Extracted Schedules from Image (Review & Edit):</h4>
+              <button mat-stroked-button color="primary" class="btn-sm" (click)="addOCRRow()">
+                <mat-icon>add</mat-icon> Add Row
+              </button>
+            </div>
             <div class="ocr-result-list">
-              <div class="ocr-row" *ngFor="let item of ocrResult()">
-                <div class="ocr-row__left">
-                  <span class="badge-env" [class]="item.environmentName">{{ item.environmentName }}</span>
-                  <span class="ocr-row__time">
-                    <strong>Time:</strong> {{ formatDate(item.startTime) }} {{ formatTime(item.startTime) }}
-                  </span>
-                  <span class="ocr-row__version">
-                    <strong>Version:</strong> {{ item.version }}
-                  </span>
+              <div class="ocr-row d-flex align-items-center justify-content-between gap-2 p-2 border-bottom" *ngFor="let item of ocrResult(); let i = index">
+                <div class="ocr-row__inputs d-flex align-items-center gap-2 flex-grow-1">
+                  <!-- Environment Selector -->
+                  <select class="form-select form-select-sm" style="width: 110px;" [ngModel]="item.environmentId" (ngModelChange)="onOCREnvChange(item, $event)">
+                    <option *ngFor="let env of environments()" [value]="env.id">{{ env.name }}</option>
+                  </select>
+
+                  <!-- Date & Time Input -->
+                  <input type="datetime-local" class="form-control form-control-sm" style="width: 190px;" [(ngModel)]="item.startTime" />
+
+                  <!-- Version Text Input -->
+                  <input type="text" class="form-control form-control-sm flex-grow-1" placeholder="Version label" [(ngModel)]="item.version" />
                 </div>
+
+                <!-- Delete Row Action -->
+                <button mat-icon-button color="warn" (click)="deleteOCRRow(i)" matTooltip="Remove row">
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
               </div>
             </div>
-            <div class="ocr-actions">
+            <div class="ocr-actions mt-3 d-flex gap-2">
               <button mat-raised-button color="primary" class="btn btn--primary" (click)="importOCRResult()">
                 <mat-icon>save</mat-icon> Sync to Scheduler
               </button>
