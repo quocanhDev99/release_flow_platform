@@ -307,46 +307,41 @@
           <mat-expansion-panel *ngFor="let l1 of groupedHierarchicalData()" class="version-panel version-panel--l1" [expanded]="isPanelExpanded(l1.versionKey)" (opened)="onPanelToggle(l1.versionKey, true)" (closed)="onPanelToggle(l1.versionKey, false)">
             <mat-expansion-panel-header>
               <mat-panel-title>
-                <mat-icon class="version-panel__icon">account_tree</mat-icon>
-                <span class="version-panel__label">Release Group</span>
-                <span class="version-panel__name">{{ l1.versionKey === 'Unclassified' ? 'Unclassified' : l1.versionKey }}</span>
-                <mat-icon *ngIf="l1.versionKey !== 'Unclassified'" class="version-panel__add-sub" (click)="openCreatePanelWithVersion(l1.versionKey, $event)" title="Add deployment record under this version">
-                  add_circle_outline
-                </mat-icon>
+                <div class="version-panel__badge">
+                  <mat-icon class="version-panel__icon">layers</mat-icon>
+                  <span class="version-panel__name">{{ l1.versionKey === 'Unclassified' ? 'Unclassified Release' : 'Release ' + l1.versionKey }}</span>
+                </div>
+                <button *ngIf="l1.versionKey !== 'Unclassified'"
+                        class="version-panel__add-btn"
+                        (click)="openCreatePanelWithVersion(l1.versionKey, $event)"
+                        matTooltip="Add record under {{ l1.versionKey }}">
+                  <mat-icon>add</mat-icon>
+                </button>
               </mat-panel-title>
               <mat-panel-description>
-                <span class="version-panel__count">{{ l1.totalCount }} items</span>
+                <span class="version-panel__count">{{ l1.totalCount }} {{ l1.totalCount === 1 ? 'item' : 'items' }}</span>
                 <span *ngIf="l1.versionKey !== 'Unclassified' && l1.totalCount > 0"
                       class="readiness-gate"
                       [ngClass]="getReleaseGateStatus(l1.allItems).isReady ? 'readiness-gate--ready' : 'readiness-gate--blocked'">
-                  <mat-icon style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle;">{{ getReleaseGateStatus(l1.allItems).isReady ? 'verified' : 'block' }}</mat-icon>
-                  {{ getReleaseGateStatus(l1.allItems).isReady ? 'Ready to Release' : 'Blocked (' + getReleaseGateStatus(l1.allItems).blockedCount + ' pending)' }}
+                  <mat-icon>{{ getReleaseGateStatus(l1.allItems).isReady ? 'check_circle' : 'error_outline' }}</mat-icon>
+                  <span>{{ getReleaseGateStatus(l1.allItems).isReady ? 'Ready to Release' : 'Blocked (' + getReleaseGateStatus(l1.allItems).blockedCount + ' pending)' }}</span>
                 </span>
               </mat-panel-description>
             </mat-expansion-panel-header>
 
             <div class="version-panel__content">
-              <!-- Panel Bulk Action Bar -->
-              <div class="panel-bulk-bar" *ngIf="l1.allItems.length > 0">
+              <!-- Contextual Bulk Action Bar (only visible when items are selected) -->
+              <div class="panel-bulk-bar" *ngIf="getSelectedCountInGroup(l1.allItems) > 0">
                 <div class="panel-bulk-bar__left">
-                  <button class="panel-select-all-btn"
-                          (click)="masterToggle(l1.allItems)"
-                          [class.panel-select-all-btn--active]="someSelected(l1.allItems)">
-                    <span class="panel-select-all-box"
-                          [class.checked]="isAllSelected(l1.allItems)"
-                          [class.indeterminate]="someSelected(l1.allItems) && !isAllSelected(l1.allItems)">
-                    </span>
-                    <span class="panel-select-all-label">Select all</span>
-                  </button>
-
-                  <span class="panel-selected-badge" *ngIf="getSelectedCountInGroup(l1.allItems) > 0">
+                  <span class="panel-selected-badge">
+                    <mat-icon style="font-size: 13px; width: 13px; height: 13px; margin-right: 2px;">check</mat-icon>
                     {{ getSelectedCountInGroup(l1.allItems) }} item{{ getSelectedCountInGroup(l1.allItems) > 1 ? 's' : '' }} selected
                   </span>
                 </div>
 
-                <div class="panel-bulk-bar__right" *ngIf="getSelectedCountInGroup(l1.allItems) > 0">
+                <div class="panel-bulk-bar__right">
                   <button mat-flat-button [matMenuTriggerFor]="bulkMenu" class="btn-bulk-actions">
-                    <span>Actions</span>
+                    <span>Bulk Actions</span>
                     <mat-icon iconPositionEnd>arrow_drop_down</mat-icon>
                   </button>
 
@@ -358,7 +353,7 @@
                     <mat-divider></mat-divider>
                     <button mat-menu-item (click)="bulkDeleteInGroup(l1.allItems)" class="menu-item--danger">
                       <mat-icon>delete</mat-icon>
-                      <span>Delete</span>
+                      <span>Delete Selected</span>
                     </button>
                   </mat-menu>
                 </div>
@@ -410,7 +405,7 @@
                 <span *ngIf="!last" style="margin-right: 4px; opacity: 0.7;"></span>
               </span>
             </ng-container>
-            <ng-template #noRepos>—</ng-template>
+            <ng-template #noRepos><span class="cell-empty">—</span></ng-template>
           </td>
         </ng-container>
 
@@ -419,19 +414,23 @@
           <th mat-header-cell *matHeaderCellDef>Ticket</th>
           <td mat-cell *matCellDef="let item">
             @if (item.tickets && item.tickets.length > 0) {
-              @for (t of item.tickets; track t.ticketId) {
+              <div class="ticket-tag-list">
+                @for (t of item.tickets; track t.ticketId) {
                   @for (ticket of t.ticketId.split(','); track $index) {
-                    <a class="ticket-id"
+                    <a class="ticket-tag"
                       [href]="'https://storai.atlassian.net/browse/' + ticket.trim()"
                       target="_blank"
                       rel="noopener noreferrer"
+                      matTooltip="Open in Jira: {{ ticket.trim() }}"
                     >
-                      {{ ticket.trim() }}
+                      <span>{{ ticket.trim() }}</span>
+                      <mat-icon class="ticket-tag__icon">launch</mat-icon>
                     </a>
                   }
-              }
+                }
+              </div>
             } @else {
-              <ng-container>-</ng-container>
+              <span class="cell-empty">—</span>
             }
           </td>
         </ng-container>
@@ -439,14 +438,22 @@
         <!-- Fix Version Column -->
         <ng-container matColumnDef="fixVersion">
           <th mat-header-cell *matHeaderCellDef>Fix Version</th>
-          <td mat-cell *matCellDef="let item">{{ cleanVersion(item.releaseStream?.version) }}</td>
+          <td mat-cell *matCellDef="let item">
+            <span class="version-chip" *ngIf="item.releaseStream?.version; else noVer">
+              {{ cleanVersion(item.releaseStream?.version) }}
+            </span>
+            <ng-template #noVer><span class="cell-empty">—</span></ng-template>
+          </td>
         </ng-container>
 
         <!-- Source Branch Column -->
         <ng-container matColumnDef="sourceBranch">
           <th mat-header-cell *matHeaderCellDef>Branch</th>
-          <td mat-cell *matCellDef="let item" [matTooltip]="item.sourceBranch + ' (click to copy)'">
-            <span class="code-chip code-chip--copyable" (click)="copyToClipboard(item.sourceBranch)">{{ item.sourceBranch }}</span>
+          <td mat-cell *matCellDef="let item" [matTooltip]="item.sourceBranch + ' (Click to copy)'">
+            <span class="code-chip code-chip--copyable" (click)="copyToClipboard(item.sourceBranch)">
+              <span class="code-chip__text">{{ item.sourceBranch }}</span>
+              <mat-icon class="code-chip__icon">content_copy</mat-icon>
+            </span>
           </td>
         </ng-container>
 
@@ -463,8 +470,11 @@
         <!-- Branch Build Column -->
         <ng-container matColumnDef="branchBuilds">
           <th mat-header-cell *matHeaderCellDef>Branch Build</th>
-          <td mat-cell *matCellDef="let item" [matTooltip]="getBuildsString(item) + ' (click to copy)'">
-            <span class="code-chip code-chip--copyable" (click)="copyToClipboard(getBuildsString(item))">{{ getBuildsString(item) }}</span>
+          <td mat-cell *matCellDef="let item" [matTooltip]="getBuildsString(item) + ' (Click to copy)'">
+            <span class="code-chip code-chip--copyable" (click)="copyToClipboard(getBuildsString(item))">
+              <span class="code-chip__text">{{ getBuildsString(item) }}</span>
+              <mat-icon class="code-chip__icon">content_copy</mat-icon>
+            </span>
           </td>
         </ng-container>
 
@@ -485,7 +495,7 @@
                 <span class="row-badge" [ngClass]="getChangeTypeClass(t.changeType)">{{ t.changeType }}</span>
               </div>
             </ng-container>
-            <ng-template #noType>—</ng-template>
+            <ng-template #noType><span class="cell-empty">—</span></ng-template>
           </td>
         </ng-container>
 
@@ -495,16 +505,19 @@
           <td mat-cell *matCellDef="let item">
             <ng-container *ngIf="item.tickets && item.tickets.length > 0; else noQC">
               <div *ngFor="let t of item.tickets">
-                <select
-                  [ngModel]="t.qcStatus"
-                  (ngModelChange)="onQCStatusChange(t, $event)"
-                  class="qc-select"
-                  [ngClass]="getQCStatusClass(t.qcStatus)">
-                  <option *ngFor="let opt of qcStatuses" [value]="opt">{{ opt }}</option>
-                </select>
+                <div class="qc-select-wrap" [ngClass]="getQCStatusClass(t.qcStatus)">
+                  <select
+                    [ngModel]="t.qcStatus"
+                    (ngModelChange)="onQCStatusChange(t, $event)"
+                    class="qc-select"
+                    [ngClass]="getQCStatusClass(t.qcStatus)">
+                    <option *ngFor="let opt of qcStatuses" [value]="opt">{{ opt === '—' ? 'Waiting' : opt }}</option>
+                  </select>
+                  <mat-icon class="qc-select__arrow">expand_more</mat-icon>
+                </div>
               </div>
             </ng-container>
-            <ng-template #noQC>—</ng-template>
+            <ng-template #noQC><span class="cell-empty">—</span></ng-template>
           </td>
         </ng-container>
 
@@ -523,10 +536,10 @@
                     <mat-icon style="font-size: 11px; width: 11px; height: 11px; vertical-align: middle;">photo</mat-icon> Image
                   </span>
                 </div>
-                <ng-template #emptyPending>—</ng-template>
+                <ng-template #emptyPending><span class="cell-empty">—</span></ng-template>
               </div>
             </ng-container>
-            <ng-template #noPending>—</ng-template>
+            <ng-template #noPending><span class="cell-empty">—</span></ng-template>
           </td>
         </ng-container>
 
@@ -534,10 +547,12 @@
         <ng-container matColumnDef="developer">
           <th mat-header-cell *matHeaderCellDef>Developer</th>
           <td mat-cell *matCellDef="let item">
-            <span class="user-avatar" [title]="item.user?.email || ''">
-              <mat-icon style="font-size: 14px; width: 14px; height: 14px; margin-right: 4px; vertical-align: middle;">person</mat-icon>
-              {{ item.user?.username || '—' }}
-            </span>
+            <div class="user-avatar-chip" [title]="item.user?.email || ''">
+              <span class="user-avatar-chip__circle">
+                <mat-icon>person</mat-icon>
+              </span>
+              <span class="user-avatar-chip__name">{{ item.user?.username || '—' }}</span>
+            </div>
           </td>
         </ng-container>
 
@@ -545,7 +560,7 @@
         <ng-container matColumnDef="createdAt">
           <th mat-header-cell *matHeaderCellDef>Created</th>
           <td mat-cell *matCellDef="let item" class="meta-cell">
-            {{ formatDate(item.createdAt) }}
+            <span class="meta-date">{{ formatDate(item.createdAt) }}</span>
           </td>
         </ng-container>
 
@@ -553,7 +568,7 @@
         <ng-container matColumnDef="updatedAt">
           <th mat-header-cell *matHeaderCellDef>Updated</th>
           <td mat-cell *matCellDef="let item" class="meta-cell">
-            {{ formatDate(item.updatedAt) }}
+            <span class="meta-date">{{ formatDate(item.updatedAt) }}</span>
           </td>
         </ng-container>
 
@@ -586,7 +601,7 @@
 
         <!-- Header and Row definitions -->
         <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" [class.row-selected]="selection.isSelected(row.id)"></tr>
 
         <!-- Empty state -->
         <tr class="mat-row" *mat-noDataRow>
