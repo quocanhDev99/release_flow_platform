@@ -575,6 +575,43 @@ export class DashboardComponent implements OnInit {
     this.loadData();
   }
 
+  hasActiveFilters(): boolean {
+    return !!(
+      this.searchText.trim() ||
+      this.selectedRepo ||
+      this.selectedRelease ||
+      this.selectedQCStatus ||
+      this.selectedStatus ||
+      this.selectedBranchBuild
+    );
+  }
+
+  getActiveFilterCount(): number {
+    let count = 0;
+    if (this.searchText.trim()) count++;
+    if (this.selectedRepo) count++;
+    if (this.selectedRelease) count++;
+    if (this.selectedQCStatus) count++;
+    if (this.selectedStatus) count++;
+    if (this.selectedBranchBuild) count++;
+    return count;
+  }
+
+  resetFilters() {
+    this.searchText = '';
+    this.selectedRepo = '';
+    this.selectedRelease = '';
+    this.selectedQCStatus = '';
+    this.selectedStatus = '';
+    this.selectedBranchBuild = '';
+    this.applyFilters();
+  }
+
+  clearSearch() {
+    this.searchText = '';
+    this.applyFilters();
+  }
+
   onPageChange(event: any) {
     this.pageIndex.set(event.pageIndex);
     this.pageSize.set(event.pageSize);

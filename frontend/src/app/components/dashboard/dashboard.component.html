@@ -83,57 +83,80 @@
     </div>
   </header>
 
-  <!-- ─── Toolbar (filters + group toggle) ────────────────────────────── -->
-  <div class="toolbar">
-    <mat-form-field appearance="outline" class="toolbar__search">
-      <mat-label>Search Ticket</mat-label>
-      <input matInput [(ngModel)]="searchText" (ngModelChange)="applyFilters()" placeholder="e.g. MAG-20479">
-      <mat-icon matSuffix>search</mat-icon>
-    </mat-form-field>
+  <!-- ─── Filter Bar ─────────────────────────────────────────────────── -->
+  <div class="filter-bar">
 
-    <mat-form-field appearance="outline" class="toolbar__filter">
-      <mat-label>Repository</mat-label>
-      <mat-select [(ngModel)]="selectedRepo" (selectionChange)="applyFilters()">
-        <mat-option value="">All</mat-option>
-        <mat-option *ngFor="let repo of repositories()" [value]="repo.name">{{ repo.name }}</mat-option>
-      </mat-select>
-    </mat-form-field>
+    <!-- Search Segment -->
+    <div class="filter-bar__search-wrap">
+      <mat-icon class="filter-bar__search-icon">search</mat-icon>
+      <input class="filter-bar__search-input"
+             type="text"
+             [(ngModel)]="searchText"
+             (ngModelChange)="applyFilters()"
+             placeholder="Search ticket, branch...">
+      <button class="filter-bar__search-clear" *ngIf="searchText" (click)="clearSearch()" matTooltip="Clear">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
 
-    <mat-form-field appearance="outline" class="toolbar__filter">
-      <mat-label>Release Stream</mat-label>
-      <mat-select [(ngModel)]="selectedRelease" (selectionChange)="applyFilters()">
-        <mat-select-trigger>{{ selectedRelease || 'All' }}</mat-select-trigger>
-        <mat-option value="">All</mat-option>
-        <mat-option *ngFor="let rel of sortedReleasesWithIndent()" [value]="rel.version">
-          <span *ngFor="let space of rel.indentArray" style="display: inline-block; width: 16px;"></span>
-          {{ rel.displayName }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+    <!-- Separator -->
+    <div class="filter-bar__sep"></div>
 
-    <mat-form-field appearance="outline" class="toolbar__filter">
-      <mat-label>QC Status</mat-label>
-      <mat-select [(ngModel)]="selectedQCStatus" (selectionChange)="applyFilters()">
-        <mat-option value="">All</mat-option>
-        <mat-option *ngFor="let s of qcStatuses" [value]="s">{{ s }}</mat-option>
-      </mat-select>
-    </mat-form-field>
+    <!-- Filter Segments -->
+    <div class="filter-bar__segments">
 
-    <mat-form-field appearance="outline" class="toolbar__filter">
-      <mat-label>Branch Status</mat-label>
-      <mat-select [(ngModel)]="selectedStatus" (selectionChange)="applyFilters()">
-        <mat-option value="">All</mat-option>
-        <mat-option *ngFor="let s of statuses" [value]="s">{{ s | uppercase }}</mat-option>
-      </mat-select>
-    </mat-form-field>
+      <div class="filter-bar__segment" [class.filter-bar__segment--active]="selectedRepo" matTooltip="Filter by Repository">
+        <span class="filter-bar__seg-label">Repository</span>
+        <select class="filter-bar__seg-select" [(ngModel)]="selectedRepo" (ngModelChange)="applyFilters()">
+          <option value="">All</option>
+          <option *ngFor="let repo of repositories()" [value]="repo.name">{{ repo.name }}</option>
+        </select>
+        <mat-icon class="filter-bar__seg-arrow">expand_more</mat-icon>
+      </div>
 
-    <mat-form-field appearance="outline" class="toolbar__filter">
-      <mat-label>Branch Build</mat-label>
-      <mat-select [(ngModel)]="selectedBranchBuild" (selectionChange)="applyFilters()">
-        <mat-option value="">All</mat-option>
-        <mat-option *ngFor="let b of branchBuildOptions" [value]="b">{{ b }}</mat-option>
-      </mat-select>
-    </mat-form-field>
+      <div class="filter-bar__segment" [class.filter-bar__segment--active]="selectedRelease" matTooltip="Filter by Release Stream">
+        <span class="filter-bar__seg-label">Release Stream</span>
+        <select class="filter-bar__seg-select" [(ngModel)]="selectedRelease" (ngModelChange)="applyFilters()">
+          <option value="">All</option>
+          <option *ngFor="let rel of sortedReleasesWithIndent()" [value]="rel.version">{{ rel.displayName }}</option>
+        </select>
+        <mat-icon class="filter-bar__seg-arrow">expand_more</mat-icon>
+      </div>
+
+      <div class="filter-bar__segment" [class.filter-bar__segment--active]="selectedQCStatus" matTooltip="Filter by QC Status">
+        <span class="filter-bar__seg-label">QC Status</span>
+        <select class="filter-bar__seg-select" [(ngModel)]="selectedQCStatus" (ngModelChange)="applyFilters()">
+          <option value="">All</option>
+          <option *ngFor="let s of qcStatuses" [value]="s">{{ s }}</option>
+        </select>
+        <mat-icon class="filter-bar__seg-arrow">expand_more</mat-icon>
+      </div>
+
+      <div class="filter-bar__segment" [class.filter-bar__segment--active]="selectedStatus" matTooltip="Filter by Branch Status">
+        <span class="filter-bar__seg-label">Branch Status</span>
+        <select class="filter-bar__seg-select" [(ngModel)]="selectedStatus" (ngModelChange)="applyFilters()">
+          <option value="">All</option>
+          <option *ngFor="let s of statuses" [value]="s">{{ s | uppercase }}</option>
+        </select>
+        <mat-icon class="filter-bar__seg-arrow">expand_more</mat-icon>
+      </div>
+
+      <div class="filter-bar__segment filter-bar__segment--last" [class.filter-bar__segment--active]="selectedBranchBuild" matTooltip="Filter by Branch Build">
+        <span class="filter-bar__seg-label">Branch Build</span>
+        <select class="filter-bar__seg-select" [(ngModel)]="selectedBranchBuild" (ngModelChange)="applyFilters()">
+          <option value="">All</option>
+          <option *ngFor="let b of branchBuildOptions" [value]="b">{{ b }}</option>
+        </select>
+        <mat-icon class="filter-bar__seg-arrow">expand_more</mat-icon>
+      </div>
+    </div>
+
+    <!-- Reset Button -->
+    <button class="filter-bar__reset-btn" *ngIf="hasActiveFilters()" (click)="resetFilters()" matTooltip="Clear all filters">
+      <mat-icon>filter_alt_off</mat-icon>
+      <span>Clear</span>
+      <span class="filter-bar__reset-badge">{{ getActiveFilterCount() }}</span>
+    </button>
   </div>
 
   <!-- ─── Stats strip + group toggle ─────────────────────────────────── -->
