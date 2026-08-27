@@ -21,6 +21,7 @@ body {
   border-radius: 24px !important;
 }
 
+
 /* Quill Editor Custom Theme Styling */
 .ql-container {
   font-family: inherit !important;
@@ -37,16 +38,19 @@ body {
   border-top-right-radius: 8px;
   background-color: var(--color-bg-page, #f8f9fa);
   border-color: var(--color-border, #e0e0e0) !important;
-  
+
   .ql-stroke {
     stroke: var(--color-text-body, #444) !important;
   }
+
   .ql-fill {
     fill: var(--color-text-body, #444) !important;
   }
+
   .ql-picker {
     color: var(--color-text-body, #444) !important;
   }
+
   .ql-picker-options {
     background-color: var(--color-bg-card, #ffffff) !important;
     color: var(--color-text-body, #333) !important;
@@ -103,6 +107,7 @@ body {
     background-color: rgba(16, 185, 129, 0.12);
     color: #10b981;
     border-color: rgba(16, 185, 129, 0.25);
+
     .status-chip__dot {
       background-color: #10b981;
       box-shadow: 0 0 8px #10b981;
@@ -114,6 +119,7 @@ body {
     background-color: rgba(245, 158, 11, 0.12);
     color: #f59e0b;
     border-color: rgba(245, 158, 11, 0.25);
+
     .status-chip__dot {
       background-color: #f59e0b;
       box-shadow: 0 0 8px #f59e0b;
@@ -125,6 +131,7 @@ body {
     background-color: rgba(59, 130, 246, 0.12);
     color: #3b82f6;
     border-color: rgba(59, 130, 246, 0.25);
+
     .status-chip__dot {
       background-color: #3b82f6;
     }
@@ -134,6 +141,7 @@ body {
     background-color: rgba(239, 68, 68, 0.12);
     color: #ef4444;
     border-color: rgba(239, 68, 68, 0.25);
+
     .status-chip__dot {
       background-color: #ef4444;
       box-shadow: 0 0 8px #ef4444;
@@ -145,6 +153,7 @@ body {
     background-color: rgba(100, 116, 139, 0.12);
     color: #64748b;
     border-color: rgba(100, 116, 139, 0.25);
+
     .status-chip__dot {
       background-color: #64748b;
     }
@@ -152,15 +161,37 @@ body {
 }
 
 @keyframes pulseGlow {
-  0% { transform: scale(0.95); opacity: 0.8; }
-  50% { transform: scale(1.2); opacity: 1; }
-  100% { transform: scale(0.95); opacity: 0.8; }
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
 }
 
 @keyframes pulseAlert {
-  0% { transform: scale(0.9); opacity: 0.6; }
-  50% { transform: scale(1.35); opacity: 1; }
-  100% { transform: scale(0.9); opacity: 0.6; }
+  0% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: scale(1.35);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
 }
 
 /* ─── Compact Rich Text Preview Cell ────────────────────────────────── */
@@ -223,4 +254,153 @@ body {
   }
 }
 
+/* ─── Checkbox: force brand-blue for ALL mat-checkbox globally ──────────── */
+/* Overrides the indigo-pink preset's accent (pink) */
+.mdc-checkbox__native-control:enabled:checked~.mdc-checkbox__background,
+.mdc-checkbox__native-control:enabled:indeterminate~.mdc-checkbox__background {
+  background-color: var(--color-brand, #2563eb) !important;
+  border-color: var(--color-brand, #2563eb) !important;
+}
 
+.mdc-checkbox__native-control:enabled:not(:checked):not(:indeterminate)~.mdc-checkbox__background {
+  border-color: var(--color-border-strong, #94a3b8) !important;
+  background-color: transparent !important;
+}
+
+/* Ripple color */
+.mat-mdc-checkbox .mat-ripple-element,
+.mat-mdc-checkbox .mdc-checkbox__ripple {
+  background-color: var(--color-brand, #2563eb) !important;
+}
+
+/* Focus ring */
+.mdc-checkbox .mdc-checkbox__native-control:focus~.mdc-checkbox__ripple {
+  background-color: rgba(37, 99, 235, 0.12) !important;
+}
+
+/* ─── Navbar dropdown menus (Data / Tools) ──────────────────────────────── */
+.navbar-dropdown-menu.mat-mdc-menu-panel {
+  min-width: 210px !important;
+  border-radius: 10px !important;
+  padding: 4px !important;
+
+  .mat-mdc-menu-item {
+    min-height: 38px !important;
+    height: 38px !important;
+    border-radius: 6px !important;
+    margin-bottom: 1px !important;
+
+    // Ensure icon+text layout is correct
+    &:first-child {
+      color: var(--color-text-primary, #1e293b) !important;
+    }
+
+    &:first-child mat-icon {
+      color: var(--color-text-muted, #64748b) !important;
+    }
+  }
+}
+
+/* ─── Modern Floating Menu Dropdown Customization ─────────────────────── */
+.mat-mdc-menu-panel {
+  border-radius: 12px !important;
+  background-color: var(--color-bg-surface, #ffffff) !important;
+  border: 1px solid var(--color-border, #e2e8f0) !important;
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.12), 0 4px 8px -4px rgba(0, 0, 0, 0.06) !important;
+  padding: 5px !important;
+  min-width: 196px !important;
+  overflow: hidden !important;
+
+  .mat-mdc-menu-content {
+    padding: 0 !important;
+  }
+
+  .mat-mdc-menu-item {
+    border-radius: 7px !important;
+    margin-bottom: 1px !important;
+    min-height: 40px !important;
+    height: 40px !important;
+    padding: 0 10px !important;
+    transition: background 0.12s ease !important;
+
+    // Override Material's internal flex container
+    .mat-mdc-menu-item-text,
+    .mdc-list-item__primary-text {
+      display: flex !important;
+      align-items: center !important;
+      gap: 10px !important;
+      font-family: 'Outfit', 'Inter', system-ui, sans-serif !important;
+      font-size: 13px !important;
+      font-weight: 500 !important;
+      letter-spacing: 0.01em !important;
+      color: inherit !important;
+    }
+
+    mat-icon {
+      font-size: 17px !important;
+      width: 17px !important;
+      height: 17px !important;
+      flex-shrink: 0 !important;
+    }
+
+    span {
+      font-family: 'Outfit', 'Inter', system-ui, sans-serif !important;
+      font-size: 13px !important;
+      font-weight: 500 !important;
+      letter-spacing: 0.01em !important;
+    }
+
+    &:hover:not([disabled]) {
+      background-color: var(--color-bg-subtle, #f8fafc) !important;
+    }
+
+    // Mark as Completed item
+    &:first-child {
+      color: var(--color-text-primary, #1e293b) !important;
+
+      mat-icon {
+        color: #10b981 !important;
+      }
+
+      &:hover:not([disabled]) {
+        background-color: rgba(16, 185, 129, 0.07) !important;
+      }
+    }
+
+    // Danger / Delete item
+    &.menu-item--danger {
+      color: #ef4444 !important;
+
+      mat-icon {
+        color: #ef4444 !important;
+      }
+
+      span {
+        color: #ef4444 !important;
+      }
+
+      &:hover:not([disabled]) {
+        background-color: rgba(239, 68, 68, 0.07) !important;
+        color: #dc2626 !important;
+
+        mat-icon {
+          color: #dc2626 !important;
+        }
+
+        span {
+          color: #dc2626 !important;
+        }
+      }
+    }
+
+    &:last-child {
+      margin-bottom: 0 !important;
+    }
+  }
+
+  mat-divider {
+    margin: 3px 0 !important;
+    border-color: var(--color-border, #e2e8f0) !important;
+    opacity: 0.7 !important;
+  }
+}

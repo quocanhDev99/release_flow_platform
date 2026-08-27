@@ -61,42 +61,76 @@
     display: flex;
     align-items: center;
     gap: 8px;
+  }
 
-    > button, > a {
-      vertical-align: middle;
-      flex-shrink: 0;
+  // ── User section (theme + avatar chip + logout) ─────────────────────────
+  &__user-section {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 4px 3px 4px;
+    background: $color-bg-subtle;
+    border: 1px solid $color-border;
+    border-radius: $radius-pill;
+  }
+
+  // Uniform icon-only buttons inside user section
+  &__icon-btn {
+    width: 28px !important;
+    height: 28px !important;
+    line-height: 28px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    color: $color-text-muted;
+    transition: $transition-fast;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 16px !important;
+      width: 16px !important;
+      height: 16px !important;
+    }
+
+    &:hover {
+      background: $color-bg-page !important;
+      color: $color-text-primary !important;
+    }
+
+    &--danger {
+      &:hover {
+        background: rgba(239, 68, 68, 0.1) !important;
+        color: $color-danger !important;
+      }
     }
   }
 
-  &__theme-btn {
-    color: $color-text-faint;
-    &:hover { color: $color-text-muted; }
-  }
-
-  .dashboard &__user-info {
-    display: flex;
+  // User chip (avatar + name)
+  &__user-chip {
+    display: inline-flex;
     align-items: center;
     gap: 5px;
-    padding: 4px 10px;
+    padding: 2px 8px 2px 4px;
     border-radius: $radius-pill;
-    background: transparent;
-    border: 1px solid $color-border;
     color: $color-text-body;
     font-size: 12.5px;
     font-weight: 600;
     cursor: pointer;
     transition: $transition-fast;
-
-    &:hover {
-      background: $color-bg-subtle;
-      border-color: $color-border-strong;
-    }
+    white-space: nowrap;
 
     mat-icon {
       font-size: 15px;
       width: 15px;
       height: 15px;
-      color: $color-text-muted;
+      color: $color-brand;
+      flex-shrink: 0;
+    }
+
+    &:hover {
+      background: $color-bg-page;
     }
   }
 
@@ -107,18 +141,22 @@
     white-space: nowrap;
   }
 
-  &__logout-btn {
-    color: $color-text-faint;
-    &:hover { color: $color-danger; }
+  // ── Tools group ──────────────────────────────────────────────────────────
+  &__tools {
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
 
   &__divider {
     width: 1px;
     height: 18px;
     background: $color-border;
-    margin: 0 6px;
+    margin: 0 4px;
+    flex-shrink: 0;
   }
 }
+
 
 // Compact Navbar Buttons
 .navbar .btn-secondary {
@@ -126,16 +164,104 @@
   font-size: 12.5px !important;
   font-weight: 500 !important;
   letter-spacing: 0 !important;
-  padding: 0 11px !important;
+  padding: 0 10px !important;
   color: $color-text-body !important;
   border-color: $color-border !important;
   border-radius: 7px !important;
+  transition: all 0.15s ease !important;
 
   mat-icon {
     font-size: 15px !important;
     width: 15px !important;
     height: 15px !important;
-    margin-right: 4px !important;
+    margin-right: 3px !important;
+  }
+
+  &:hover {
+    background: $color-bg-subtle !important;
+    border-color: $color-border-strong !important;
+  }
+}
+
+// Dropdown trigger variant — icon + label + chevron
+.navbar .btn-dropdown {
+  padding: 0 8px 0 10px !important;
+  gap: 2px;
+  display: inline-flex !important;
+  align-items: center !important;
+
+  .btn-dropdown__arrow {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    opacity: 0.55;
+    transition: transform 0.15s ease;
+  }
+
+  &[aria-expanded="true"] .btn-dropdown__arrow {
+    transform: rotate(180deg);
+    opacity: 0.8;
+  }
+}
+
+// Cmd+K search shortcut button
+.btn-cmdK {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 8px 0 10px;
+  background: transparent;
+  border: 1px solid $color-border;
+  border-radius: 7px;
+  cursor: pointer;
+  color: $color-text-muted;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+    opacity: 0.7;
+  }
+
+  &__label {
+    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: $color-text-body;
+  }
+
+  &__kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 18px;
+    padding: 0 5px;
+    font-family: $font-mono;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: $color-text-faint;
+    background: $color-bg-page;
+    border: 1px solid $color-border;
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    letter-spacing: 0;
+    user-select: none;
+  }
+
+  &:hover {
+    background: $color-bg-subtle;
+    border-color: $color-border-strong;
+    color: $color-text-body;
+
+    .btn-cmdK__kbd {
+      border-color: $color-border-strong;
+      color: $color-text-muted;
+    }
   }
 }
 
@@ -150,25 +276,53 @@
   color: $color-text-faint !important;
   padding: 0 !important;
   border-radius: 7px !important;
-  &:hover { color: $color-brand !important; background: $color-bg-subtle !important; }
-  mat-icon { font-size: 17px !important; width: 17px !important; height: 17px !important; }
+
+  &:hover {
+    color: $color-brand !important;
+    background: $color-bg-subtle !important;
+  }
+
+  mat-icon {
+    font-size: 17px !important;
+    width: 17px !important;
+    height: 17px !important;
+  }
 }
 
+// ── New Record CTA (Standard Angular Material Primary) ────────────────────
 .navbar .btn-new-record {
   height: 30px !important;
+  line-height: 30px !important;
   font-size: 12.5px !important;
-  font-weight: 600 !important;
-  padding: 0 13px !important;
+  font-weight: 500 !important;
+  padding: 0 12px !important;
   border-radius: 7px !important;
   letter-spacing: 0 !important;
+  background-color: #3f51b5 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+  border: none !important;
+  transition: all 0.15s ease !important;
 
   mat-icon {
     font-size: 15px !important;
     width: 15px !important;
     height: 15px !important;
-    margin-right: 4px !important;
+    margin-right: 3px !important;
+    color: #ffffff !important;
+  }
+
+  span,
+  .mdc-button__label {
+    color: #ffffff !important;
+  }
+
+  &:hover {
+    background-color: #303f9f !important;
   }
 }
+
+
 
 // ─── Code Chips & Badges ───────────────────────────────────────────────────
 .code-chip {
@@ -212,20 +366,78 @@
   border: 1px solid transparent;
   white-space: nowrap;
 
-  &--core       { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
-  &--ecom       { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
-  &--cms        { background: #faf5ff; color: #6d28d9; border-color: #ddd6fe; }
-  &--emarketing { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
-  &--promotion  { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
-  &--default-repo { background: $color-bg-subtle; color: $color-text-muted; border-color: $color-border; }
+  &--core {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+  }
 
-  &--feature { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
-  &--bug     { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
-  &--enhance { background: #faf5ff; color: #6d28d9; border-color: #ddd6fe; }
+  &--ecom {
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: #bbf7d0;
+  }
 
-  &--merged  { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; font-weight: 700; }
-  &--pending { background: #fefce8; color: #a16207; border-color: #fde68a; }
-  &--closed  { background: $color-bg-subtle; color: $color-text-muted; border-color: $color-border; }
+  &--cms {
+    background: #faf5ff;
+    color: #6d28d9;
+    border-color: #ddd6fe;
+  }
+
+  &--emarketing {
+    background: #fff7ed;
+    color: #c2410c;
+    border-color: #fed7aa;
+  }
+
+  &--promotion {
+    background: #fff1f2;
+    color: #be123c;
+    border-color: #fecdd3;
+  }
+
+  &--default-repo {
+    background: $color-bg-subtle;
+    color: $color-text-muted;
+    border-color: $color-border;
+  }
+
+  &--feature {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+  }
+
+  &--bug {
+    background: #fff1f2;
+    color: #be123c;
+    border-color: #fecdd3;
+  }
+
+  &--enhance {
+    background: #faf5ff;
+    color: #6d28d9;
+    border-color: #ddd6fe;
+  }
+
+  &--merged {
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: #bbf7d0;
+    font-weight: 700;
+  }
+
+  &--pending {
+    background: #fefce8;
+    color: #a16207;
+    border-color: #fde68a;
+  }
+
+  &--closed {
+    background: $color-bg-subtle;
+    color: $color-text-muted;
+    border-color: $color-border;
+  }
 }
 
 // ─── Release Chips ────────────────────────────────────────────────────────
@@ -262,7 +474,10 @@
     cursor: pointer;
     transition: $transition-fast;
 
-    &:hover { background: rgba(220, 38, 38, 0.12); color: $color-danger; }
+    &:hover {
+      background: rgba(220, 38, 38, 0.12);
+      color: $color-danger;
+    }
   }
 }
 
@@ -279,4 +494,47 @@
   background: rgba(15, 23, 42, 0.18);
   backdrop-filter: blur(2px);
   z-index: 999;
+}
+
+// ─── Skeleton Loading Shimmer System ────────────────────────────────────────
+.skeleton-shimmer {
+  background: var(--skeleton-base, #e2e8f0);
+  background-image: linear-gradient(90deg,
+      var(--skeleton-base, #e2e8f0) 0%,
+      var(--skeleton-highlight, #f8fafc) 50%,
+      var(--skeleton-base, #e2e8f0) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer-anim 1.5s ease-in-out infinite;
+  display: inline-block;
+}
+
+@keyframes skeleton-shimmer-anim {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-box {
+  @extend .skeleton-shimmer;
+  border-radius: $radius-sm;
+}
+
+.skeleton-pill {
+  @extend .skeleton-shimmer;
+  border-radius: $radius-pill;
+}
+
+.skeleton-circle {
+  @extend .skeleton-shimmer;
+  border-radius: 50%;
+}
+
+.skeleton-text {
+  @extend .skeleton-shimmer;
+  height: 14px;
+  border-radius: 4px;
 }
