@@ -6,10 +6,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
@@ -19,10 +21,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterModule } from '@angular/router';
 import * as XLSX from 'xlsx';
 import { DeploymentItem, ReleaseStream, Repository, Ticket, User } from '../../models/release.model';
+import { SafeHtmlPipe } from '../../pipes/safe-html.pipe';
 import { AuthService } from '../../services/auth.service';
 import { ReleaseService } from '../../services/release.service';
 import { ToastService } from '../../services/toast.service';
-import { SafeHtmlPipe } from '../../pipes/safe-html.pipe';
 import { CommandPaletteComponent } from '../command-palette/command-palette.component';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { DashboardSidebarComponent } from '../dashboard-sidebar/dashboard-sidebar.component';
@@ -50,6 +52,8 @@ import { ToastComponent } from '../toast/toast.component';
     MatExpansionModule,
     MatTooltipModule,
     MatTabsModule,
+    MatMenuModule,
+    MatDividerModule,
     ToastComponent,
     DashboardSidebarComponent,
     SafeHtmlPipe,
@@ -108,17 +112,7 @@ export class DashboardComponent implements OnInit {
   }
 
   private getAllVersionKeys(): string[] {
-    const keys: string[] = [];
-    const traverse = (nodes: any[]) => {
-      for (const node of nodes) {
-        keys.push(node.versionKey);
-        if (node.subNodes && node.subNodes.length > 0) {
-          traverse(node.subNodes);
-        }
-      }
-    };
-    traverse(this.groupedHierarchicalData());
-    return keys;
+    return this.groupedHierarchicalData().map(node => node.versionKey);
   }
 
   toggleExpandAll() {
@@ -154,12 +148,19 @@ export class DashboardComponent implements OnInit {
     return match ? match[0] : 'unclassified';
   }
 
+  /** Returns the parent base version (e.g. "1.12" from "1.12.1", "1.12.2", "1.12") */
+  getBaseVersionKey(item: DeploymentItem): string {
+    const key = this.getVersionKey(item);
+    if (key === 'unclassified') return 'Unclassified';
+    const parts = key.split('.');
+    if (parts.length >= 2) {
+      return `${parts[0]}.${parts[1]}`;
+    }
+    return parts[0];
+  }
+
   /**
    * Builds a flat list with hierarchical group headers.
-   * Each group header carries a `level` property:
-   *   level 1 → 1.x   (2-segment version, e.g. 1.12)
-   *   level 2 → 1.x.x (3-segment, e.g. 1.12.1)
-   *   level 3 → 1.x.x.x (4-segment, e.g. 1.12.1.2)
    */
   groupedDataSource = computed(() => {
     if (!this.isGrouped()) {
@@ -195,7 +196,6 @@ export class DashboardComponent implements OnInit {
     const result: any[] = [];
     for (const key of sortedKeys) {
       const { parts, items: groupItems } = buckets.get(key)!;
-      // Level: 2 parts → 1 (1.x), 3 parts → 2 (1.x.x), 4+ parts → 3 (1.x.x.x)
       const level = key === 'unclassified' ? 1 : Math.min(3, Math.max(1, parts.length - 1));
       result.push({
         isHeader: true,
@@ -208,108 +208,72 @@ export class DashboardComponent implements OnInit {
     return result;
   });
 
+  /**
+   * Base Version parent grouping:
+   * Groups items under a single Base Version Pending Block (e.g. 1.12),
+   * managing all child patch versions (1.12.1, 1.12.2...) together in allItems.
+   */
   groupedHierarchicalData = computed(() => {
     const items = this.filteredItems();
-    const rootNodes: any[] = [];
-    const level1Map = new Map<string, any>();
+    const baseMap = new Map<string, { versionKey: string; level: number; allItems: DeploymentItem[]; totalCount: number }>();
+    const unclassItems: DeploymentItem[] = [];
 
     for (const item of items) {
-      const key = this.getVersionKey(item);
-      if (key === 'unclassified') {
-        let unclassNode = rootNodes.find(n => n.versionKey === 'Unclassified');
-        if (!unclassNode) {
-          unclassNode = { versionKey: 'Unclassified', level: 1, directItems: [], subNodes: [], totalCount: 0 };
-          rootNodes.push(unclassNode);
-        }
-        unclassNode.directItems.push(item);
+      const baseKey = this.getBaseVersionKey(item);
+      if (baseKey === 'Unclassified') {
+        unclassItems.push(item);
         continue;
       }
 
-      const parts = key.split('.').map(Number);
-      const l1Key = parts.slice(0, 2).join('.');
-
-      let l1Node = level1Map.get(l1Key);
-      if (!l1Node) {
-        l1Node = { versionKey: l1Key, level: 1, directItems: [], subNodes: [], totalCount: 0 };
-        level1Map.set(l1Key, l1Node);
+      let node = baseMap.get(baseKey);
+      if (!node) {
+        node = {
+          versionKey: baseKey,
+          level: 1,
+          allItems: [],
+          totalCount: 0
+        };
+        baseMap.set(baseKey, node);
       }
-
-      if (parts.length <= 2) {
-        l1Node.directItems.push(item);
-      } else {
-        const l2Key = parts.slice(0, 3).join('.');
-        let l2Node = l1Node.subNodes.find((n: any) => n.versionKey === l2Key);
-        if (!l2Node) {
-          l2Node = { versionKey: l2Key, level: 2, directItems: [], subNodes: [], totalCount: 0 };
-          l1Node.subNodes.push(l2Node);
-        }
-
-        if (parts.length === 3) {
-          l2Node.directItems.push(item);
-        } else {
-          const l3Key = parts.slice(0, 4).join('.');
-          let l3Node = l2Node.subNodes.find((n: any) => n.versionKey === l3Key);
-          if (!l3Node) {
-            l3Node = { versionKey: l3Key, level: 3, directItems: [], subNodes: [], totalCount: 0 };
-            l2Node.subNodes.push(l3Node);
-          }
-          l3Node.directItems.push(item);
-        }
-      }
+      node.allItems.push(item);
     }
 
-    const list = Array.from(level1Map.values());
+    const list = Array.from(baseMap.values());
+    for (const node of list) {
+      // Sort items within each base group by their full version parts (1.12 -> 1.12.1 -> 1.12.2)
+      node.allItems.sort((a, b) => {
+        const vA = this.getVersionKey(a);
+        const vB = this.getVersionKey(b);
+        if (vA === vB) return 0;
+        const pA = vA.split('.').map(Number);
+        const pB = vB.split('.').map(Number);
+        for (let i = 0; i < Math.max(pA.length, pB.length); i++) {
+          const diff = (pA[i] ?? 0) - (pB[i] ?? 0);
+          if (diff !== 0) return diff;
+        }
+        return 0;
+      });
+      node.totalCount = node.allItems.length;
+    }
+
+    // Sort base groups numerically (1.11, 1.12, 1.13, 2.0...)
     list.sort((a, b) => {
-      const pa = a.versionKey.split('.').map(Number);
-      const pb = b.versionKey.split('.').map(Number);
-      for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-        const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
+      const pA = a.versionKey.split('.').map(Number);
+      const pB = b.versionKey.split('.').map(Number);
+      for (let i = 0; i < Math.max(pA.length, pB.length); i++) {
+        const diff = (pA[i] ?? 0) - (pB[i] ?? 0);
         if (diff !== 0) return diff;
       }
       return 0;
     });
 
-    for (const l1 of list) {
-      l1.subNodes.sort((a: any, b: any) => {
-        const pa = a.versionKey.split('.').map(Number);
-        const pb = b.versionKey.split('.').map(Number);
-        for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-          const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
-          if (diff !== 0) return diff;
-        }
-        return 0;
+    if (unclassItems.length > 0) {
+      list.push({
+        versionKey: 'Unclassified',
+        level: 1,
+        allItems: unclassItems,
+        totalCount: unclassItems.length
       });
-
-      for (const l2 of l1.subNodes) {
-        l2.subNodes.sort((a: any, b: any) => {
-          const pa = a.versionKey.split('.').map(Number);
-          const pb = b.versionKey.split('.').map(Number);
-          for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-            const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
-            if (diff !== 0) return diff;
-          }
-          return 0;
-        });
-      }
-    }
-
-    const calcCounts = (node: any): number => {
-      let count = node.directItems.length;
-      for (const sub of node.subNodes) {
-        count += calcCounts(sub);
-      }
-      node.totalCount = count;
-      return count;
-    };
-
-    for (const node of list) {
-      calcCounts(node);
-    }
-
-    const unclass = rootNodes.find(n => n.versionKey === 'Unclassified');
-    if (unclass) {
-      calcCounts(unclass);
-      list.push(unclass);
     }
 
     return list;
@@ -447,6 +411,7 @@ export class DashboardComponent implements OnInit {
 
   // Table configuration
   displayedColumns: string[] = [
+    'select',
     'repo',
     'ticket',
     'fixVersion',
@@ -527,7 +492,7 @@ export class DashboardComponent implements OnInit {
     if (savedPanels) {
       try {
         this.expandedPanels.set(new Set(JSON.parse(savedPanels)));
-      } catch (e) {}
+      } catch (e) { }
     }
 
     this.loadData();
@@ -678,6 +643,11 @@ export class DashboardComponent implements OnInit {
     return items.some(item => this.selection.isSelected(item.id));
   }
 
+  getSelectedCountInGroup(items: DeploymentItem[]): number {
+    if (!items || items.length === 0) return 0;
+    return items.filter(item => this.selection.isSelected(item.id)).length;
+  }
+
   masterToggle(items: DeploymentItem[]): void {
     if (this.isAllSelected(items)) {
       items.forEach(item => this.selection.deselect(item.id));
@@ -686,16 +656,49 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  deleteSelectedItems(): void {
-    const selectedIds = this.selection.selected;
-    if (selectedIds.length === 0) return;
+  bulkMarkAsCompleted(groupItems?: DeploymentItem[]): void {
+    let targetIds = this.selection.selected;
+    if (groupItems && groupItems.length > 0) {
+      targetIds = groupItems.filter(item => this.selection.isSelected(item.id)).map(i => i.id);
+    }
+    if (targetIds.length === 0) return;
 
+    this.isLoading.set(true);
+    const payload = {
+      ids: targetIds,
+      status: 'merged',
+      isMergedOnDevel: true,
+      qcStatus: 'Passed'
+    };
+
+    this.releaseService.bulkUpdateDeploymentItems(payload).subscribe({
+      next: () => {
+        this.toast.success(`Successfully marked ${targetIds.length} item(s) as Completed.`);
+        targetIds.forEach(id => this.selection.deselect(id));
+        this.loadData();
+      },
+      error: (err) => {
+        console.error('Failed to mark items as completed', err);
+        this.toast.error('Failed to update items. Please try again.');
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  bulkDeleteInGroup(groupItems?: DeploymentItem[]): void {
+    let targetIds = this.selection.selected;
+    if (groupItems && groupItems.length > 0) {
+      targetIds = groupItems.filter(item => this.selection.isSelected(item.id)).map(i => i.id);
+    }
+    if (targetIds.length === 0) return;
+
+    const count = targetIds.length;
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '440px',
       data: {
-        title: 'Delete Selected Records',
-        message: `This will permanently remove the ${selectedIds.length} selected deployment record(s) and all associated tickets. This action cannot be undone.`,
-        confirmLabel: 'Delete All',
+        title: `Delete ${count} item${count > 1 ? 's' : ''}?`,
+        message: 'These items will be permanently removed from the pending list. This action cannot be undone.',
+        confirmLabel: 'Delete',
         cancelLabel: 'Cancel',
         type: 'danger'
       }
@@ -704,9 +707,10 @@ export class DashboardComponent implements OnInit {
     ref.afterClosed().subscribe((confirmed: boolean) => {
       if (!confirmed) return;
       this.isLoading.set(true);
-      this.releaseService.bulkDeleteDeploymentItems(selectedIds).subscribe({
+      this.releaseService.bulkDeleteDeploymentItems(targetIds).subscribe({
         next: () => {
-          this.toast.success(`Successfully deleted ${selectedIds.length} record(s).`);
+          this.toast.success(`Successfully deleted ${count} item(s).`);
+          targetIds.forEach(id => this.selection.deselect(id));
           this.loadData();
         },
         error: (err) => {
@@ -716,6 +720,10 @@ export class DashboardComponent implements OnInit {
         }
       });
     });
+  }
+
+  deleteSelectedItems(): void {
+    this.bulkDeleteInGroup();
   }
 
   // open panel to edit ticket detail (Pending Issues, builds)
@@ -800,10 +808,10 @@ export class DashboardComponent implements OnInit {
         const maxScan = Math.min(data.length, 20);
         for (let r = 0; r < maxScan; r++) {
           if (!data[r] || !Array.isArray(data[r])) continue;
-          
+
           const currentHeaders = data[r].map(h => h ? String(h).toLowerCase().trim() : '');
           const currentGetColIndex = (names: string[]) => currentHeaders.findIndex(h => h && names.some(n => h.includes(n)));
-          
+
           const tIdx = currentGetColIndex(['ticket', 'mã ticket', 'key', 'issue', 'mã lỗi', 'task']);
           if (tIdx !== -1) {
             headerRowIndex = r;
@@ -1123,4 +1131,3 @@ export class DashboardComponent implements OnInit {
     };
   }
 }
-
