@@ -1,4 +1,9 @@
-// ─── Angular Material Global & MDC Dark Theme Overrides ───────────────────
+@use '@angular/material' as mat;
+
+// Global compact form-field density for enterprise look
+.mat-mdc-form-field {
+  @include mat.form-field-density(-3);
+}
 
 // Subscript wrapper error matcher spacing
 .mat-mdc-form-field-subscript-wrapper {
