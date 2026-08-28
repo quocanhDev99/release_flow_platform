@@ -133,7 +133,269 @@
     z-index: 999;
 }
 
-// ─── Release chips ────────────────────────────────────────────────────────────
+// ─── Release Streams Management (Quick Add, Search & Semantic Groups) ──────
+.stream-quick-add {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+
+  &__input-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--color-bg-surface, #ffffff);
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 8px;
+    padding: 0 10px;
+    height: 38px;
+    position: relative;
+    transition: all 0.15s ease;
+
+    &:focus-within {
+      border-color: var(--color-brand, #4f46e5);
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.12);
+    }
+
+    &.is-invalid {
+      border-color: #f87171;
+      background: #fffbfa;
+    }
+  }
+
+  &__icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    color: var(--color-text-muted, #64748b);
+  }
+
+  &__input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 12.5px;
+    font-family: $font-mono;
+    color: var(--color-text-primary, #0f172a);
+
+    &::placeholder {
+      font-family: $font-primary;
+      color: var(--color-text-faint, #94a3b8);
+    }
+  }
+
+  &__hint {
+    font-size: 10px;
+    font-weight: 600;
+    color: #dc2626;
+    background: #fef2f2;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  &__btn {
+    height: 38px !important;
+    line-height: 38px !important;
+    padding: 0 14px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    background: var(--color-brand, #4f46e5) !important;
+    color: #ffffff !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+
+    .mat-icon {
+      font-size: 16px !important;
+      width: 16px !important;
+      height: 16px !important;
+      margin: 0 !important;
+    }
+
+    &:disabled {
+      opacity: 0.45 !important;
+      background: var(--color-bg-subtle, #f1f5f9) !important;
+      color: var(--color-text-faint, #94a3b8) !important;
+    }
+  }
+}
+
+.stream-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-bg-subtle, #f1f5f9);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 6px;
+  padding: 0 8px;
+  height: 30px;
+  margin-bottom: 12px;
+
+  .stream-search-icon {
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
+    color: var(--color-text-muted, #64748b);
+  }
+
+  .stream-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 11.5px;
+    color: var(--color-text-primary);
+
+    &::placeholder {
+      color: var(--color-text-faint, #94a3b8);
+    }
+  }
+
+  .stream-search-clear {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: var(--color-text-faint);
+
+    mat-icon {
+      font-size: 13px !important;
+      width: 13px !important;
+      height: 13px !important;
+    }
+
+    &:hover {
+      color: var(--color-danger);
+    }
+  }
+}
+
+.stream-groups-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 2px;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong, #cbd5e1);
+    border-radius: 4px;
+  }
+}
+
+.stream-group {
+  background: var(--color-bg-subtle, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 8px;
+  padding: 8px 10px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  &__title {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    color: var(--color-text-muted, #64748b);
+  }
+
+  &__badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 10px;
+    background: var(--color-bg-surface, #ffffff);
+    border: 1px solid var(--color-border, #e2e8f0);
+    color: var(--color-text-muted, #64748b);
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+}
+
+.stream-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--color-bg-surface, #ffffff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 5px;
+  padding: 2.5px 6px 2.5px 8px;
+  font-size: 11.5px;
+  font-family: $font-mono;
+  font-weight: 600;
+  color: var(--color-text-primary, #0f172a);
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-border-strong, #cbd5e1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  &--invalid {
+    background: #fffbfa;
+    border-color: #fed7aa;
+    color: #c2410c;
+  }
+
+  &__warn-badge {
+    display: inline-flex;
+    align-items: center;
+    color: #d97706;
+
+    mat-icon {
+      font-size: 12px !important;
+      width: 12px !important;
+      height: 12px !important;
+    }
+  }
+
+  &__remove {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    color: var(--color-text-faint, #94a3b8);
+    transition: all 0.12s ease;
+
+    mat-icon {
+      font-size: 12px !important;
+      width: 12px !important;
+      height: 12px !important;
+    }
+
+    &:hover {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+  }
+}
+
+// ─── Legacy release chips ───────────────────────────────────────────────────
 .release-chip-list {
   display: flex;
   flex-wrap: wrap;
@@ -171,7 +433,13 @@
   }
 }
 
-.release-chip-empty { color: $color-text-faint; font-size: 12px; font-style: italic; }
+.release-chip-empty {
+  color: var(--color-text-faint, #94a3b8);
+  font-size: 12px;
+  font-style: italic;
+  padding: 12px;
+  text-align: center;
+}
 
 // Sidebar user-badge
 .sidebar__user-badge {

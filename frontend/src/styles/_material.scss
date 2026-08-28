@@ -1,4 +1,9 @@
-// ─── Angular Material Global & MDC Dark Theme Overrides ───────────────────
+@use '@angular/material' as mat;
+
+// Global compact form-field density for enterprise look
+.mat-mdc-form-field {
+  @include mat.form-field-density(-3);
+}
 
 // Subscript wrapper error matcher spacing
 .mat-mdc-form-field-subscript-wrapper {
@@ -193,5 +198,53 @@ body.dark-theme {
 
   .mat-expansion-indicator::after {
     border-color: var(--color-text-muted) !important;
+  }
+}
+
+// ─── Release Stream Select Dropdown Overlay ─────────────────────────────────
+.release-stream-select-panel {
+  max-height: 320px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12) !important;
+  border: 1px solid var(--color-border, #e2e8f0) !important;
+  padding: 4px 0 !important;
+  background-color: var(--color-bg-surface, #ffffff) !important;
+
+  .mat-mdc-optgroup-label {
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.2px !important;
+    color: var(--color-text-muted, #64748b) !important;
+    min-height: 28px !important;
+    height: 28px !important;
+    line-height: 28px !important;
+    padding: 0 12px !important;
+    background: var(--color-bg-subtle, #f8fafc) !important;
+    border-bottom: 1px solid var(--color-border, #e2e8f0) !important;
+  }
+
+  .release-select-option {
+    min-height: 34px !important;
+    height: 34px !important;
+    padding: 0 12px !important;
+
+    .release-select-badge {
+      font-family: 'Fira Code', 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-primary, #0f172a);
+    }
+
+    &:hover:not(.mdc-list-item--disabled) {
+      background-color: var(--color-bg-subtle, #f1f5f9) !important;
+    }
+
+    &.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+      background-color: rgba(79, 70, 229, 0.08) !important;
+
+      .release-select-badge {
+        color: var(--color-brand, #4f46e5) !important;
+      }
+    }
   }
 }

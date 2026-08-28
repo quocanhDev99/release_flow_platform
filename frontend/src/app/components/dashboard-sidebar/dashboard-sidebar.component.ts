@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { QuillModule } from 'ngx-quill';
 import { DeploymentItem, RecordFormModel, ReleaseStream, Repository, Ticket, User } from '../../models/release.model';
 import { ReleaseService } from '../../services/release.service';
@@ -27,6 +28,7 @@ import { ToastService } from '../../services/toast.service';
     MatInputModule,
     MatFormFieldModule,
     MatTabsModule,
+    MatTooltipModule,
     QuillModule
   ],
   templateUrl: './dashboard-sidebar.component.html',
@@ -82,9 +84,97 @@ export class DashboardSidebarComponent implements OnChanges {
 
   // Config Mode Inputs & Settings
   newReleaseVersionName = '';
+  releaseSearchQuery = '';
   newRepoName = '';
   newRepoGitUrl = '';
   newEnvironmentName = '';
+
+  // Computed Release Lists (Cached to prevent infinite CD loops)
+  selectableReleases: any[] = [];
+  groupedSelectableReleases: Array<{ groupKey: string; items: any[] }> = [];
+  groupedReleaseStreams: Array<{ groupKey: string; items: ReleaseStream[] }> = [];
+
+  /**
+   * Validates if a version string is a deployable SemVer release (at least 3 parts: x.y.z).
+   */
+  isValidReleaseVersion(versionStr: string | undefined | null): boolean {
+    if (!versionStr || !versionStr.trim()) return false;
+    const match = versionStr.trim().match(/\d+(\.\d+)+/);
+    if (!match) return false;
+    const parts = match[0].split('.').filter(p => p.length > 0);
+    return parts.length >= 3;
+  }
+
+  /**
+   * Recomputes cached structures when releases inputs change.
+   */
+  updateReleasesStructures(): void {
+    // 1. Selectable 3-part releases
+    this.selectableReleases = (this.sortedReleasesWithIndent || []).filter(rel =>
+      this.isValidReleaseVersion(rel.version || rel.displayName)
+    );
+
+    // 2. Grouped selectable releases for create/edit dropdown
+    const selectMap = new Map<string, any[]>();
+    for (const rel of this.selectableReleases) {
+      const raw = rel.displayName || rel.version;
+      const match = raw.match(/\d+(\.\d+)*/);
+      let groupKey = 'Other Releases';
+      if (match) {
+        const parts = match[0].split('.');
+        if (parts.length >= 2) {
+          groupKey = `Release ${parts[0]}.${parts[1]}`;
+        }
+      }
+      if (!selectMap.has(groupKey)) {
+        selectMap.set(groupKey, []);
+      }
+      selectMap.get(groupKey)!.push(rel);
+    }
+    this.groupedSelectableReleases = Array.from(selectMap.entries()).map(([groupKey, items]) => ({ groupKey, items }));
+
+    // 3. Grouped release streams for config panel
+    this.updateGroupedReleaseStreams();
+  }
+
+  updateGroupedReleaseStreams(): void {
+    const query = this.releaseSearchQuery.toLowerCase().trim();
+    const filtered = (this.releases || []).filter(r => !query || r.version.toLowerCase().includes(query));
+
+    const sorted = [...filtered].sort((a, b) => {
+      const matchA = a.version.match(/\d+(\.\d+)+/);
+      const matchB = b.version.match(/\d+(\.\d+)+/);
+      if (!matchA || !matchB) return a.version.localeCompare(b.version);
+      const partsA = matchA[0].split('.').map(Number);
+      const partsB = matchB[0].split('.').map(Number);
+      for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+        const vA = partsA[i] !== undefined ? partsA[i] : 0;
+        const vB = partsB[i] !== undefined ? partsB[i] : 0;
+        if (vA !== vB) return vA - vB;
+      }
+      return 0;
+    });
+
+    const groupMap = new Map<string, ReleaseStream[]>();
+    for (const rel of sorted) {
+      const match = rel.version.match(/\d+(\.\d+)*/);
+      let groupKey = 'Other Streams';
+      if (match) {
+        const parts = match[0].split('.');
+        if (parts.length >= 2) {
+          groupKey = `Release ${parts[0]}.${parts[1]}`;
+        } else {
+          groupKey = `Release ${parts[0]}`;
+        }
+      }
+      if (!groupMap.has(groupKey)) {
+        groupMap.set(groupKey, []);
+      }
+      groupMap.get(groupKey)!.push(rel);
+    }
+
+    this.groupedReleaseStreams = Array.from(groupMap.entries()).map(([groupKey, items]) => ({ groupKey, items }));
+  }
 
   settingsForm = {
     TELEGRAM_BOT_TOKEN: '',
@@ -104,16 +194,29 @@ export class DashboardSidebarComponent implements OnChanges {
   // -------------------------------------------------------------------------
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (this.isConfigMode) {
-      if (changes['isConfigMode']) this.initConfigMode();
-      this.loadCronStatus();
+    if (changes['sortedReleasesWithIndent'] || changes['releases']) {
+      this.updateReleasesStructures();
+    }
+
+    if (changes['isConfigMode']) {
+      if (this.isConfigMode) {
+        this.initConfigMode();
+        this.loadCronStatus();
+      }
       return;
     }
 
-    if (this.isCreateMode) {
-      this.initCreateMode();
-    } else if (this.activeItem) {
-      this.initEditMode();
+    if (changes['isCreateMode']) {
+      if (this.isCreateMode) {
+        this.initCreateMode();
+      }
+      return;
+    }
+
+    if (changes['activeItem'] || changes['activeTicket']) {
+      if (!this.isCreateMode && !this.isConfigMode && this.activeItem) {
+        this.initEditMode();
+      }
     }
   }
 
@@ -189,6 +292,48 @@ export class DashboardSidebarComponent implements OnChanges {
 
   closeEditPanel(): void {
     this.close.emit();
+  }
+
+  getSelectedUsername(userId: number | null | undefined): string {
+    if (!userId) return '';
+    const u = (this.users || []).find(user => user.id === userId);
+    return u ? u.username : '';
+  }
+
+  getRepoBadgeClass(name: string): string {
+    if (!name) return 'row-badge--default-repo';
+    const lower = name.toLowerCase();
+    if (lower.includes('core')) return 'row-badge--core';
+    if (lower.includes('ecom') || lower.includes('e-com')) return 'row-badge--ecom';
+    if (lower.includes('cms')) return 'row-badge--cms';
+    if (lower.includes('emarketing')) return 'row-badge--emarketing';
+    if (lower.includes('promotion')) return 'row-badge--promotion';
+    return 'row-badge--default-repo';
+  }
+
+  getChangeTypeClass(type: string): string {
+    switch (type) {
+      case 'Feature': return 'row-badge--feature';
+      case 'Fix bug': return 'row-badge--bug';
+      case 'Enhance': return 'row-badge--enhance';
+      default: return 'row-badge--default-repo';
+    }
+  }
+
+  getStatusBadgeClass(status: string): string {
+    const s = (status || '').toLowerCase();
+    if (s === 'merged') return 'row-badge--merged';
+    if (s === 'in progress' || s === 'pending') return 'row-badge--pending';
+    return 'row-badge--closed';
+  }
+
+  getQCStatusBadgeClass(status: string): string {
+    switch (status) {
+      case 'Passed': return 'row-badge--merged';
+      case 'Ready': return 'row-badge--pending';
+      case 'Failed': return 'row-badge--bug';
+      default: return 'row-badge--default-repo';
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -283,11 +428,15 @@ export class DashboardSidebarComponent implements OnChanges {
 
   addReleaseVersion(): void {
     const version = this.newReleaseVersionName.trim();
-    if (!version) return this.toast.warn('Please enter a release version name.');
+    if (!version) return this.toast.warn('Please enter a release version.');
+
+    if (!this.isValidReleaseVersion(version)) {
+      return this.toast.warn('Version must have at least 3 parts (e.g. 1.14.0 or sow/1.14.0).');
+    }
 
     this.releaseService.createRelease(version).subscribe({
       next: () => {
-        this.toast.success('Release stream added successfully.');
+        this.toast.success(`Release stream "${version}" added successfully.`);
         this.newReleaseVersionName = '';
         this.refreshData.emit();
       },
