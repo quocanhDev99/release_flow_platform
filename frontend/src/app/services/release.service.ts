@@ -237,4 +237,13 @@ export class ReleaseService {
   deleteDeploymentBooking(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/deployment-bookings/${id}`);
   }
+
+  // Release Notes Endpoints
+  getReleaseNotes(windowId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/deployment-windows/${windowId}/release-notes`);
+  }
+
+  broadcastReleaseNotes(windowId: number, payload: { channels?: string[]; customNote?: string }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deployment-windows/${windowId}/release-notes/broadcast`, payload);
+  }
 }

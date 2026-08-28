@@ -13,6 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { createWorker } from 'tesseract.js';
 import * as XLSX from 'xlsx';
 import { ReleaseService } from '../../services/release.service';
@@ -20,6 +21,7 @@ import { ToastService } from '../../services/toast.service';
 import { AuthService } from '../../services/auth.service';
 import { DeploymentWindow, ReleasePackage, Environment } from '../../models/release.model';
 import { ToastComponent } from '../toast/toast.component';
+import { ReleaseNotesDialogComponent } from '../release-notes-dialog/release-notes-dialog.component';
 
 @Component({
   selector: 'app-scheduler',
@@ -36,6 +38,7 @@ import { ToastComponent } from '../toast/toast.component';
     MatFormFieldModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
+    MatDialogModule,
     ToastComponent
   ],
   templateUrl: './scheduler.component.html',
@@ -47,6 +50,7 @@ export class SchedulerComponent implements OnInit {
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
 
   // Core Data Signals
   windows = signal<DeploymentWindow[]>([]);
@@ -1013,6 +1017,20 @@ export class SchedulerComponent implements OnInit {
       fixVersion: ''
     });
     this.showWindowModal.set(true);
+  }
+
+  openReleaseNotes(win: DeploymentWindow, event?: Event) {
+    if (event) event.stopPropagation();
+    this.dialog.open(ReleaseNotesDialogComponent, {
+      width: '860px',
+      maxWidth: '96vw',
+      panelClass: 'release-notes-dialog-panel',
+      data: {
+        windowId: win.id,
+        environmentName: win.environment?.name,
+        packageVersion: this.getFixVersion(win),
+      },
+    });
   }
 
   openEditWindowModal(win: DeploymentWindow) {
