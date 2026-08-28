@@ -1,43 +1,42 @@
 <div class="scheduler">
   <!-- Navbar -->
-  <nav class="navbar">
+  <header class="navbar">
     <div class="navbar__brand" [routerLink]="['/']" style="cursor: pointer;">
       <mat-icon class="navbar__logo-icon">rocket_launch</mat-icon>
       <h1 class="navbar__title">Release Flow Platform</h1>
-      <span class="navbar__badge">V2.5</span>
+      <span class="navbar__version-badge">MVP v1</span>
     </div>
 
-    <div class="navbar__menu">
-      <button mat-button class="navbar__nav-item" [routerLink]="['/']">
-        <mat-icon class="navbar__nav-icon">dashboard</mat-icon>
-        Dashboard
+    <!-- Segmented Navigation Control -->
+    <div class="navbar__segmented-nav">
+      <button mat-button class="nav-segment" [routerLink]="['/']">
+        <mat-icon class="nav-segment__icon">dashboard</mat-icon>
+        <span>Dashboard</span>
       </button>
-      <button mat-button class="navbar__nav-item navbar__nav-item--active" [routerLink]="['/scheduler']">
-        <mat-icon class="navbar__nav-icon">schedule</mat-icon>
-        Scheduler
+      <button mat-button class="nav-segment nav-segment--active" [routerLink]="['/scheduler']">
+        <mat-icon class="nav-segment__icon">schedule</mat-icon>
+        <span>Scheduler</span>
       </button>
     </div>
 
+    <!-- Navbar Actions matching Dashboard -->
     <div class="navbar__actions">
-      <button mat-icon-button (click)="toggleTheme()" matTooltip="Toggle Theme">
-        <mat-icon>{{ theme() === 'light' ? 'dark_mode' : 'light_mode' }}</mat-icon>
+      <button mat-icon-button (click)="toggleTheme()"
+              class="navbar__theme-btn"
+              [matTooltip]="theme() === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+        <mat-icon>{{ theme() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
       </button>
 
-      <div class="navbar__user" *ngIf="currentUser()" [routerLink]="['/profile']" matTooltip="Profile & Notification Settings" style="cursor: pointer;">
-        <div class="navbar__avatar">
-          <mat-icon>account_circle</mat-icon>
-        </div>
-        <div class="navbar__user-info">
-          <span class="navbar__username">{{ currentUser().username }}</span>
-          <span class="navbar__role">Release Manager</span>
-        </div>
+      <div class="navbar__user-info" [routerLink]="['/profile']" matTooltip="Edit Profile">
+        <mat-icon>person</mat-icon>
+        <span class="navbar__username">{{ currentUser()?.username || 'Guest' }}</span>
       </div>
 
-      <button mat-icon-button (click)="logout()" matTooltip="Sign Out" class="navbar__logout">
+      <button mat-icon-button (click)="logout()" class="navbar__logout-btn" matTooltip="Sign Out">
         <mat-icon>logout</mat-icon>
       </button>
     </div>
-  </nav>
+  </header>
 
   <!-- Notification Banner (Today's Deployment Alerts) -->
   <div class="scheduler__alerts" *ngIf="upcomingAlerts().length > 0">
@@ -232,17 +231,29 @@
       
       <!-- Selected Day Details Panel -->
       <div class="day-details-card">
-        <div class="day-details-card__header">
-          <h3>
+        <div class="day-details-card__header" style="display: flex; align-items: center; justify-content: space-between;">
+          <h3 style="margin: 0; display: flex; align-items: center; gap: 6px;">
             <mat-icon>event_available</mat-icon>
             Schedule for {{ selectedDay() ? formatDate(selectedDay()!) : '' }}
           </h3>
+          <button *ngIf="filteredWindows().length > 0"
+                  mat-stroked-button
+                  color="primary"
+                  class="btn-sm"
+                  style="height: 28px; font-size: 11.5px; border-radius: 6px; padding: 0 10px;"
+                  (click)="sendDailyAlertNotification(selectedDay()!)"
+                  matTooltip="Broadcast this day's schedule to Teams & Telegram">
+            <mat-icon style="font-size: 14px; width: 14px; height: 14px; margin-right: 4px;">send</mat-icon>
+            Send Alert
+          </button>
         </div>
         <div class="day-details-card__body">
           <div class="day-empty" *ngIf="filteredWindows().length === 0">
-            <mat-icon>history_toggle_off</mat-icon>
-            <p>No deployment schedules for this day.</p>
-            <button mat-stroked-button color="primary" (click)="openCreateWindowModal()">
+            <div class="day-empty__icon-wrap">
+              <mat-icon>event_busy</mat-icon>
+            </div>
+            <p class="day-empty__text">No deployment schedules for this day.</p>
+            <button mat-flat-button color="primary" class="btn-create-schedule" (click)="openCreateWindowModal()">
               <mat-icon>add</mat-icon> Create Schedule
             </button>
           </div>

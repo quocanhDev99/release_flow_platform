@@ -112,7 +112,7 @@
     color: $color-text-primary;
   }
 
-  &__badge {
+  &__version-badge {
     font-size: 10px;
     color: $color-text-faint;
     background: $color-bg-subtle;
@@ -123,95 +123,138 @@
     letter-spacing: 0.3px;
   }
 
-  &__menu {
-    display: flex;
+  &__segmented-nav {
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
+    background: $color-bg-subtle;
+    border: 1px solid $color-border;
+    border-radius: 9px;
+    padding: 3px;
+    gap: 2px;
   }
 
-  &__nav-item {
+  .nav-segment {
+    height: 28px !important;
+    line-height: 28px !important;
+    padding: 0 12px !important;
+    border-radius: 6px !important;
     font-size: 12.5px !important;
-    font-weight: 600 !important;
-    color: $color-text-body !important;
+    font-weight: 500 !important;
+    color: $color-text-muted !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 5px !important;
-    height: 32px !important;
-    line-height: 32px !important;
-    padding: 0 12px !important;
-    border-radius: 8px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
     transition: $transition-fast;
 
     &:hover {
-      background: $color-bg-subtle !important;
       color: $color-text-primary !important;
     }
 
     &--active {
+      background: $color-bg-surface !important;
       color: $color-brand !important;
-      background: $color-brand-light !important;
-      border: 1px solid rgba(37, 99, 235, 0.15) !important;
+      font-weight: 700 !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
     }
-  }
 
-  &__nav-icon {
-    font-size: 16px !important;
-    width: 16px !important;
-    height: 16px !important;
+    &__icon {
+      font-size: 15px !important;
+      width: 15px !important;
+      height: 15px !important;
+      margin-right: 0 !important;
+    }
   }
 
   &__actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  &__user {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding-left: 10px;
-    border-left: 1px solid $color-border;
-  }
 
-  &__avatar {
-    display: flex;
-    align-items: center;
-    color: $color-text-muted;
-
-    mat-icon {
-      font-size: 20px !important;
-      width: 20px !important;
-      height: 20px !important;
+    >button,
+    >a,
+    >div {
+      vertical-align: middle;
+      flex-shrink: 0;
     }
   }
 
-  &__user-info {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center;
+  &__theme-btn,
+  &__logout-btn {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
     padding: 0 !important;
-    border: none !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    line-height: 1.1;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    color: $color-text-muted;
+    background: transparent;
+    transition: $transition-fast;
+
+    .mat-icon {
+      font-size: 18px !important;
+      width: 18px !important;
+      height: 18px !important;
+      line-height: 18px !important;
+      margin: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    &:hover {
+      color: $color-text-primary !important;
+      background: $color-bg-subtle !important;
+    }
+  }
+
+  &__logout-btn:hover {
+    color: $color-danger !important;
+    background: $color-danger-bg !important;
+  }
+
+  &__user-info {
+    height: 32px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px 0 8px;
+    border-radius: $radius-pill;
+    background: transparent;
+    border: 1px solid $color-border;
+    color: $color-text-body;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: $transition-fast;
+
+    &:hover {
+      background: $color-bg-subtle;
+      border-color: $color-border-strong;
+      color: $color-text-primary;
+    }
+
+    mat-icon {
+      font-size: 16px !important;
+      width: 16px !important;
+      height: 16px !important;
+      line-height: 16px !important;
+      color: $color-text-muted;
+      margin: 0 !important;
+    }
   }
 
   &__username {
-    font-weight: 600;
-    font-size: 12.5px !important;
-    color: $color-text-primary;
-    max-width: none !important;
-    overflow: visible !important;
-    white-space: nowrap !important;
-    line-height: 1.2;
-  }
-
-  &__role {
-    font-size: 10px !important;
-    color: $color-text-muted;
-    line-height: 1.1;
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1;
   }
 }
 
@@ -690,21 +733,61 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 30px 16px;
+  padding: 36px 16px;
   text-align: center;
-  color: $color-text-muted;
 
-  mat-icon {
-    font-size: 32px;
-    width: 32px;
-    height: 32px;
-    margin-bottom: 8px;
-    color: $color-text-faint;
+  &__icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: $color-bg-subtle;
+    border: 1px solid $color-border;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+
+    mat-icon {
+      font-size: 24px !important;
+      width: 24px !important;
+      height: 24px !important;
+      color: $color-text-faint;
+    }
   }
 
-  p {
-    font-size: 12px;
-    margin: 0 0 16px;
+  &__text {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: $color-text-muted;
+    margin: 0 0 18px !important;
+  }
+
+  .btn-create-schedule {
+    height: 34px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    padding: 0 16px !important;
+    background: $color-brand !important;
+    color: #ffffff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25) !important;
+    transition: $transition-fast;
+
+    &:hover {
+      background: $color-brand-dark !important;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(37, 99, 235, 0.3) !important;
+    }
+
+    mat-icon {
+      font-size: 16px !important;
+      width: 16px !important;
+      height: 16px !important;
+      margin-right: 2px !important;
+    }
   }
 }
 
