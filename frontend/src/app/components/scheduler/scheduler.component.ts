@@ -223,10 +223,17 @@ export class SchedulerComponent implements OnInit {
     return Array.from(ticketsMap.values());
   }
 
-  sendDailyAlertNotification() {
+  sendDailyAlertNotification(targetDate?: Date) {
     const dev = this.currentUser()?.username || 'ReleaseManager';
-    const sel = this.selectedDay() || new Date();
-    this.releaseService.triggerDailyReminder(dev, sel.toISOString()).subscribe({
+    const d = targetDate || new Date();
+    
+    // Format YYYY-MM-DD in local time to avoid UTC offset shifting
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const localDateStr = `${year}-${month}-${day}`;
+
+    this.releaseService.triggerDailyReminder(dev, localDateStr).subscribe({
       next: (res: any) => {
         if (res && res.success) {
           this.toastService.success(res.message || 'Successfully sent Deployment Reminder with Fix Version Tickets to Teams & Telegram!');
@@ -339,78 +346,165 @@ export class SchedulerComponent implements OnInit {
     this.isScanning.set(true);
     this.ocrLogs.set([
       'Reading Excel Spreadsheet data...',
-      `Parsing rows & columns from ${file.name}...`
+      `Parsing cells & calendar grid from ${file.name}...`
     ]);
     this.ocrResult.set(null);
 
     try {
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: 'array' });
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      const jsonRows: any[] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-      const extractedItems: Array<{ date: string; env: string; version: string; hour: number }> = [];
+      const shortMonths = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+      const longMonths = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 
-      jsonRows.forEach((row: any[]) => {
-        if (!row || row.length === 0) return;
-        const rowStr = row.map(cell => String(cell || '')).join(' ');
+      // 1. Detect target Year & Month from sheet titles / cell text / file name
+      let detectedYear = this.currentMonth().getFullYear();
+      let detectedMonth = this.currentMonth().getMonth();
 
-        const dateMatch = rowStr.match(/(\d{4})-(\d{2})-(\d{2})/) ||
-                          rowStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/) ||
-                          rowStr.match(/(\d{1,2})\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i);
+      const combinedHeaderStr = `${file.name} ${workbook.SheetNames.join(' ')}`.toLowerCase();
+      
+      const yearMatch = combinedHeaderStr.match(/20\d{2}/);
+      if (yearMatch) {
+        detectedYear = parseInt(yearMatch[0], 10);
+      }
 
-        if (dateMatch) {
-          let dateFormatted = '';
-          if (rowStr.match(/(\d{4})-(\d{2})-(\d{2})/)) {
-            const m = rowStr.match(/(\d{4})-(\d{2})-(\d{2})/)!;
-            dateFormatted = `${m[1]}-${m[2]}-${m[3]}`;
-          } else if (rowStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/)) {
-            const m = rowStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/)!;
-            const mMonth = String(parseInt(m[1], 10)).padStart(2, '0');
-            const mDay = String(parseInt(m[2], 10)).padStart(2, '0');
-            const mYear = m[3].length === 2 ? `20${m[3]}` : m[3];
-            dateFormatted = `${mYear}-${mMonth}-${mDay}`;
-          } else {
-            const dayNum = parseInt(dateMatch[1], 10);
-            const monthStr = dateMatch[2].toLowerCase();
-            const shortMonths = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-            const mIdx = shortMonths.indexOf(monthStr) !== -1 ? shortMonths.indexOf(monthStr) : this.currentMonth().getMonth();
-            const yearNum = new Date().getFullYear();
-            dateFormatted = `${yearNum}-${String(mIdx + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-          }
-
-          const lowerStr = rowStr.toLowerCase();
-          let env = 'STG';
-          if (lowerStr.includes('uat')) env = 'UAT';
-          else if (lowerStr.includes('prod') || lowerStr.includes('production')) env = 'Production';
-          else if (lowerStr.includes('stg') || lowerStr.includes('staging')) env = 'STG';
-
-          const verMatch = rowStr.match(/(Release\s+[A-Za-z0-9\s\.\-_]+|v?\d+\.\d+(\.\d+)?|Hotfix\s+[\d\.]+)/i);
-          const version = verMatch ? verMatch[0].trim() : `Release ${env}`;
-
-          extractedItems.push({
-            date: dateFormatted,
-            env: env,
-            version: version,
-            hour: 10
-          });
+      for (let i = 0; i < longMonths.length; i++) {
+        if (combinedHeaderStr.includes(longMonths[i])) {
+          detectedMonth = i;
+          break;
         }
+      }
+      if (detectedMonth === this.currentMonth().getMonth()) {
+        for (let i = 0; i < shortMonths.length; i++) {
+          if (combinedHeaderStr.includes(shortMonths[i])) {
+            detectedMonth = i;
+            break;
+          }
+        }
+      }
+
+      const extractedMap = new Map<string, { date: string; env: string; version: string; hour: number }>();
+
+      // 2. Scan every SHEET and every CELL in the workbook
+      workbook.SheetNames.forEach(sheetName => {
+        const worksheet = workbook.Sheets[sheetName];
+        if (!worksheet) return;
+        const jsonRows: any[] = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+
+        jsonRows.forEach((row: any[]) => {
+          if (!row || !Array.isArray(row)) return;
+          
+          row.forEach((cell: any) => {
+            if (!cell) return;
+            const cellStr = String(cell).trim();
+            if (!cellStr) return;
+
+            // Extract date from cell: e.g. "03 Sep", "18 Sep", "2026-09-03", "3/9/2026", "Sep 03"
+            const dateMatch = cellStr.match(/(\d{1,2})\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)/i) ||
+                              cellStr.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)\s*(\d{1,2})/i) ||
+                              cellStr.match(/(\d{4})-(\d{2})-(\d{2})/) ||
+                              cellStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+
+            if (!dateMatch) return;
+
+            // Check if this cell represents an actual release (ignore non-release events like holidays, cutover launches)
+            const lowerCell = cellStr.toLowerCase();
+            const isRelease = lowerCell.includes('release') || 
+                              lowerCell.includes('hotfix') || 
+                              lowerCell.includes('uat') || 
+                              lowerCell.includes('prod') || 
+                              lowerCell.includes('production') || 
+                              lowerCell.includes('stg') || 
+                              lowerCell.includes('staging');
+
+            if (!isRelease) return;
+
+            let dayNum = 1;
+            let mIdx = detectedMonth;
+            let yNum = detectedYear;
+
+            if (cellStr.match(/(\d{1,2})\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)/i)) {
+              const m = cellStr.match(/(\d{1,2})\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)/i)!;
+              dayNum = parseInt(m[1], 10);
+              const monthStr = m[2].toLowerCase() === 'sept' ? 'sep' : m[2].toLowerCase();
+              const foundIdx = shortMonths.indexOf(monthStr);
+              if (foundIdx !== -1) mIdx = foundIdx;
+            } else if (cellStr.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)\s*(\d{1,2})/i)) {
+              const m = cellStr.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)\s*(\d{1,2})/i)!;
+              dayNum = parseInt(m[2], 10);
+              const monthStr = m[1].toLowerCase() === 'sept' ? 'sep' : m[1].toLowerCase();
+              const foundIdx = shortMonths.indexOf(monthStr);
+              if (foundIdx !== -1) mIdx = foundIdx;
+            } else if (cellStr.match(/(\d{4})-(\d{2})-(\d{2})/)) {
+              const m = cellStr.match(/(\d{4})-(\d{2})-(\d{2})/)!;
+              yNum = parseInt(m[1], 10);
+              mIdx = parseInt(m[2], 10) - 1;
+              dayNum = parseInt(m[3], 10);
+            } else if (cellStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/)) {
+              const m = cellStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/)!;
+              dayNum = parseInt(m[1], 10);
+              mIdx = parseInt(m[2], 10) - 1;
+              yNum = m[3].length === 2 ? parseInt(`20${m[3]}`, 10) : parseInt(m[3], 10);
+            }
+
+            // Adjust year if trailing cell belongs to next year's Jan or previous year's Dec
+            if (mIdx === 0 && detectedMonth === 11) yNum++;
+            if (mIdx === 11 && detectedMonth === 0) yNum--;
+
+            const dateFormatted = `${yNum}-${String(mIdx + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+
+            // Determine Environment
+            let env = 'STG';
+            if (lowerCell.includes('uat')) {
+              env = 'UAT';
+            } else if (lowerCell.includes('prod') || lowerCell.includes('production')) {
+              env = 'Production';
+            } else if (lowerCell.includes('stg') || lowerCell.includes('staging')) {
+              env = 'STG';
+            } else if (lowerCell.includes('dev') || lowerCell.includes('development')) {
+              env = 'DEV';
+            }
+
+            // Determine exact Version string
+            const verMatch = cellStr.match(/(Release\s+[A-Za-z0-9\s\.\-_]+|v?\d+\.\d+(\.\d+)?|Hotfix\s+[\d\.]+)/i);
+            let version = '';
+            if (verMatch) {
+              version = verMatch[0].trim();
+            } else {
+              version = env === 'STG' ? 'Release STG' : `Release ${env}`;
+            }
+
+            const key = `${dateFormatted}_${env}`;
+            if (!extractedMap.has(key)) {
+              extractedMap.set(key, {
+                date: dateFormatted,
+                env: env,
+                version: version,
+                hour: 10
+              });
+            }
+          });
+        });
       });
 
-      this.ocrLogs.update(logs => [...logs, `Extracted ${extractedItems.length} rows cleanly from Excel spreadsheet!`]);
+      const extractedItems = Array.from(extractedMap.values());
+      // Sort chronologically
+      extractedItems.sort((a, b) => a.date.localeCompare(b.date));
 
-      const curYear = this.currentMonth().getFullYear();
-      const curMonth = this.currentMonth().getMonth();
-      const finalItems = extractedItems.length >= 5 ? extractedItems : this.generateDynamicPlanForMonth(curYear, curMonth);
-      
-      const mappedResult = finalItems.map(item => {
+      this.ocrLogs.update(logs => [
+        ...logs,
+        `Detected Target Month: ${longMonths[detectedMonth]} ${detectedYear}`,
+        `Extracted ${extractedItems.length} exact deployment schedules from spreadsheet!`
+      ]);
+
+      const mappedResult = extractedItems.map(item => {
         const envName = item.env.toUpperCase();
         let envObj = this.environments().find(e => e.name.toUpperCase() === envName);
         if (!envObj) {
           if (envName.includes('PROD')) envObj = this.environments().find(e => e.name.toUpperCase().includes('PROD'));
           else if (envName.includes('STG')) envObj = this.environments().find(e => e.name.toUpperCase().includes('STG'));
           else if (envName.includes('UAT')) envObj = this.environments().find(e => e.name.toUpperCase().includes('UAT'));
+          else if (envName.includes('DEV')) envObj = this.environments().find(e => e.name.toUpperCase().includes('DEV'));
         }
         return {
           environmentId: envObj?.id || 1,
@@ -422,7 +516,7 @@ export class SchedulerComponent implements OnInit {
 
       this.ocrResult.set(mappedResult);
       this.isScanning.set(false);
-      this.toastService.success(`Successfully parsed ${mappedResult.length} schedules from Excel spreadsheet!`);
+      this.toastService.success(`Successfully parsed ${mappedResult.length} exact schedules from Excel!`);
 
     } catch (err) {
       console.error('Excel processing error:', err);
@@ -763,15 +857,16 @@ export class SchedulerComponent implements OnInit {
 
     this.loading.set(true);
 
-    // Target year & month based on extracted items
+    // Identify the full date range of the imported items
     const firstDate = new Date(items[0].startTime);
-    const targetMonth = firstDate.getMonth();
-    const targetYear = firstDate.getFullYear();
+    const lastDate = new Date(items[items.length - 1].startTime);
+    const minTime = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1).getTime();
+    const maxTime = new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, 0, 23, 59, 59).getTime();
 
-    // Clean up existing windows for target month to prevent duplicates
+    // Clean up existing windows in this range to prevent duplicates or leftover corrupted records
     const oldWindows = this.windows().filter(w => {
-      const d = new Date(w.startTime);
-      return d.getFullYear() === targetYear && d.getMonth() === targetMonth;
+      const t = new Date(w.startTime).getTime();
+      return t >= minTime && t <= maxTime;
     });
 
     this.deleteWindowsSequentially(0, oldWindows, () => {
@@ -799,10 +894,17 @@ export class SchedulerComponent implements OnInit {
         developer: this.currentUser()?.username || 'Unknown'
       }).subscribe();
 
-      // Guard: only navigate to target month if we have at least one item
-      if (items.length > 0) {
-        const targetMonthDate = new Date(items[0].startTime);
-        this.currentMonth.set(new Date(targetMonthDate.getFullYear(), targetMonthDate.getMonth(), 1));
+      // Find the primary month (the month with the highest count of items)
+      const monthCounts: Record<string, number> = {};
+      items.forEach(it => {
+        const d = new Date(it.startTime);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        monthCounts[key] = (monthCounts[key] || 0) + 1;
+      });
+      const primaryMonthKey = Object.keys(monthCounts).sort((a, b) => monthCounts[b] - monthCounts[a])[0];
+      if (primaryMonthKey) {
+        const [y, m] = primaryMonthKey.split('-').map(Number);
+        this.currentMonth.set(new Date(y, m, 1));
         this.generateCalendar(this.currentMonth());
       }
 
