@@ -21,13 +21,31 @@ export class RepositoriesController {
   }
 
   @Post()
-  create(@Body() body: { name: string; gitUrl?: string }) {
+  async create(@Body() body: { name: string; gitUrl?: string }) {
+    const trimmedName = (body.name || '').trim();
+    if (!trimmedName) {
+      throw new Error('Repository name cannot be empty');
+    }
+
+    const existing = await this.prisma.repository.findFirst({
+      where: {
+        name: {
+          equals: trimmedName,
+          mode: 'insensitive',
+        },
+      },
+    });
+
+    if (existing) {
+      return existing;
+    }
+
     return this.prisma.repository.create({
       data: {
-        name: body.name,
+        name: trimmedName,
         gitUrl:
           body.gitUrl ||
-          `https://github.com/quocanhDev99/release_flow_platform_${body.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}.git`,
+          `https://github.com/quocanhDev99/release_flow_platform_${trimmedName.toLowerCase().replace(/[^a-z0-9]/g, '_')}.git`,
       },
     });
   }

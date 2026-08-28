@@ -92,8 +92,34 @@ export class ReleasesService {
   }
 
   async create(version: string) {
+    const trimmed = version.trim();
+
+    // Auto-create base version x.x if adding x.y.z and base does not exist
+    const match = trimmed.match(/\d+(\.\d+)+/);
+    if (match) {
+      const parts = match[0].split('.');
+      if (parts.length >= 3) {
+        const baseVer = `${parts[0]}.${parts[1]}`;
+        const existingBase = await this.prisma.releasePackage.findFirst({
+          where: { version: baseVer },
+        });
+        if (!existingBase) {
+          await this.prisma.releasePackage.create({
+            data: { version: baseVer },
+          });
+        }
+      }
+    }
+
+    const existing = await this.prisma.releasePackage.findFirst({
+      where: { version: trimmed },
+    });
+    if (existing) {
+      return existing;
+    }
+
     return this.prisma.releasePackage.create({
-      data: { version },
+      data: { version: trimmed },
     });
   }
 
