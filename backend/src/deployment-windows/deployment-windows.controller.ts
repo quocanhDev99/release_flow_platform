@@ -9,12 +9,28 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { DeploymentWindowsService } from './deployment-windows.service';
+import { ReleaseNotesService } from '../scheduler/release-notes.service';
 
 @Controller('deployment-windows')
 export class DeploymentWindowsController {
   constructor(
     private readonly deploymentWindowsService: DeploymentWindowsService,
+    private readonly releaseNotesService: ReleaseNotesService,
   ) {}
+
+  // Release Notes Endpoints
+  @Get(':id/release-notes')
+  getReleaseNotes(@Param('id', ParseIntPipe) id: number) {
+    return this.releaseNotesService.generateReleaseNotes(id);
+  }
+
+  @Post(':id/release-notes/broadcast')
+  broadcastReleaseNotes(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { channels?: string[]; customNote?: string },
+  ) {
+    return this.releaseNotesService.broadcastReleaseNotes(id, body);
+  }
 
   // Windows Endpoints
   @Get()

@@ -1,0 +1,233 @@
+<div class="rn-dialog">
+  <!-- Dialog Header -->
+  <header class="rn-dialog__header">
+    <div class="rn-dialog__title-group">
+      <div class="rn-dialog__icon-wrap">
+        <mat-icon>description</mat-icon>
+      </div>
+      <div>
+        <h2 class="rn-dialog__title">Release Handover Studio</h2>
+        <p class="rn-dialog__subtitle">
+          Executive release notes & scope for
+          <strong>{{ releaseData()?.metadata?.packageVersion || data.packageVersion || 'Deployment' }}</strong>
+        </p>
+      </div>
+    </div>
+
+    <div class="rn-dialog__header-actions" *ngIf="releaseData()">
+      <span class="badge badge--env" [ngClass]="'badge--' + releaseData().metadata.environment">
+        {{ releaseData().metadata.environment }}
+      </span>
+      <span class="badge badge--status">
+        {{ releaseData().metadata.status | uppercase }}
+      </span>
+      <button mat-icon-button (click)="close()" class="btn-close-dialog" matTooltip="Close dialog">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </header>
+
+  <!-- Loading State -->
+  <div class="rn-dialog__loading" *ngIf="loading()">
+    <mat-spinner diameter="36"></mat-spinner>
+    <p>Generating intelligent release notes from schedule & tickets...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="rn-dialog__error" *ngIf="error() && !loading()">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error() }}</p>
+    <button mat-flat-button color="primary" (click)="fetchReleaseNotes()">Try Again</button>
+  </div>
+
+  <!-- Main Content Body -->
+  <div class="rn-dialog__body" *ngIf="!loading() && !error() && releaseData()">
+    <!-- Quick Summary Metrics Bar -->
+    <div class="rn-summary-bar">
+      <div class="rn-summary-grid">
+        <div class="rn-stat-card">
+          <span class="rn-stat-card__val">{{ releaseData().summary.totalTickets }}</span>
+          <span class="rn-stat-card__lbl">Tickets</span>
+        </div>
+        <div class="rn-stat-card rn-stat-card--blue">
+          <span class="rn-stat-card__val">{{ releaseData().summary.featuresCount }}</span>
+          <span class="rn-stat-card__lbl">✨ Features</span>
+        </div>
+        <div class="rn-stat-card rn-stat-card--red">
+          <span class="rn-stat-card__val">{{ releaseData().summary.bugfixesCount }}</span>
+          <span class="rn-stat-card__lbl">🐞 Fixes</span>
+        </div>
+        <div class="rn-stat-card rn-stat-card--green">
+          <span class="rn-stat-card__val">{{ releaseData().summary.enhancementsCount }}</span>
+          <span class="rn-stat-card__lbl">⚡ Enhance</span>
+        </div>
+      </div>
+
+      <div class="rn-repos-block">
+        <span class="rn-repos-lbl">Repositories:</span>
+        <div class="rn-repo-chips">
+          <span class="repo-tag" *ngFor="let repo of releaseData().summary.repositories">{{ repo }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Multi-format Preview Tabs -->
+    <mat-tab-group animationDuration="150ms" class="rn-tabs" mat-stretch-tabs="false">
+      <!-- Tab 1: Visual Handover Preview -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">dashboard</mat-icon>
+          <span>Visual Handover</span>
+        </ng-template>
+        <div class="tab-pane visual-pane">
+          <!-- Ticket Breakdown List -->
+          <div class="ticket-list" *ngIf="releaseData().tickets.length > 0">
+            <div class="ticket-row" *ngFor="let t of releaseData().tickets">
+              <div class="ticket-row__id-group">
+                <a [href]="t.jiraUrl" target="_blank" class="ticket-key">{{ t.ticketId }}</a>
+                <span class="type-pill" [ngClass]="'type-pill--' + t.changeType.toLowerCase().replace(' ', '-')">
+                  {{ t.changeType }}
+                </span>
+              </div>
+              <div class="ticket-row__desc">
+                <span class="ticket-summary">{{ t.summary }}</span>
+                <span class="ticket-meta" *ngIf="t.branch">
+                  <mat-icon>commit</mat-icon> {{ t.branch }}
+                </span>
+              </div>
+              <div class="ticket-row__author">
+                <mat-icon>person</mat-icon> {{ t.developer || 'Team' }}
+              </div>
+            </div>
+          </div>
+
+          <div class="empty-tickets" *ngIf="releaseData().tickets.length === 0">
+            <div class="empty-tickets__icon-wrap">
+              <mat-icon>fact_check</mat-icon>
+            </div>
+            <h4>Deployment Scope Ready</h4>
+            <p>This deployment window is configured for <strong>{{ releaseData().metadata.packageVersion }}</strong> on <strong>{{ releaseData().metadata.environment }}</strong>.</p>
+          </div>
+
+          <!-- Handover Verification Card -->
+          <div class="handover-notice">
+            <mat-icon>verified</mat-icon>
+            <div>
+              <strong>QA Sanity & Smoke Test Sign-off:</strong>
+              <p>Deployment window schedule: <strong>{{ releaseData().metadata.startTime }}</strong>. Verification checklist ready.</p>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Tab 2: Markdown Format -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">code</mat-icon>
+          <span>Markdown</span>
+        </ng-template>
+        <div class="tab-pane code-pane">
+          <div class="code-toolbar">
+            <span class="code-badge">GITHUB / CONFLUENCE MARKDOWN</span>
+            <button mat-button class="btn-copy-code" (click)="copyMarkdown()">
+              <mat-icon>{{ copiedType() === 'markdown' ? 'check' : 'content_copy' }}</mat-icon>
+              <span>{{ copiedType() === 'markdown' ? 'Copied!' : 'Copy Markdown' }}</span>
+            </button>
+          </div>
+          <pre class="code-content"><code>{{ releaseData().markdown }}</code></pre>
+        </div>
+      </mat-tab>
+
+      <!-- Tab 3: HTML / Email Format -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">mail</mat-icon>
+          <span>Email (HTML)</span>
+        </ng-template>
+        <div class="tab-pane email-pane">
+          <div class="code-toolbar">
+            <span class="code-badge">OUTLOOK / GMAIL RICH HTML</span>
+            <button mat-button class="btn-copy-code" (click)="copyHtmlForEmail()">
+              <mat-icon>{{ copiedType() === 'html' ? 'check' : 'content_copy' }}</mat-icon>
+              <span>{{ copiedType() === 'html' ? 'Copied for Email!' : 'Copy for Outlook / Email' }}</span>
+            </button>
+          </div>
+          <div class="email-preview-container" [innerHTML]="releaseData().html"></div>
+        </div>
+      </mat-tab>
+
+      <!-- Tab 4: 1-Click Broadcast -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">campaign</mat-icon>
+          <span>Broadcast</span>
+        </ng-template>
+        <div class="tab-pane broadcast-pane">
+          <div class="broadcast-card">
+            <h4>📡 Broadcast Handover Report to Team Channels</h4>
+            <p>Send an automated summary and full handover ticket list directly to your team's active channels.</p>
+
+            <div class="channel-selector">
+              <div class="channel-item" [class.is-active]="selectedChannels().telegram" (click)="toggleChannel('telegram')">
+                <mat-icon class="channel-icon telegram-col">telegram</mat-icon>
+                <span>Telegram Bot</span>
+                <mat-icon class="check-icon">{{ selectedChannels().telegram ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
+              </div>
+
+              <div class="channel-item" [class.is-active]="selectedChannels().teams" (click)="toggleChannel('teams')">
+                <mat-icon class="channel-icon teams-col">groups</mat-icon>
+                <span>Microsoft Teams</span>
+                <mat-icon class="check-icon">{{ selectedChannels().teams ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
+              </div>
+
+              <div class="channel-item" [class.is-active]="selectedChannels().slack" (click)="toggleChannel('slack')">
+                <mat-icon class="channel-icon slack-col">chat</mat-icon>
+                <span>Slack</span>
+                <mat-icon class="check-icon">{{ selectedChannels().slack ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
+              </div>
+
+              <div class="channel-item" [class.is-active]="selectedChannels().email" (click)="toggleChannel('email')">
+                <mat-icon class="channel-icon email-col">email</mat-icon>
+                <span>Email List</span>
+                <mat-icon class="check-icon">{{ selectedChannels().email ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
+              </div>
+            </div>
+
+            <div class="custom-note-field">
+              <label>Optional Note / RM Sign-off Message:</label>
+              <input type="text" [(ngModel)]="customBroadcastNote" placeholder="e.g. Please execute sanity testing on SOW 1.14.1 now.">
+            </div>
+
+            <div class="broadcast-action">
+              <button mat-flat-button color="primary" class="btn-broadcast" (click)="broadcastReport()" [disabled]="isBroadcasting()">
+                <mat-spinner diameter="16" *ngIf="isBroadcasting()"></mat-spinner>
+                <mat-icon *ngIf="!isBroadcasting()">send</mat-icon>
+                <span>{{ isBroadcasting() ? 'Broadcasting...' : 'Broadcast Report Now' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+
+  <!-- Dialog Footer Toolbar -->
+  <footer class="rn-dialog__footer" *ngIf="!loading() && releaseData()">
+    <div class="footer-left">
+      <button mat-stroked-button class="btn-footer-download" (click)="downloadMarkdown()">
+        <mat-icon>download</mat-icon> <span>Download .md</span>
+      </button>
+    </div>
+    <div class="footer-right">
+      <button mat-stroked-button class="btn-footer-copy" (click)="copyMarkdown()">
+        <mat-icon>content_copy</mat-icon> <span>Copy Markdown</span>
+      </button>
+      <button mat-flat-button color="primary" class="btn-footer-primary" (click)="copyHtmlForEmail()">
+        <mat-icon>content_copy</mat-icon> <span>Copy for Email</span>
+      </button>
+      <button mat-button class="btn-footer-close" (click)="close()">
+        Close
+      </button>
+    </div>
+  </footer>
+</div>

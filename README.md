@@ -26,6 +26,7 @@ Many enterprise teams still manage software release schedules using manual Excel
 *   **Automated Cron Reminders:** Automatically sends daily broadcast alerts for today's and tomorrow's upcoming deployments (e.g. 8:00 AM daily alerts, 4:30 PM reminder to merge code).
 *   **AI OCR Scanner:** Automatically scans and digitizes schedule information from images (spreadsheets, emails) directly into the database without manual input.
 *   **ChatOps & Notifications:** Broadcasts real-time multi-channel alerts (Telegram, Email, Slack, Teams) upon significant changes. Features Microsoft Teams Adaptive Cards with automatic user @mentions based on UPNs. Supports both **System-wide Webhooks** and **Personal Notifications** for individual user preferences.
+*   **Auto Release Notes & Handover Studio:** Automatically aggregates all tickets, Jira keys, SOW scopes, authors, and affected repositories for any deployment window. Generates 1-click copyable **Markdown** (for Confluence/Jira), **Rich HTML** (formatted for Outlook/Gmail), and supports instant multi-channel broadcast (Telegram, Teams, Slack, Email).
 *   **System Settings UI:** Allows Administrators to configure API Tokens and Webhook URLs directly via the Web UI without modifying source code or `.env` files.
 
 ---
@@ -63,6 +64,7 @@ All technical deep-dives and architectural diagrams are stored in the `docs/` di
 | Document | Detailed Content |
 | :--- | :--- |
 | 📄 [Deployment Scheduler](docs/03-Features-and-Usecases/03.1-deployment-scheduler.md) | Use Case & Sequence Diagrams for scheduling. |
+| 📄 [Auto Release Notes & Handover](docs/03-Features-and-Usecases/03.8-release-notes-handover.md) | Release Notes generation, HTML email copy, and multi-channel broadcast. |
 | 📄 [CI/CD Webhooks](docs/03-Features-and-Usecases/03.2-cicd-automation.md) | Use Case & Sequence Diagrams for PR webhook handling. |
 | 📄 [AI OCR Scanner](docs/03-Features-and-Usecases/03.3-ai-ocr-scanner.md) | Use Case & Sequence Diagrams for Image-to-JSON extraction. |
 | 📄 [Automated Reminders](docs/03-Features-and-Usecases/03.4-automated-reminders.md) | Use Case & Sequence Diagrams for daily Cron jobs. |
