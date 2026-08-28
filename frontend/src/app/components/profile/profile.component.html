@@ -1,28 +1,30 @@
 <div class="profile-page">
   <app-toast></app-toast>
 
-  <div class="profile-page__bg">
-    <div class="orb orb--1"></div>
-    <div class="orb orb--2"></div>
-  </div>
+  <div class="profile-container">
 
-  <div class="profile-wrapper">
+    <!-- Top Navigation & Header (Horizontal Split Layout) -->
+    <header class="profile-header">
+      <div class="profile-header__title-block">
+        <h1 class="profile-header__title">Account Settings</h1>
+        <p class="profile-header__subtitle">Manage your personal profile, security credentials, and deployment alert channels.</p>
+      </div>
 
-    <!-- Back nav -->
-    <button mat-button (click)="onBack()" class="profile-back-btn">
-      <mat-icon>arrow_back_ios_new</mat-icon>
-      Back to Dashboard
-    </button>
+      <button mat-stroked-button (click)="onBack()" class="profile-back-btn">
+        <mat-icon>arrow_back</mat-icon>
+        <span>Back to Dashboard</span>
+      </button>
+    </header>
 
     <div class="profile-layout">
 
-      <!-- ── Left: Identity Card ── -->
-      <div class="identity-card">
+      <!-- ── Left Column: User Identity Card ── -->
+      <aside class="identity-card">
         <div class="identity-card__banner"></div>
 
-        <div class="identity-card__body">
-          <!-- Avatar upload area -->
-          <div class="identity-card__avatar" (click)="triggerAvatarUpload()" [matTooltip]="'Click to change photo'">
+        <div class="identity-card__content">
+          <!-- Avatar with camera overlay -->
+          <div class="identity-card__avatar-wrap" (click)="triggerAvatarUpload()" [matTooltip]="'Click to change photo'">
             <img *ngIf="avatarUrl()" [src]="avatarUrl()" alt="Avatar" class="identity-card__avatar-img">
             <span *ngIf="!avatarUrl()" class="identity-card__avatar-initials">{{ avatarInitials() }}</span>
             <div class="identity-card__avatar-overlay">
@@ -32,156 +34,184 @@
           <input #avatarInput type="file" accept="image/*" style="display:none"
                  (change)="onAvatarFileChange($event)">
 
-          <h2 class="identity-card__name">{{ username || 'Your Name' }}</h2>
-          <p class="identity-card__email">{{ email || 'your&#64;email.com' }}</p>
+          <h2 class="identity-card__name">{{ username || 'User Name' }}</h2>
+          <p class="identity-card__email">{{ email || 'user@example.com' }}</p>
 
-          <div class="identity-card__meta">
-            <div class="identity-card__meta-item">
-              <mat-icon>verified_user</mat-icon>
-              <span>Active Member</span>
+          <div class="identity-card__badge-wrap">
+            <span class="status-pill status-pill--active">
+              <span class="status-pill__dot"></span>
+              Active Member
+            </span>
+          </div>
+
+          <div class="identity-card__details">
+            <div class="identity-detail-item">
+              <span class="identity-detail-item__label">Account Role</span>
+              <span class="identity-detail-item__value">Developer</span>
+            </div>
+            <div class="identity-detail-item">
+              <span class="identity-detail-item__label">Platform Access</span>
+              <span class="identity-detail-item__value">Release Contributor</span>
             </div>
           </div>
         </div>
-      </div>
+      </aside>
 
-      <!-- ── Right: Edit Form ── -->
-      <div class="edit-card">
+      <!-- ── Right Column: Edit Profile Form ── -->
+      <main class="settings-card">
 
-        <!-- Account Info section -->
-        <div class="edit-card__section">
-          <h3 class="edit-card__section-title edit-card__section-title--info">
-            <mat-icon>manage_accounts</mat-icon>
-            Account Information
-          </h3>
+        <!-- 1. Account Info Section -->
+        <section class="settings-section">
+          <div class="settings-section__header">
+            <div class="settings-section__icon-wrap">
+              <mat-icon>person_outline</mat-icon>
+            </div>
+            <div class="settings-section__titles">
+              <h3 class="settings-section__title">Account Information</h3>
+              <p class="settings-section__desc">Update your display username and primary communication email.</p>
+            </div>
+          </div>
 
-          <div class="edit-card__fields">
-            <div class="field-group">
-              <label class="field-label">Username</label>
-              <mat-form-field appearance="outline" class="field-input">
-                <input id="profile-username" matInput [(ngModel)]="username" placeholder="Enter username">
-                <mat-icon matSuffix>badge</mat-icon>
+          <div class="settings-grid">
+            <div class="settings-field">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Username</mat-label>
+                <input id="profile-username" matInput [(ngModel)]="username" placeholder="Enter username" autocomplete="username">
+                <mat-icon matSuffix class="field-icon">badge</mat-icon>
               </mat-form-field>
             </div>
 
-            <div class="field-group">
-              <label class="field-label">Email Address</label>
-              <mat-form-field appearance="outline" class="field-input">
-                <input id="profile-email" matInput [(ngModel)]="email" type="email" placeholder="your&#64;email.com">
-                <mat-icon matSuffix>alternate_email</mat-icon>
+            <div class="settings-field">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Email Address</mat-label>
+                <input id="profile-email" matInput [(ngModel)]="email" type="email" placeholder="name@company.com" autocomplete="email">
+                <mat-icon matSuffix class="field-icon">mail_outline</mat-icon>
               </mat-form-field>
             </div>
           </div>
-        </div>
+        </section>
 
-        <!-- Divider -->
-        <div class="edit-card__divider"><span>Security</span></div>
+        <hr class="settings-divider">
 
-        <!-- Password section -->
-        <div class="edit-card__section">
-          <h3 class="edit-card__section-title edit-card__section-title--security">
-            <mat-icon>lock</mat-icon>
-            Change Password
-            <span class="edit-card__badge">Optional</span>
-          </h3>
+        <!-- 2. Security / Password Section -->
+        <section class="settings-section">
+          <div class="settings-section__header">
+            <div class="settings-section__icon-wrap settings-section__icon-wrap--security">
+              <mat-icon>lock_outline</mat-icon>
+            </div>
+            <div class="settings-section__titles">
+              <div class="d-flex align-items-center gap-2">
+                <h3 class="settings-section__title">Security & Password</h3>
+                <span class="optional-tag">Optional</span>
+              </div>
+              <p class="settings-section__desc">Leave fields blank if you do not wish to change your current password.</p>
+            </div>
+          </div>
 
-          <div class="edit-card__fields">
-            <div class="field-group">
-              <label class="field-label">New Password</label>
-              <mat-form-field appearance="outline" class="field-input">
+          <div class="settings-grid">
+            <div class="settings-field">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>New Password</mat-label>
                 <input id="profile-password" matInput
                        [type]="showPassword ? 'text' : 'password'"
                        [(ngModel)]="password"
-                       placeholder="Leave blank to keep current">
-                <button mat-icon-button matSuffix type="button" (click)="showPassword = !showPassword">
-                  <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+                       placeholder="Enter new password"
+                       autocomplete="new-password">
+                <button mat-icon-button matSuffix type="button" (click)="showPassword = !showPassword" tabindex="-1">
+                  <mat-icon class="field-icon">{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
                 </button>
               </mat-form-field>
             </div>
 
-            <div class="field-group">
-              <label class="field-label">Confirm Password</label>
-              <mat-form-field appearance="outline" class="field-input">
+            <div class="settings-field">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Confirm Password</mat-label>
                 <input id="profile-confirm-password" matInput
                        [type]="showPassword ? 'text' : 'password'"
                        [(ngModel)]="confirmPassword"
                        placeholder="Repeat new password"
+                       autocomplete="new-password"
                        (keyup.enter)="onUpdate()">
-                <mat-icon matSuffix>lock_reset</mat-icon>
+                <mat-icon matSuffix class="field-icon">lock_reset</mat-icon>
               </mat-form-field>
             </div>
           </div>
-        </div>
+        </section>
 
-        <!-- Divider -->
-        <div class="edit-card__divider"><span>Notifications</span></div>
+        <hr class="settings-divider">
 
-        <!-- Personal Notifications section -->
-        <div class="edit-card__section">
-          <h3 class="edit-card__section-title edit-card__section-title--info">
-            <mat-icon>notifications_active</mat-icon>
-            Personal Direct Messages
-            <span class="edit-card__badge">Optional</span>
-          </h3>
-          <p class="edit-card__section-subtitle" style="font-size: 13px; color: #666; margin: -10px 0 15px 32px;">
-            Configure your personal webhooks to receive direct messages for your deployments.
-          </p>
+        <!-- 3. Notifications & Webhooks Section -->
+        <section class="settings-section">
+          <div class="settings-section__header">
+            <div class="settings-section__icon-wrap settings-section__icon-wrap--notif">
+              <mat-icon>notifications_none</mat-icon>
+            </div>
+            <div class="settings-section__titles">
+              <div class="d-flex align-items-center gap-2">
+                <h3 class="settings-section__title">Personal Deployment Alerts</h3>
+                <span class="optional-tag">Optional</span>
+              </div>
+              <p class="settings-section__desc">Receive direct alerts when your tickets are merged or deployment windows open.</p>
+            </div>
+          </div>
 
-          <div class="edit-card__fields">
-            <div class="field-group">
-              <label class="field-label">Teams Webhook URL</label>
-              <mat-form-field appearance="outline" class="field-input w-100">
+          <div class="settings-grid settings-grid--stacked">
+            <div class="settings-field">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Microsoft Teams Webhook URL</mat-label>
                 <input id="profile-teams" matInput [(ngModel)]="teamsWebhookUrl" placeholder="https://<tenant>.webhook.office.com/...">
-                <mat-icon matSuffix>groups</mat-icon>
+                <mat-icon matSuffix class="field-icon">groups</mat-icon>
               </mat-form-field>
             </div>
 
-            <div class="field-group">
-              <label class="field-label">Slack Webhook URL</label>
-              <mat-form-field appearance="outline" class="field-input w-100">
+            <div class="settings-field">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Slack Webhook URL</mat-label>
                 <input id="profile-slack" matInput [(ngModel)]="slackWebhookUrl" placeholder="https://hooks.slack.com/services/...">
-                <mat-icon matSuffix>chat</mat-icon>
+                <mat-icon matSuffix class="field-icon">chat</mat-icon>
               </mat-form-field>
             </div>
 
-            <div class="field-group">
-              <label class="field-label">Telegram Chat ID</label>
-              <mat-form-field appearance="outline" class="field-input w-100">
-                <input id="profile-telegram" matInput [(ngModel)]="telegramChatId" placeholder="e.g. 123456789">
-                <mat-icon matSuffix>telegram</mat-icon>
+            <div class="settings-field">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Telegram Chat ID</mat-label>
+                <input id="profile-telegram" matInput [(ngModel)]="telegramChatId" placeholder="e.g. 5043450356">
+                <mat-icon matSuffix class="field-icon">send</mat-icon>
               </mat-form-field>
             </div>
 
-            <div class="field-group" style="padding-top: 10px;">
-              <mat-slide-toggle [(ngModel)]="notifyViaEmail" color="primary">
-                Receive Email Notifications
-              </mat-slide-toggle>
+            <div class="toggle-field">
+              <div class="toggle-field__info">
+                <span class="toggle-field__title">Email Notifications</span>
+                <span class="toggle-field__desc">Send daily deployment digests and emergency change alerts to {{ email || 'your email' }}.</span>
+              </div>
+              <mat-slide-toggle [(ngModel)]="notifyViaEmail" color="primary"></mat-slide-toggle>
             </div>
           </div>
-        </div>
+        </section>
 
-        <!-- Actions -->
-        <div class="edit-card__actions">
-          <button mat-stroked-button class="btn-cancel" (click)="onBack()">
+        <!-- Actions Toolbar -->
+        <footer class="settings-footer">
+          <button mat-stroked-button type="button" class="btn-cancel" (click)="onBack()">
             Cancel
           </button>
           <button id="profile-submit-btn"
                   mat-flat-button
+                  color="primary"
                   class="btn-save"
                   (click)="onUpdate()"
                   [disabled]="loading()">
             @if (loading()) {
               <mat-spinner diameter="18"></mat-spinner>
-              <span>Saving…</span>
+              <span>Saving Changes...</span>
             } @else {
-              <span class="btn-save__inner">
-                <mat-icon>check</mat-icon>
-                <span>Save Changes</span>
-              </span>
+              <span>Save Changes</span>
             }
           </button>
-        </div>
+        </footer>
 
-      </div>
+      </main>
+
     </div>
   </div>
 </div>
