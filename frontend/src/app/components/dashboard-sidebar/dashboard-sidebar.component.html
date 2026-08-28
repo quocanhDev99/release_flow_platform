@@ -229,7 +229,9 @@
             <!-- 2. Repositories section -->
             <div class="config-card">
               <div class="config-card__header">
-                <mat-icon class="card-icon">source</mat-icon>
+                <div class="card-icon-wrap">
+                  <mat-icon class="card-icon">source</mat-icon>
+                </div>
                 <div class="header-text">
                   <h4>Active Repositories</h4>
                   <p>Configure Git repositories linked to deployments.</p>
@@ -262,7 +264,7 @@
               </div>
 
               <div class="d-flex justify-content-end mt-3">
-                <button mat-stroked-button type="button" color="primary" (click)="addRepository()"
+                <button mat-flat-button type="button" color="primary" class="btn-config-action" (click)="addRepository()"
                   [disabled]="!newRepoName.trim()">
                   <mat-icon>add</mat-icon> Add Repository
                 </button>
@@ -272,7 +274,9 @@
             <!-- 3. Branch Build / Environments section -->
             <div class="config-card mb-0">
               <div class="config-card__header">
-                <mat-icon class="card-icon">dns</mat-icon>
+                <div class="card-icon-wrap">
+                  <mat-icon class="card-icon">dns</mat-icon>
+                </div>
                 <div class="header-text">
                   <h4>Branch Builds (Environments)</h4>
                   <p>Define deployment environments like dev, STG, UAT.</p>
@@ -299,7 +303,7 @@
               </div>
 
               <div class="d-flex justify-content-end mt-3">
-                <button mat-stroked-button type="button" color="primary" (click)="addEnvironment()"
+                <button mat-flat-button type="button" color="primary" class="btn-config-action" (click)="addEnvironment()"
                   [disabled]="!newEnvironmentName.trim()">
                   <mat-icon>add</mat-icon> Add Build
                 </button>
@@ -319,7 +323,9 @@
             <!-- Telegram Config -->
             <div class="config-card">
               <div class="config-card__header">
-                <mat-icon class="telegram-icon">telegram</mat-icon>
+                <div class="card-icon-wrap card-icon-wrap--telegram">
+                  <mat-icon class="telegram-icon">telegram</mat-icon>
+                </div>
                 <div class="header-text">
                   <h4>Telegram Bot Integration</h4>
                   <p>Send deployment and bulk alerts to a Telegram chat.</p>
@@ -328,7 +334,7 @@
 
               <div class="row mt-2">
                 <div class="col-12">
-                  <mat-form-field appearance="outline" class="w-100">
+                  <mat-form-field appearance="outline" class="w-100 mb-0">
                     <mat-label>Bot Token</mat-label>
                     <input matInput type="password" name="TELEGRAM_BOT_TOKEN"
                       [(ngModel)]="settingsForm.TELEGRAM_BOT_TOKEN" placeholder="Enter Bot Token"
@@ -336,8 +342,8 @@
                   </mat-form-field>
                 </div>
 
-                <div class="col-12">
-                  <mat-form-field appearance="outline" class="w-100 mt-3">
+                <div class="col-12 mt-3">
+                  <mat-form-field appearance="outline" class="w-100 mb-0">
                     <mat-label>Chat ID</mat-label>
                     <input matInput name="TELEGRAM_CHAT_ID" [(ngModel)]="settingsForm.TELEGRAM_CHAT_ID"
                       placeholder="Enter Chat ID" autocomplete="off">
@@ -346,16 +352,18 @@
               </div>
 
               <div class="d-flex justify-content-end mt-3">
-                <button mat-stroked-button type="button" color="primary" (click)="testNotification('telegram')">
+                <button mat-stroked-button type="button" class="btn-config-secondary" (click)="testNotification('telegram')">
                   <mat-icon>send</mat-icon> Test Message
                 </button>
               </div>
             </div>
 
             <!-- Email Config -->
-            <div class="config-card mb-0">
+            <div class="config-card">
               <div class="config-card__header">
-                <mat-icon class="email-icon">email</mat-icon>
+                <div class="card-icon-wrap card-icon-wrap--email">
+                  <mat-icon class="email-icon">email</mat-icon>
+                </div>
                 <div class="header-text">
                   <h4>SMTP Email Settings</h4>
                   <p>Configure automated email notifications.</p>
@@ -413,16 +421,18 @@
               </div>
 
               <div class="d-flex justify-content-end mt-3">
-                <button mat-stroked-button type="button" color="primary" (click)="testNotification('email')">
+                <button mat-stroked-button type="button" class="btn-config-secondary" (click)="testNotification('email')">
                   <mat-icon>forward_to_inbox</mat-icon> Test Email
                 </button>
               </div>
             </div>
 
             <!-- Microsoft Teams Config -->
-            <div class="config-card mt-3">
+            <div class="config-card">
               <div class="config-card__header">
-                <mat-icon class="teams-icon" style="color: #6264a7;">groups</mat-icon>
+                <div class="card-icon-wrap card-icon-wrap--teams">
+                  <mat-icon class="teams-icon">groups</mat-icon>
+                </div>
                 <div class="header-text">
                   <h4>Microsoft Teams Integration</h4>
                   <p>Send deployment alerts to a Teams Channel via Webhook.</p>
@@ -440,16 +450,18 @@
               </div>
 
               <div class="d-flex justify-content-end mt-3">
-                <button mat-stroked-button type="button" color="primary" (click)="testNotification('teams')">
+                <button mat-stroked-button type="button" class="btn-config-secondary" (click)="testNotification('teams')">
                   <mat-icon>send</mat-icon> Test Teams
                 </button>
               </div>
             </div>
 
             <!-- Slack Config -->
-            <div class="config-card mt-3 mb-4">
+            <div class="config-card mb-0">
               <div class="config-card__header">
-                <mat-icon class="slack-icon" style="color: #4a154b;">chat</mat-icon>
+                <div class="card-icon-wrap card-icon-wrap--slack">
+                  <mat-icon class="slack-icon">chat</mat-icon>
+                </div>
                 <div class="header-text">
                   <h4>Slack Integration</h4>
                   <p>Send deployment alerts to a Slack Workspace via Webhook.</p>
@@ -467,7 +479,7 @@
               </div>
 
               <div class="d-flex justify-content-end mt-3">
-                <button mat-stroked-button type="button" color="primary" (click)="testNotification('slack')">
+                <button mat-stroked-button type="button" class="btn-config-secondary" (click)="testNotification('slack')">
                   <mat-icon>send</mat-icon> Test Slack
                 </button>
               </div>
@@ -485,7 +497,9 @@
           <div class="tab-content-wrapper">
             <div class="config-card mb-3" *ngFor="let job of cronJobs()">
               <div class="config-card__header">
-                <mat-icon class="cron-icon">alarm</mat-icon>
+                <div class="card-icon-wrap card-icon-wrap--cron">
+                  <mat-icon class="cron-icon">alarm</mat-icon>
+                </div>
                 <div class="header-text">
                   <h4>{{ job.name }}</h4>
                   <p>{{ job.description }}</p>
@@ -503,7 +517,7 @@
               </div>
 
               <div class="d-flex justify-content-end mt-3">
-                <button mat-stroked-button type="button" color="primary" (click)="runCronJob(job.id)">
+                <button mat-flat-button type="button" color="primary" class="btn-config-action" (click)="runCronJob(job.id)">
                   <mat-icon>play_arrow</mat-icon> Run Job Now
                 </button>
               </div>
