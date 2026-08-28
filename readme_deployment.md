@@ -68,7 +68,7 @@ Vì mạng gia đình/văn phòng ở Việt Nam chủ yếu sử dụng IPv4, c
 6.  Click **Create Web Service**. Chờ quá trình build hoàn tất. Sau khi thành công, copy URL Render cấp ở góc trên bên trái (ví dụ: `https://release-flow-backend-z76u.onrender.com`).
 
 > [!NOTE]
-> **Giải pháp kỹ thuật đã xử lý:** Lệnh khởi chạy mặc định của NestJS là `node dist/main`, tuy nhiên do trình biên dịch giữ nguyên thư mục gốc, tệp khởi chạy thực tế nằm ở `dist/src/main.js`. Mã nguồn [backend/package.json](file:///d:/PROGRAMMING/PROJECT/release_flow_platform/backend/package.json) đã được cập nhật script `"start:prod": "node dist/src/main.js"` để Render khởi động thành công.
+> **Giải pháp kỹ thuật đã xử lý:** Tệp khởi chạy thực tế nằm ở `dist/main.js`. Mã nguồn [backend/package.json](file:///Users/anhnguyen/Documents/PROGRAMING/RELEASE_FLOW_PLATFORM/backend/package.json) đã được cập nhật script `"start:prod": "node dist/main.js"` để Render khởi động thành công.
 
 ---
 
